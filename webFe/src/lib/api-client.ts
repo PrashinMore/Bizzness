@@ -1,6 +1,7 @@
 import { AuthResponse, User } from '@/types/user';
 import { Product } from '@/types/product';
 import { Sale } from '@/types/sale';
+import { Expense } from '@/types/expense';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000';
@@ -167,5 +168,37 @@ export const salesApi = {
     const path = qs ? `/sales/totals/daily?${qs}` : '/sales/totals/daily';
     return request(path, { token });
   }
+};
+
+type ExpensesFilters = {
+  from?: string;
+  to?: string;
+  category?: string;
+};
+
+export const expensesApi = {
+  list: (token: string, filters: ExpensesFilters = {}): Promise<Expense[]> => {
+    const params = new URLSearchParams();
+    if (filters.from) params.set('from', filters.from);
+    if (filters.to) params.set('to', filters.to);
+    if (filters.category) params.set('category', filters.category);
+    const qs = params.toString();
+    const path = qs ? `/expenses?${qs}` : '/expenses';
+    return request<Expense[]>(path, { token });
+  },
+  monthlySummary: (token: string, from?: string, to?: string): Promise<{ month: string; total: string }[]> => {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    const qs = params.toString();
+    const path = qs ? `/expenses/summary/monthly?${qs}` : '/expenses/summary/monthly';
+    return request(path, { token });
+  },
+  create: (token: string, payload: Omit<Expense, 'id' | 'createdAt'> & { date: string }): Promise<Expense> =>
+    request<Expense>('/expenses', { method: 'POST', body: payload, token }),
+  update: (token: string, id: string, payload: Partial<Omit<Expense, 'id' | 'createdAt'>> & { date?: string }): Promise<Expense> =>
+    request<Expense>(`/expenses/${id}`, { method: 'PATCH', body: payload, token }),
+  remove: (token: string, id: string): Promise<void> =>
+    request<void>(`/expenses/${id}`, { method: 'DELETE', token }),
 };
 

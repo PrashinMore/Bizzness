@@ -124,6 +124,28 @@ export default function DashboardPage() {
               </div>
             </dl>
           </article>
+
+          <article className="rounded-3xl bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-zinc-900">Expenses</h2>
+            <ul className="mt-4 space-y-3 text-sm text-zinc-600">
+              <li>
+                <Link
+                  href="/expenses"
+                  className="font-medium text-zinc-900 underline-offset-4 hover:underline"
+                >
+                  View expenses
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/expenses/new"
+                  className="font-medium text-zinc-900 underline-offset-4 hover:underline"
+                >
+                  Add expense
+                </Link>
+              </li>
+            </ul>
+          </article>
         </section>
       </div>
     </main>

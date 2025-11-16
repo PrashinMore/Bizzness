@@ -10,6 +10,8 @@ import { Product } from './products/entities/product.entity';
 import { SalesModule } from './sales/sales.module';
 import { Sale } from './sales/entities/sale.entity';
 import { SaleItem } from './sales/entities/sale-item.entity';
+import { ExpensesModule } from './expenses/expenses.module';
+import { Expense } from './expenses/entities/expense.entity';
 
 @Module({
   imports: [
@@ -20,13 +22,14 @@ import { SaleItem } from './sales/entities/sale-item.entity';
       username: process.env.DB_USER ?? 'postgres',
       password: process.env.DB_PASSWORD ?? 'postgres',
       database: process.env.DB_NAME ?? 'biznes',
-      entities: [User, Product, Sale, SaleItem],
+      entities: [User, Product, Sale, SaleItem, Expense],
       synchronize: true,
     }),
     UsersModule,
     AuthModule,
     ProductsModule,
     SalesModule,
+    ExpensesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
