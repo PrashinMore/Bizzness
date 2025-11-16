@@ -1,5 +1,6 @@
 import { AuthResponse, User } from '@/types/user';
 import { Product } from '@/types/product';
+import { Sale } from '@/types/sale';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000';
@@ -130,5 +131,41 @@ export const productsApi = {
     request<Product>(`/products/${id}/stock`, { method: 'PATCH', body: { delta }, token }),
   remove: (token: string, id: string): Promise<void> =>
     request<void>(`/products/${id}`, { method: 'DELETE', token }),
+};
+
+type SalesFilters = {
+  from?: string;
+  to?: string;
+  productId?: string;
+  staff?: string;
+};
+
+export const salesApi = {
+  list: (token: string, filters: SalesFilters = {}): Promise<Sale[]> => {
+    const params = new URLSearchParams();
+    if (filters.from) params.set('from', filters.from);
+    if (filters.to) params.set('to', filters.to);
+    if (filters.productId) params.set('productId', filters.productId);
+    if (filters.staff) params.set('staff', filters.staff);
+    const qs = params.toString();
+    const path = qs ? `/sales?${qs}` : '/sales';
+    return request<Sale[]>(path, { token });
+  },
+  get: (token: string, id: string): Promise<Sale> =>
+    request<Sale>(`/sales/${id}`, { token }),
+  create: (token: string, payload: {
+    date: string;
+    items: { productId: string; quantity: number; sellingPrice: number }[];
+    totalAmount: number;
+    soldBy: string;
+  }): Promise<Sale> => request<Sale>('/sales', { method: 'POST', body: payload, token }),
+  dailyTotals: (token: string, from?: string, to?: string): Promise<{ day: string; total: string }[]> => {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    const qs = params.toString();
+    const path = qs ? `/sales/totals/daily?${qs}` : '/sales/totals/daily';
+    return request(path, { token });
+  }
 };
 

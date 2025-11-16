@@ -84,6 +84,14 @@ export default function DashboardPage() {
                       Inventory & stock
                     </Link>
                   </li>
+                  <li>
+                    <Link
+                      href="/sales"
+                      className="font-medium text-zinc-900 underline-offset-4 hover:underline"
+                    >
+                      Sales
+                    </Link>
+                  </li>
                 </>
               ) : null}
             </ul>
