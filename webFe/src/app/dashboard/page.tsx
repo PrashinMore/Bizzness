@@ -67,14 +67,24 @@ export default function DashboardPage() {
                 </Link>
               </li>
               {user.role === 'admin' ? (
-                <li>
-                  <Link
-                    href="/dashboard/users"
-                    className="font-medium text-zinc-900 underline-offset-4 hover:underline"
-                  >
-                    Manage team members
-                  </Link>
-                </li>
+                <>
+                  <li>
+                    <Link
+                      href="/dashboard/users"
+                      className="font-medium text-zinc-900 underline-offset-4 hover:underline"
+                    >
+                      Manage team members
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/dashboard/products"
+                      className="font-medium text-zinc-900 underline-offset-4 hover:underline"
+                    >
+                      Inventory & stock
+                    </Link>
+                  </li>
+                </>
               ) : null}
             </ul>
           </article>

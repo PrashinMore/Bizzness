@@ -1,4 +1,5 @@
 import { AuthResponse, User } from '@/types/user';
+import { Product } from '@/types/product';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000';
@@ -93,5 +94,41 @@ export const usersApi = {
     }),
   remove: (token: string, id: string): Promise<void> =>
     request<void>(`/users/${id}`, { method: 'DELETE', token }),
+};
+
+type ProductFilters = {
+  search?: string;
+  category?: string;
+  lowStockOnly?: boolean;
+};
+
+export const productsApi = {
+  list: (token: string, filters: ProductFilters = {}): Promise<Product[]> => {
+    const params = new URLSearchParams();
+    if (filters.search) {
+      params.set('search', filters.search);
+    }
+    if (filters.category) {
+      params.set('category', filters.category);
+    }
+    if (filters.lowStockOnly) {
+      params.set('lowStock', 'true');
+    }
+    const qs = params.toString();
+    const path = qs ? `/products?${qs}` : '/products';
+    return request<Product[]>(path, { token });
+  },
+  create: (token: string, payload: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'isLowStock'>): Promise<Product> =>
+    request<Product>('/products', { method: 'POST', body: payload, token }),
+  update: (
+    token: string,
+    id: string,
+    payload: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'isLowStock'>>,
+  ): Promise<Product> =>
+    request<Product>(`/products/${id}`, { method: 'PATCH', body: payload, token }),
+  adjustStock: (token: string, id: string, delta: number): Promise<Product> =>
+    request<Product>(`/products/${id}/stock`, { method: 'PATCH', body: { delta }, token }),
+  remove: (token: string, id: string): Promise<void> =>
+    request<void>(`/products/${id}`, { method: 'DELETE', token }),
 };
 
