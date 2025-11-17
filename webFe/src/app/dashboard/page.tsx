@@ -52,7 +52,7 @@ export default function DashboardPage() {
             <ul className="mt-4 space-y-3 text-sm text-zinc-600">
               <li>
                 <Link
-                  href="/dashboard/settings"
+                  href="/settings"
                   className="font-medium text-zinc-900 underline-offset-4 hover:underline"
                 >
                   Update your password
@@ -60,7 +60,7 @@ export default function DashboardPage() {
               </li>
               <li>
                 <Link
-                  href="/dashboard/settings"
+                  href="/settings"
                   className="font-medium text-zinc-900 underline-offset-4 hover:underline"
                 >
                   Refresh profile information
@@ -70,7 +70,7 @@ export default function DashboardPage() {
                 <>
                   <li>
                     <Link
-                      href="/dashboard/users"
+                      href="/users"
                       className="font-medium text-zinc-900 underline-offset-4 hover:underline"
                     >
                       Manage team members
@@ -78,7 +78,7 @@ export default function DashboardPage() {
                   </li>
                   <li>
                     <Link
-                      href="/dashboard/products"
+                      href="/products"
                       className="font-medium text-zinc-900 underline-offset-4 hover:underline"
                     >
                       Inventory & stock
@@ -97,33 +97,7 @@ export default function DashboardPage() {
             </ul>
           </article>
 
-          <article className="rounded-3xl bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-zinc-900">
-              Account details
-            </h2>
-            <dl className="mt-4 space-y-3 text-sm text-zinc-600">
-              <div className="flex justify-between">
-                <dt className="font-medium text-zinc-500">Email</dt>
-                <dd className="text-zinc-900">{user.email}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="font-medium text-zinc-500">Role</dt>
-                <dd className="capitalize text-zinc-900">{user.role}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="font-medium text-zinc-500">Created</dt>
-                <dd className="text-zinc-900">
-                  {new Date(user.createdAt).toLocaleString()}
-                </dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="font-medium text-zinc-500">Last updated</dt>
-                <dd className="text-zinc-900">
-                  {new Date(user.updatedAt).toLocaleString()}
-                </dd>
-              </div>
-            </dl>
-          </article>
+          
 
           <article className="rounded-3xl bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-zinc-900">Expenses</h2>
