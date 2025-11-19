@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/contexts/auth-context';
-import { SideNav } from '@/components/side-nav';
+import { ConditionalSideNav } from '@/components/conditional-side-nav';
+import { ConditionalContentWrapper } from '@/components/conditional-content-wrapper';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -29,8 +30,8 @@ export default function RootLayout({
     <html lang="en">
       <body suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
-          <SideNav />
-          <div className="min-h-screen bg-zinc-50 md:pl-56">{children}</div>
+          <ConditionalSideNav />
+          <ConditionalContentWrapper>{children}</ConditionalContentWrapper>
         </AuthProvider>
       </body>
     </html>
