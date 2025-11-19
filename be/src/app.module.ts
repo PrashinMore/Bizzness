@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -15,15 +16,23 @@ import { Expense } from './expenses/entities/expense.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST ?? 'localhost',
-      port: parseInt(process.env.DB_PORT ?? '5432', 10),
-      username: process.env.DB_USER ?? 'postgres',
-      password: process.env.DB_PASSWORD ?? 'postgres',
-      database: process.env.DB_NAME ?? 'biznes',
-      entities: [User, Product, Sale, SaleItem, Expense],
-      synchronize: true,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get<string>('DB_HOST') ?? configService.get<string>('DBHOST') ?? 'localhost',
+        port: parseInt(configService.get<string>('DB_PORT') ?? '5432', 10),
+        username: configService.get<string>('DB_USER') ?? 'postgres',
+        password: configService.get<string>('DB_PASSWORD') ?? 'postgres',
+        database: configService.get<string>('DB_NAME') ?? 'biznes',
+        entities: [User, Product, Sale, SaleItem, Expense],
+        synchronize: true,
+      }),
+      inject: [ConfigService],
     }),
     UsersModule,
     AuthModule,
