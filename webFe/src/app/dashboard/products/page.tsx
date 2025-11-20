@@ -133,6 +133,7 @@ export default function ProductsPage() {
         stock: Number(createState.stock),
         unit: createState.unit.trim(),
         lowStockThreshold: Number(createState.lowStockThreshold || '0'),
+        imageUrl: null,
       };
       const created = await productsApi.create(token, payload, createImageFile || undefined);
       setProducts((prev) => [created, ...prev]);
