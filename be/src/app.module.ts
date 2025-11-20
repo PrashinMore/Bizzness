@@ -16,6 +16,7 @@ import { Expense } from './expenses/entities/expense.entity';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { SettingsModule } from './settings/settings.module';
 import { Settings } from './settings/entities/settings.entity';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { Settings } from './settings/entities/settings.entity';
     ExpensesModule,
     DashboardModule,
     SettingsModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

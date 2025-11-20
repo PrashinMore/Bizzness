@@ -366,3 +366,96 @@ export const settingsApi = {
     }),
 };
 
+export const reportsApi = {
+  getSalesReport: (
+    token: string,
+    from?: string,
+    to?: string,
+  ): Promise<{
+    period: { from: string; to: string };
+    summary: {
+      totalSales: number;
+      totalOrders: number;
+      averageOrderValue: number;
+    };
+    productBreakdown: Array<{ name: string; quantity: number; revenue: number }>;
+    staffBreakdown: Array<{ name: string; sales: number; orders: number }>;
+  }> => {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    const qs = params.toString();
+    return request(`/reports/sales${qs ? `?${qs}` : ''}`, { token });
+  },
+  exportSalesReportCSV: (token: string, from?: string, to?: string): Promise<Blob> => {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    params.set('export', 'csv');
+    return fetch(`${API_BASE_URL}/reports/sales?${params.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: 'include',
+    }).then((res) => res.blob());
+  },
+  getProfitLossReport: (
+    token: string,
+    from?: string,
+    to?: string,
+  ): Promise<{
+    period: { from: string; to: string };
+    revenue: number;
+    costOfGoodsSold: number;
+    grossProfit: number;
+    operatingExpenses: number;
+    netProfit: number;
+    grossMargin: number;
+    netMargin: number;
+  }> => {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    const qs = params.toString();
+    return request(`/reports/profit-loss${qs ? `?${qs}` : ''}`, { token });
+  },
+  getInventoryReport: (token: string): Promise<{
+    summary: {
+      totalProducts: number;
+      totalStockValue: number;
+      lowStockItems: number;
+    };
+    products: Array<{
+      id: string;
+      name: string;
+      category: string;
+      stock: number;
+      unit: string;
+      costPrice: number;
+      stockValue: number;
+      salesLast30Days: number;
+      movement: 'fast' | 'medium' | 'slow';
+    }>;
+  }> => request('/reports/inventory', { token }),
+  getExpenseReport: (
+    token: string,
+    from?: string,
+    to?: string,
+  ): Promise<{
+    period: { from: string; to: string };
+    summary: {
+      totalExpenses: number;
+      totalTransactions: number;
+      averageExpense: number;
+    };
+    categoryBreakdown: Array<{ category: string; amount: number; percentage: number }>;
+    monthlyBreakdown: Array<{ month: string; amount: number }>;
+  }> => {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    const qs = params.toString();
+    return request(`/reports/expenses${qs ? `?${qs}` : ''}`, { token });
+  },
+};
+

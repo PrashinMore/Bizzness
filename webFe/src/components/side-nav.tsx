@@ -106,12 +106,15 @@ export function SideNav() {
             <Link href="/products" className={linkClasses('/products')} prefetch={false}>
               Inventory & Stock
             </Link>
-            <Link href="/settings" className={linkClasses('/settings')} prefetch={false}>
-              Settings
-            </Link>
-            <Link href="/profile" className={linkClasses('/profile')} prefetch={false}>
-              Manage
-            </Link>
+          <Link href="/settings" className={linkClasses('/settings')} prefetch={false}>
+            Settings
+          </Link>
+          <Link href="/reports" className={linkClasses('/reports')} prefetch={false}>
+            Reports
+          </Link>
+          <Link href="/profile" className={linkClasses('/profile')} prefetch={false}>
+            Manage
+          </Link>
           </div>
           <div className="border-t border-zinc-200 p-2">
             <button
