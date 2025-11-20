@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
 import { useEffect, useMemo, useState } from 'react';
-import { productsApi, salesApi } from '@/lib/api-client';
+import { productsApi, salesApi, usersApi } from '@/lib/api-client';
 import type { Sale } from '@/types/sale';
 import type { Product } from '@/types/product';
+import type { User } from '@/types/user';
 
 export default function SalesListPage() {
   const { token } = useAuth();
@@ -18,13 +19,22 @@ export default function SalesListPage() {
   const [productId, setProductId] = useState<string>('');
   const [staff, setStaff] = useState<string>('');
   const [products, setProducts] = useState<Product[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+
+  const userMap = useMemo(() => {
+    return new Map(users.map((u) => [u.id, u]));
+  }, [users]);
 
   useEffect(() => {
     async function bootstrap() {
       if (!token) return;
       try {
-        const [prods] = await Promise.all([productsApi.list(token)]);
+        const [prods, usersData] = await Promise.all([
+          productsApi.list(token),
+          usersApi.list(token),
+        ]);
         setProducts(prods);
+        setUsers(usersData);
       } catch (err) {
         console.error(err);
       }
@@ -172,7 +182,7 @@ export default function SalesListPage() {
                   {s.items.reduce((sum, it) => sum + it.quantity, 0)} items
                 </td>
                 <td className="px-4 py-2 text-sm">₹ {Number(s.totalAmount).toFixed(2)}</td>
-                <td className="px-4 py-2 text-sm">{s.soldBy}</td>
+                <td className="px-4 py-2 text-sm">{userMap.get(s.soldBy)?.name || s.soldBy}</td>
                 <td className="px-4 py-2 text-sm">
                   {s.id ? (
                     <Link

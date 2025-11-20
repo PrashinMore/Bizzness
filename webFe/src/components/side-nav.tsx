@@ -49,25 +49,25 @@ export function SideNav() {
           <span className="text-sm font-semibold text-zinc-900">Bizzness</span>
         </div>
         <nav className="space-y-1 px-2">
-          <Link href="/dashboard" className={linkClasses('/dashboard')}>
+          <Link href="/dashboard" className={linkClasses('/dashboard')} prefetch={false}>
             Dashboard
           </Link>
-          <Link href="/menu" className={linkClasses('/menu')}>
+          <Link href="/menu" className={linkClasses('/menu')} prefetch={false}>
             Menu & Checkout
           </Link>
-          <Link href="/expenses" className={linkClasses('/expenses')}>
+          <Link href="/expenses" className={linkClasses('/expenses')} prefetch={false}>
             Expenses
           </Link>
-          <Link href="/sales" className={linkClasses('/sales')}>
+          <Link href="/sales" className={linkClasses('/sales')} prefetch={false}>
             Sales
           </Link>
-          <Link href="/users" className={linkClasses('/users')}>
+          <Link href="/users" className={linkClasses('/users')} prefetch={false}>
             Users
           </Link>
-          <Link href="/products" className={linkClasses('/products')}>
+          <Link href="/products" className={linkClasses('/products')} prefetch={false}>
             Inventory & Stock
           </Link>
-          <Link href="/profile" className={linkClasses('/profile')}>
+          <Link href="/profile" className={linkClasses('/profile')} prefetch={false}>
             Manage
           </Link>
         </nav>

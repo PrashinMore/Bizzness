@@ -1,9 +1,10 @@
 'use client';
 
 import { useAuth } from '@/contexts/auth-context';
-import { salesApi, productsApi } from '@/lib/api-client';
+import { salesApi, productsApi, usersApi } from '@/lib/api-client';
 import type { Sale } from '@/types/sale';
 import type { Product } from '@/types/product';
+import type { User } from '@/types/user';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
@@ -15,6 +16,7 @@ export default function SaleDetailPage() {
   const validId = typeof id === 'string' && id !== 'undefined' ? id : null;
   const [sale, setSale] = useState<Sale | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,18 +24,24 @@ export default function SaleDetailPage() {
     return new Map(products.map((p) => [p.id, p]));
   }, [products]);
 
+  const userMap = useMemo(() => {
+    return new Map(users.map((u) => [u.id, u]));
+  }, [users]);
+
   useEffect(() => {
     async function load() {
       if (!token || !validId) return;
       setLoading(true);
       setError(null);
       try {
-        const [saleData, productsData] = await Promise.all([
+        const [saleData, productsData, usersData] = await Promise.all([
           salesApi.get(token, validId),
           productsApi.list(token),
+          usersApi.list(token),
         ]);
         setSale(saleData);
         setProducts(productsData);
+        setUsers(usersData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load sale');
       } finally {
@@ -71,7 +79,7 @@ export default function SaleDetailPage() {
             </div>
             <div>
               <div className="text-sm text-zinc-500">Sold By</div>
-              <div>{sale.soldBy}</div>
+              <div>{userMap.get(sale.soldBy)?.name || sale.soldBy}</div>
             </div>
             <div>
               <div className="text-sm text-zinc-500">Total Amount</div>
