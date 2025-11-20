@@ -14,6 +14,8 @@ import { SaleItem } from './sales/entities/sale-item.entity';
 import { ExpensesModule } from './expenses/expenses.module';
 import { Expense } from './expenses/entities/expense.entity';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { SettingsModule } from './settings/settings.module';
+import { Settings } from './settings/entities/settings.entity';
 
 @Module({
   imports: [
@@ -37,7 +39,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
           username: configService.get<string>('DB_USER') ?? 'postgres',
           password: configService.get<string>('DB_PASSWORD') ?? 'postgres',
           database: configService.get<string>('DB_NAME') ?? 'biznes',
-          entities: [User, Product, Sale, SaleItem, Expense],
+          entities: [User, Product, Sale, SaleItem, Expense, Settings],
           synchronize: true,
         };
 
@@ -78,6 +80,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     SalesModule,
     ExpensesModule,
     DashboardModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -280,3 +280,89 @@ export const dashboardApi = {
   }[]> => request('/dashboard/expenses-summary', { token }),
 };
 
+export interface Settings {
+  id: string;
+  businessName: string | null;
+  businessLogo: string | null;
+  businessAddress: string | null;
+  gstNumber: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  taxRate: number;
+  invoicePrefix: string;
+  invoiceFooter: string | null;
+  currency: string;
+  defaultDiscountType: string;
+  defaultLowStockThreshold: number;
+  defaultUnit: string;
+  stockWarningAlerts: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const settingsApi = {
+  get: (token: string): Promise<Settings> => request('/settings', { token }),
+  updateBusiness: (
+    token: string,
+    payload: {
+      businessName?: string | null;
+      businessLogo?: string | null;
+      businessAddress?: string | null;
+      gstNumber?: string | null;
+      contactPhone?: string | null;
+      contactEmail?: string | null;
+    },
+    logoFile?: File,
+  ): Promise<Settings> => {
+    if (logoFile) {
+      const formData = new FormData();
+      formData.append('logo', logoFile);
+      Object.keys(payload).forEach((key) => {
+        const value = payload[key as keyof typeof payload];
+        if (value !== undefined && value !== null) {
+          formData.append(key, value.toString());
+        }
+      });
+      return request<Settings>('/settings/business', {
+        method: 'PATCH',
+        body: formData,
+        token,
+        isFormData: true,
+      });
+    }
+    return request<Settings>('/settings/business', {
+      method: 'PATCH',
+      body: payload,
+      token,
+    });
+  },
+  updateBilling: (
+    token: string,
+    payload: {
+      taxRate?: number;
+      invoicePrefix?: string;
+      invoiceFooter?: string | null;
+      currency?: string;
+      defaultDiscountType?: 'percentage' | 'fixed';
+    },
+  ): Promise<Settings> =>
+    request<Settings>('/settings/billing', {
+      method: 'PATCH',
+      body: payload,
+      token,
+    }),
+  updateInventory: (
+    token: string,
+    payload: {
+      defaultLowStockThreshold?: number;
+      defaultUnit?: string;
+      stockWarningAlerts?: boolean;
+    },
+  ): Promise<Settings> =>
+    request<Settings>('/settings/inventory', {
+      method: 'PATCH',
+      body: payload,
+      token,
+    }),
+};
+

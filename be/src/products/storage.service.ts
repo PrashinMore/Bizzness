@@ -6,19 +6,24 @@ import { extname } from 'path';
 
 @Injectable()
 export class StorageService {
-  private readonly uploadPath = join(process.cwd(), 'uploads', 'products');
+  private readonly productsUploadPath = join(process.cwd(), 'uploads', 'products');
+  private readonly businessUploadPath = join(process.cwd(), 'uploads', 'business');
 
   constructor() {
-    // Ensure upload directory exists
-    if (!existsSync(this.uploadPath)) {
-      mkdirSync(this.uploadPath, { recursive: true });
+    // Ensure upload directories exist
+    if (!existsSync(this.productsUploadPath)) {
+      mkdirSync(this.productsUploadPath, { recursive: true });
+    }
+    if (!existsSync(this.businessUploadPath)) {
+      mkdirSync(this.businessUploadPath, { recursive: true });
     }
   }
 
-  getStorageConfig() {
+  getStorageConfig(directory: 'products' | 'business' = 'products') {
+    const uploadPath = directory === 'products' ? this.productsUploadPath : this.businessUploadPath;
     return diskStorage({
       destination: (req, file, cb) => {
-        cb(null, this.uploadPath);
+        cb(null, uploadPath);
       },
       filename: (req, file, cb) => {
         // Generate unique filename: timestamp-random-originalname
@@ -30,12 +35,12 @@ export class StorageService {
     });
   }
 
-  getImageUrl(filename: string): string {
-    return `/uploads/products/${filename}`;
+  getImageUrl(filename: string, directory: 'products' | 'business' = 'products'): string {
+    return `/uploads/${directory}/${filename}`;
   }
 
-  getUploadPath(): string {
-    return this.uploadPath;
+  getUploadPath(directory: 'products' | 'business' = 'products'): string {
+    return directory === 'products' ? this.productsUploadPath : this.businessUploadPath;
   }
 }
 

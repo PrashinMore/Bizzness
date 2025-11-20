@@ -1,5 +1,498 @@
 'use client';
 
-export { default } from '@/app/dashboard/settings/page';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/auth-context';
+import { useRequireAuth } from '@/hooks/use-require-auth';
+import { settingsApi, type Settings } from '@/lib/api-client';
 
+type Tab = 'business' | 'billing' | 'inventory';
 
+export default function SettingsPage() {
+  const { user, loading } = useRequireAuth();
+  const { token } = useAuth();
+  const [activeTab, setActiveTab] = useState<Tab>('business');
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [loadingSettings, setLoadingSettings] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // Business form state
+  const [businessName, setBusinessName] = useState('');
+  const [businessAddress, setBusinessAddress] = useState('');
+  const [gstNumber, setGstNumber] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
+  // Billing form state
+  const [taxRate, setTaxRate] = useState(0);
+  const [invoicePrefix, setInvoicePrefix] = useState('INV-');
+  const [invoiceFooter, setInvoiceFooter] = useState('');
+  const [currency, setCurrency] = useState('₹');
+  const [defaultDiscountType, setDefaultDiscountType] = useState<'percentage' | 'fixed'>('percentage');
+
+  // Inventory form state
+  const [defaultLowStockThreshold, setDefaultLowStockThreshold] = useState(10);
+  const [defaultUnit, setDefaultUnit] = useState('unit');
+  const [stockWarningAlerts, setStockWarningAlerts] = useState(true);
+
+  useEffect(() => {
+    async function loadSettings() {
+      if (!token || loading || !user) return;
+      setLoadingSettings(true);
+      setError(null);
+      try {
+        const data = await settingsApi.get(token);
+        setSettings(data);
+        // Populate form fields
+        setBusinessName(data.businessName || '');
+        setBusinessAddress(data.businessAddress || '');
+        setGstNumber(data.gstNumber || '');
+        setContactPhone(data.contactPhone || '');
+        setContactEmail(data.contactEmail || '');
+        setLogoPreview(data.businessLogo ? `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'}${data.businessLogo}` : null);
+        setTaxRate(data.taxRate);
+        setInvoicePrefix(data.invoicePrefix);
+        setInvoiceFooter(data.invoiceFooter || '');
+        setCurrency(data.currency);
+        setDefaultDiscountType(data.defaultDiscountType as 'percentage' | 'fixed');
+        setDefaultLowStockThreshold(data.defaultLowStockThreshold);
+        setDefaultUnit(data.defaultUnit);
+        setStockWarningAlerts(data.stockWarningAlerts);
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('Unable to load settings.');
+        }
+      } finally {
+        setLoadingSettings(false);
+      }
+    }
+    loadSettings();
+  }, [token, loading, user]);
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleBusinessSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const updated = await settingsApi.updateBusiness(
+        token,
+        {
+          businessName: businessName || null,
+          businessAddress: businessAddress || null,
+          gstNumber: gstNumber || null,
+          contactPhone: contactPhone || null,
+          contactEmail: contactEmail || null,
+        },
+        logoFile || undefined,
+      );
+      setSettings(updated);
+      setLogoFile(null);
+      setSuccess('Business settings updated successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Unable to update business settings.');
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleBillingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const updated = await settingsApi.updateBilling(token, {
+        taxRate,
+        invoicePrefix,
+        invoiceFooter: invoiceFooter || null,
+        currency,
+        defaultDiscountType,
+      });
+      setSettings(updated);
+      setSuccess('Billing settings updated successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Unable to update billing settings.');
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleInventorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const updated = await settingsApi.updateInventory(token, {
+        defaultLowStockThreshold,
+        defaultUnit,
+        stockWarningAlerts,
+      });
+      setSettings(updated);
+      setSuccess('Inventory settings updated successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Unable to update inventory settings.');
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading || !user || !token) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-zinc-50">
+        <p className="text-sm text-zinc-500">Loading…</p>
+      </main>
+    );
+  }
+
+  if (user.role !== 'admin') {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-zinc-50">
+        <p className="text-sm text-red-600">Access denied. Admin only.</p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-zinc-50 px-6 py-12">
+      <div className="mx-auto w-full max-w-4xl">
+        <header className="mb-8">
+          <h1 className="text-3xl font-semibold text-zinc-900">Settings</h1>
+          <p className="mt-2 text-sm text-zinc-500">
+            Manage your business configuration
+          </p>
+        </header>
+
+        {error && (
+          <div className="mb-4 rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-4 rounded-md border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-600">
+            {success}
+          </div>
+        )}
+
+        {/* Tabs */}
+        <div className="mb-6 flex gap-2 border-b border-zinc-200">
+          <button
+            onClick={() => setActiveTab('business')}
+            className={`px-4 py-2 text-sm font-medium transition ${
+              activeTab === 'business'
+                ? 'border-b-2 border-zinc-900 text-zinc-900'
+                : 'text-zinc-500 hover:text-zinc-700'
+            }`}
+          >
+            Business
+          </button>
+          <button
+            onClick={() => setActiveTab('billing')}
+            className={`px-4 py-2 text-sm font-medium transition ${
+              activeTab === 'billing'
+                ? 'border-b-2 border-zinc-900 text-zinc-900'
+                : 'text-zinc-500 hover:text-zinc-700'
+            }`}
+          >
+            Billing
+          </button>
+          <button
+            onClick={() => setActiveTab('inventory')}
+            className={`px-4 py-2 text-sm font-medium transition ${
+              activeTab === 'inventory'
+                ? 'border-b-2 border-zinc-900 text-zinc-900'
+                : 'text-zinc-500 hover:text-zinc-700'
+            }`}
+          >
+            Inventory
+          </button>
+        </div>
+
+        {loadingSettings ? (
+          <div className="flex items-center justify-center py-12">
+            <p className="text-sm text-zinc-500">Loading settings…</p>
+          </div>
+        ) : (
+          <div className="rounded-3xl bg-white p-6 shadow-sm">
+            {/* Business Settings */}
+            {activeTab === 'business' && (
+              <form onSubmit={handleBusinessSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-900">
+                    Business Name
+                  </label>
+                  <input
+                    type="text"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    placeholder="Your Business Name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-zinc-900">
+                    Business Logo
+                  </label>
+                  {logoPreview && (
+                    <img
+                      src={logoPreview}
+                      alt="Business logo"
+                      className="mb-2 h-24 w-24 rounded-lg object-cover"
+                    />
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                    className="mt-1 block w-full text-sm text-zinc-500 file:mr-4 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-zinc-700 hover:file:bg-zinc-200"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-zinc-900">
+                    Business Address
+                  </label>
+                  <textarea
+                    value={businessAddress}
+                    onChange={(e) => setBusinessAddress(e.target.value)}
+                    rows={3}
+                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    placeholder="Street, City, State, ZIP"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-zinc-900">
+                    GST Number
+                  </label>
+                  <input
+                    type="text"
+                    value={gstNumber}
+                    onChange={(e) => setGstNumber(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    placeholder="GSTIN (optional)"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900">
+                      Contact Phone
+                    </label>
+                    <input
+                      type="tel"
+                      value={contactPhone}
+                      onChange={(e) => setContactPhone(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      placeholder="+91 1234567890"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900">
+                      Contact Email
+                    </label>
+                    <input
+                      type="email"
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      placeholder="contact@business.com"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50"
+                >
+                  {saving ? 'Saving…' : 'Save Business Settings'}
+                </button>
+              </form>
+            )}
+
+            {/* Billing Settings */}
+            {activeTab === 'billing' && (
+              <form onSubmit={handleBillingSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900">
+                      Tax Rate (%)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value={taxRate}
+                      onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
+                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900">
+                      Currency
+                    </label>
+                    <input
+                      type="text"
+                      value={currency}
+                      onChange={(e) => setCurrency(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      placeholder="₹"
+                      maxLength={10}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-zinc-900">
+                    Invoice Prefix
+                  </label>
+                  <input
+                    type="text"
+                    value={invoicePrefix}
+                    onChange={(e) => setInvoicePrefix(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    placeholder="INV-"
+                    maxLength={20}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-zinc-900">
+                    Invoice Footer Text
+                  </label>
+                  <textarea
+                    value={invoiceFooter}
+                    onChange={(e) => setInvoiceFooter(e.target.value)}
+                    rows={3}
+                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    placeholder="Thank you for your business!"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-zinc-900">
+                    Default Discount Type
+                  </label>
+                  <select
+                    value={defaultDiscountType}
+                    onChange={(e) => setDefaultDiscountType(e.target.value as 'percentage' | 'fixed')}
+                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                  >
+                    <option value="percentage">Percentage (%)</option>
+                    <option value="fixed">Fixed Amount</option>
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50"
+                >
+                  {saving ? 'Saving…' : 'Save Billing Settings'}
+                </button>
+              </form>
+            )}
+
+            {/* Inventory Settings */}
+            {activeTab === 'inventory' && (
+              <form onSubmit={handleInventorySubmit} className="space-y-6">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900">
+                      Default Low Stock Threshold
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={defaultLowStockThreshold}
+                      onChange={(e) => setDefaultLowStockThreshold(parseInt(e.target.value, 10) || 0)}
+                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900">
+                      Default Unit
+                    </label>
+                    <input
+                      type="text"
+                      value={defaultUnit}
+                      onChange={(e) => setDefaultUnit(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      placeholder="unit"
+                      maxLength={32}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={stockWarningAlerts}
+                      onChange={(e) => setStockWarningAlerts(e.target.checked)}
+                      className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                    />
+                    <span className="text-sm font-medium text-zinc-900">
+                      Enable Stock Warning Alerts
+                    </span>
+                  </label>
+                  <p className="mt-1 text-xs text-zinc-500">
+                    Show alerts when products fall below the low stock threshold
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50"
+                >
+                  {saving ? 'Saving…' : 'Save Inventory Settings'}
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
