@@ -51,9 +51,13 @@ export default function ProductsPage() {
   const [appliedFilters, setAppliedFilters] = useState<FilterState>(initialFilters);
 
   const [createState, setCreateState] = useState<CreateProductState>(blankProduct);
+  const [createImageFile, setCreateImageFile] = useState<File | null>(null);
+  const [createImagePreview, setCreateImagePreview] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
   const [editForms, setEditForms] = useState<Record<string, CreateProductState>>({});
+  const [editImageFiles, setEditImageFiles] = useState<Record<string, File | null>>({});
+  const [editImagePreviews, setEditImagePreviews] = useState<Record<string, string | null>>({});
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -130,10 +134,12 @@ export default function ProductsPage() {
         unit: createState.unit.trim(),
         lowStockThreshold: Number(createState.lowStockThreshold || '0'),
       };
-      const created = await productsApi.create(token, payload);
+      const created = await productsApi.create(token, payload, createImageFile || undefined);
       setProducts((prev) => [created, ...prev]);
       setCreateState(blankProduct);
-      setStatusMessage(`Product “${created.name}” added.`);
+      setCreateImageFile(null);
+      setCreateImagePreview(null);
+      setStatusMessage(`Product "${created.name}" added.`);
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -180,7 +186,7 @@ export default function ProductsPage() {
         unit: form.unit.trim(),
         lowStockThreshold: Number(form.lowStockThreshold),
       };
-      const updated = await productsApi.update(token, id, payload);
+      const updated = await productsApi.update(token, id, payload, editImageFiles[id] || undefined);
       setProducts((prev) =>
         prev.map((product) => (product.id === id ? updated : product)),
       );
@@ -196,8 +202,18 @@ export default function ProductsPage() {
           lowStockThreshold: updated.lowStockThreshold.toString(),
         },
       }));
+      setEditImageFiles((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      setEditImagePreviews((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
       setEditingProductId(null);
-      setStatusMessage(`Product “${updated.name}” updated.`);
+      setStatusMessage(`Product "${updated.name}" updated.`);
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -426,6 +442,39 @@ export default function ProductsPage() {
                 }
                 className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
               />
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-2">
+                  Product Image (optional)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) {
+                      setCreateImageFile(file);
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setCreateImagePreview(reader.result as string);
+                      };
+                      reader.readAsDataURL(file);
+                    } else {
+                      setCreateImageFile(null);
+                      setCreateImagePreview(null);
+                    }
+                  }}
+                  className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                />
+                {createImagePreview && (
+                  <div className="mt-2">
+                    <img
+                      src={createImagePreview}
+                      alt="Preview"
+                      className="h-32 w-32 object-cover rounded-lg border border-zinc-200"
+                    />
+                  </div>
+                )}
+              </div>
               <button
                 type="submit"
                 disabled={creating}
@@ -551,21 +600,33 @@ export default function ProductsPage() {
                     }`}
                   >
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-base font-semibold text-zinc-900">
-                            {product.name}
-                          </h3>
-                          {lowStock ? (
-                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
-                              Low stock
-                            </span>
-                          ) : null}
+                      <div className="flex gap-4">
+                        {product.imageUrl && (
+                          <img
+                            src={`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'}${product.imageUrl}`}
+                            alt={product.name}
+                            className="h-20 w-20 object-cover rounded-lg border border-zinc-200 flex-shrink-0"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        )}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-base font-semibold text-zinc-900">
+                              {product.name}
+                            </h3>
+                            {lowStock ? (
+                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                                Low stock
+                              </span>
+                            ) : null}
+                          </div>
+                          <p className="text-sm text-zinc-500">{product.category}</p>
+                          <p className="text-xs text-zinc-400">
+                            Added {new Date(product.createdAt).toLocaleDateString()}
+                          </p>
                         </div>
-                        <p className="text-sm text-zinc-500">{product.category}</p>
-                        <p className="text-xs text-zinc-400">
-                          Added {new Date(product.createdAt).toLocaleDateString()}
-                        </p>
                       </div>
                       <div className="flex flex-wrap gap-4 text-sm text-zinc-600">
                         <div>
@@ -717,6 +778,53 @@ export default function ProductsPage() {
                           }
                           className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
                         />
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-zinc-700 mb-2">
+                            Product Image (optional)
+                          </label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(event) => {
+                              const file = event.target.files?.[0];
+                              if (file) {
+                                setEditImageFiles((prev) => ({ ...prev, [product.id]: file }));
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  setEditImagePreviews((prev) => ({
+                                    ...prev,
+                                    [product.id]: reader.result as string,
+                                  }));
+                                };
+                                reader.readAsDataURL(file);
+                              } else {
+                                setEditImageFiles((prev) => {
+                                  const next = { ...prev };
+                                  delete next[product.id];
+                                  return next;
+                                });
+                                setEditImagePreviews((prev) => {
+                                  const next = { ...prev };
+                                  delete next[product.id];
+                                  return next;
+                                });
+                              }
+                            }}
+                            className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                          />
+                          {(editImagePreviews[product.id] || product.imageUrl) && (
+                            <div className="mt-2">
+                              <img
+                                src={
+                                  editImagePreviews[product.id] ||
+                                  `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'}${product.imageUrl}`
+                                }
+                                alt="Preview"
+                                className="h-32 w-32 object-cover rounded-lg border border-zinc-200"
+                              />
+                            </div>
+                          )}
+                        </div>
                         <div className="md:col-span-2 flex gap-3">
                           <button
                             onClick={() => handleUpdate(product.id)}
@@ -741,6 +849,16 @@ export default function ProductsPage() {
                                   lowStockThreshold: product.lowStockThreshold.toString(),
                                 },
                               }));
+                              setEditImageFiles((prev) => {
+                                const next = { ...prev };
+                                delete next[product.id];
+                                return next;
+                              });
+                              setEditImagePreviews((prev) => {
+                                const next = { ...prev };
+                                delete next[product.id];
+                                return next;
+                              });
                             }}
                             className="flex-1 rounded-full border border-zinc-200 px-6 py-2 text-sm font-semibold uppercase tracking-wide text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900"
                           >

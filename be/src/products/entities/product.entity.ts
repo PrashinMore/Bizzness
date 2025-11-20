@@ -32,6 +32,9 @@ export class Product {
   @Column({ type: 'int', default: 10 })
   lowStockThreshold: number;
 
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  imageUrl: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

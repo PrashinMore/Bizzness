@@ -52,6 +52,9 @@ export function SideNav() {
           <Link href="/dashboard" className={linkClasses('/dashboard')}>
             Dashboard
           </Link>
+          <Link href="/menu" className={linkClasses('/menu')}>
+            Menu & Checkout
+          </Link>
           <Link href="/expenses" className={linkClasses('/expenses')}>
             Expenses
           </Link>

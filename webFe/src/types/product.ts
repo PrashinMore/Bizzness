@@ -7,6 +7,7 @@ export interface Product {
   stock: number;
   unit: string;
   lowStockThreshold: number;
+  imageUrl: string | null;
   createdAt: string;
   updatedAt: string;
   isLowStock?: boolean;

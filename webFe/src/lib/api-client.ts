@@ -14,11 +14,13 @@ type RequestOptions = {
 
 async function request<T>(
   path: string,
-  { method = 'GET', body, token }: RequestOptions = {},
+  { method = 'GET', body, token, isFormData = false }: RequestOptions & { isFormData?: boolean } = {},
 ): Promise<T> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
+  const headers: Record<string, string> = {};
+
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
@@ -27,7 +29,7 @@ async function request<T>(
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined,
+    body: isFormData ? (body as FormData) : (body ? JSON.stringify(body) : undefined),
     credentials: 'include',
   });
 
@@ -120,14 +122,47 @@ export const productsApi = {
     const path = qs ? `/products?${qs}` : '/products';
     return request<Product[]>(path, { token });
   },
-  create: (token: string, payload: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'isLowStock'>): Promise<Product> =>
-    request<Product>('/products', { method: 'POST', body: payload, token }),
+  create: (
+    token: string,
+    payload: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'isLowStock'>,
+    imageFile?: File,
+  ): Promise<Product> => {
+    if (imageFile) {
+      const formData = new FormData();
+      formData.append('image', imageFile);
+      formData.append('name', payload.name);
+      formData.append('category', payload.category);
+      formData.append('costPrice', payload.costPrice.toString());
+      formData.append('sellingPrice', payload.sellingPrice.toString());
+      formData.append('stock', payload.stock.toString());
+      formData.append('unit', payload.unit);
+      formData.append('lowStockThreshold', payload.lowStockThreshold.toString());
+      if (payload.imageUrl) {
+        formData.append('imageUrl', payload.imageUrl);
+      }
+      return request<Product>('/products', { method: 'POST', body: formData, token, isFormData: true });
+    }
+    return request<Product>('/products', { method: 'POST', body: payload, token });
+  },
   update: (
     token: string,
     id: string,
     payload: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'isLowStock'>>,
-  ): Promise<Product> =>
-    request<Product>(`/products/${id}`, { method: 'PATCH', body: payload, token }),
+    imageFile?: File,
+  ): Promise<Product> => {
+    if (imageFile) {
+      const formData = new FormData();
+      formData.append('image', imageFile);
+      Object.keys(payload).forEach((key) => {
+        const value = payload[key as keyof typeof payload];
+        if (value !== undefined && value !== null) {
+          formData.append(key, value.toString());
+        }
+      });
+      return request<Product>(`/products/${id}`, { method: 'PATCH', body: formData, token, isFormData: true });
+    }
+    return request<Product>(`/products/${id}`, { method: 'PATCH', body: payload, token });
+  },
   adjustStock: (token: string, id: string, delta: number): Promise<Product> =>
     request<Product>(`/products/${id}/stock`, { method: 'PATCH', body: { delta }, token }),
   remove: (token: string, id: string): Promise<void> =>

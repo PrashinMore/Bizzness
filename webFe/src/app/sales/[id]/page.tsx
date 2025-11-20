@@ -1,11 +1,12 @@
 'use client';
 
 import { useAuth } from '@/contexts/auth-context';
-import { salesApi } from '@/lib/api-client';
+import { salesApi, productsApi } from '@/lib/api-client';
 import type { Sale } from '@/types/sale';
+import type { Product } from '@/types/product';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 export default function SaleDetailPage() {
   const { token } = useAuth();
@@ -13,8 +14,13 @@ export default function SaleDetailPage() {
   const id = params?.id;
   const validId = typeof id === 'string' && id !== 'undefined' ? id : null;
   const [sale, setSale] = useState<Sale | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const productMap = useMemo(() => {
+    return new Map(products.map((p) => [p.id, p]));
+  }, [products]);
 
   useEffect(() => {
     async function load() {
@@ -22,8 +28,12 @@ export default function SaleDetailPage() {
       setLoading(true);
       setError(null);
       try {
-        const data = await salesApi.get(token, validId);
-        setSale(data);
+        const [saleData, productsData] = await Promise.all([
+          salesApi.get(token, validId),
+          productsApi.list(token),
+        ]);
+        setSale(saleData);
+        setProducts(productsData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load sale');
       } finally {
@@ -74,7 +84,7 @@ export default function SaleDetailPage() {
               <thead className="bg-zinc-50">
                 <tr>
                   <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
-                    Product ID
+                    Product
                   </th>
                   <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
                     Qty
@@ -88,14 +98,19 @@ export default function SaleDetailPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200 bg-white">
-                {sale.items.map((it) => (
-                  <tr key={it.id}>
-                    <td className="px-4 py-2 text-sm font-mono">{it.productId}</td>
-                    <td className="px-4 py-2 text-sm">{it.quantity}</td>
-                    <td className="px-4 py-2 text-sm">₹ {Number(it.sellingPrice).toFixed(2)}</td>
-                    <td className="px-4 py-2 text-sm">₹ {Number(it.subtotal).toFixed(2)}</td>
-                  </tr>
-                ))}
+                {sale.items.map((it) => {
+                  const product = productMap.get(it.productId);
+                  return (
+                    <tr key={it.id}>
+                      <td className="px-4 py-2 text-sm">
+                        {product ? product.name : it.productId}
+                      </td>
+                      <td className="px-4 py-2 text-sm">{it.quantity}</td>
+                      <td className="px-4 py-2 text-sm">₹ {Number(it.sellingPrice).toFixed(2)}</td>
+                      <td className="px-4 py-2 text-sm">₹ {Number(it.subtotal).toFixed(2)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
