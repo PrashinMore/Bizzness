@@ -320,7 +320,8 @@ export default function DashboardPage() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={(entry: ExpenseSummary & { percent?: number }) => {
+                      label={(props: any) => {
+                        const entry = props as ExpenseSummary & { percent?: number };
                         const percent = entry.percentage !== undefined 
                           ? entry.percentage.toFixed(1)
                           : entry.percent !== undefined
