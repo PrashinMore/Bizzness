@@ -237,3 +237,46 @@ export const expensesApi = {
     request<void>(`/expenses/${id}`, { method: 'DELETE', token }),
 };
 
+export const dashboardApi = {
+  getSummary: (token: string): Promise<{
+    totalSales: number;
+    totalExpenses: number;
+    costOfGoodsSold: number;
+    grossProfit: number;
+    netProfit: number;
+    totalOrders: number;
+  }> => request('/dashboard/summary', { token }),
+  getSalesTrend: (token: string, range: '7days' | '30days' = '7days'): Promise<{
+    date: string;
+    totalSales: number;
+  }[]> => {
+    const params = new URLSearchParams();
+    params.set('range', range);
+    return request(`/dashboard/sales-trend?${params.toString()}`, { token });
+  },
+  getTopProducts: (token: string, limit: number = 5): Promise<{
+    productId: string;
+    productName: string;
+    totalQuantity: number;
+    totalRevenue: number;
+  }[]> => {
+    const params = new URLSearchParams();
+    params.set('limit', limit.toString());
+    return request(`/dashboard/top-products?${params.toString()}`, { token });
+  },
+  getLowStock: (token: string): Promise<{
+    id: string;
+    name: string;
+    category: string;
+    stock: number;
+    lowStockThreshold: number;
+    unit: string;
+    imageUrl: string | null;
+  }[]> => request('/dashboard/low-stock', { token }),
+  getExpensesSummary: (token: string): Promise<{
+    category: string;
+    amount: number;
+    percentage: number;
+  }[]> => request('/dashboard/expenses-summary', { token }),
+};
+
