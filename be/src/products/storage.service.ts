@@ -6,16 +6,58 @@ import { extname } from 'path';
 
 @Injectable()
 export class StorageService {
-  private readonly productsUploadPath = join(process.cwd(), 'uploads', 'products');
-  private readonly businessUploadPath = join(process.cwd(), 'uploads', 'business');
+  private readonly productsUploadPath: string;
+  private readonly businessUploadPath: string;
 
   constructor() {
-    // Ensure upload directories exist
-    if (!existsSync(this.productsUploadPath)) {
-      mkdirSync(this.productsUploadPath, { recursive: true });
+    // Detect serverless environment (AWS Lambda, Vercel, etc.)
+    const isServerless = 
+      !!process.env.AWS_LAMBDA_FUNCTION_NAME ||
+      !!process.env.VERCEL ||
+      !!process.env.IS_SERVERLESS ||
+      process.cwd().startsWith('/var/task'); // AWS Lambda indicator
+
+    // Use /tmp for serverless environments (only writable location)
+    const baseUploadPath = isServerless ? '/tmp' : process.cwd();
+    
+    this.productsUploadPath = join(baseUploadPath, 'uploads', 'products');
+    this.businessUploadPath = join(baseUploadPath, 'uploads', 'business');
+
+    // Ensure upload directories exist with proper error handling
+    try {
+      if (!existsSync(this.productsUploadPath)) {
+        mkdirSync(this.productsUploadPath, { recursive: true });
+      }
+    } catch (error) {
+      console.error('Failed to create products upload directory:', error);
+      // Fallback to /tmp if initial path fails
+      if (!isServerless) {
+        const fallbackPath = join('/tmp', 'uploads', 'products');
+        try {
+          mkdirSync(fallbackPath, { recursive: true });
+          (this as any).productsUploadPath = fallbackPath;
+        } catch (fallbackError) {
+          console.error('Failed to create fallback upload directory:', fallbackError);
+        }
+      }
     }
-    if (!existsSync(this.businessUploadPath)) {
-      mkdirSync(this.businessUploadPath, { recursive: true });
+
+    try {
+      if (!existsSync(this.businessUploadPath)) {
+        mkdirSync(this.businessUploadPath, { recursive: true });
+      }
+    } catch (error) {
+      console.error('Failed to create business upload directory:', error);
+      // Fallback to /tmp if initial path fails
+      if (!isServerless) {
+        const fallbackPath = join('/tmp', 'uploads', 'business');
+        try {
+          mkdirSync(fallbackPath, { recursive: true });
+          (this as any).businessUploadPath = fallbackPath;
+        } catch (fallbackError) {
+          console.error('Failed to create fallback upload directory:', fallbackError);
+        }
+      }
     }
   }
 

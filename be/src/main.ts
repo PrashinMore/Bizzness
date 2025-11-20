@@ -7,10 +7,28 @@ import { join } from 'path';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Detect serverless environment
+  const isServerless = 
+    !!process.env.AWS_LAMBDA_FUNCTION_NAME ||
+    !!process.env.VERCEL ||
+    !!process.env.IS_SERVERLESS ||
+    process.cwd().startsWith('/var/task');
+
   // Serve static files from uploads directory
-  app.useStaticAssets(join(process.cwd(), 'uploads'), {
-    prefix: '/uploads',
-  });
+  // In serverless, use /tmp; otherwise use process.cwd()
+  const uploadsPath = isServerless 
+    ? join('/tmp', 'uploads')
+    : join(process.cwd(), 'uploads');
+  
+  try {
+    app.useStaticAssets(uploadsPath, {
+      prefix: '/uploads',
+    });
+  } catch (error) {
+    console.warn('Could not serve static files from uploads directory:', error);
+    // In serverless environments, static file serving may not work
+    // Consider using cloud storage (S3, etc.) instead
+  }
 
   // CORS configuration - allow requests from anywhere
   app.enableCors({
