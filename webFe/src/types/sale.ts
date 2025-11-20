@@ -12,6 +12,7 @@ export interface Sale {
   items: SaleItem[];
   totalAmount: number;
   soldBy: string;
+  paymentType: string;
   createdAt: string;
 }
 

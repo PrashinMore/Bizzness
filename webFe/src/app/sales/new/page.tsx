@@ -20,6 +20,7 @@ export default function NewSalePage() {
   const [date, setDate] = useState<string>(() => new Date().toISOString().slice(0, 16));
   const [products, setProducts] = useState<Product[]>([]);
   const [items, setItems] = useState<DraftItem[]>([{ productId: '', quantity: 1, sellingPrice: 0 }]);
+  const [paymentType, setPaymentType] = useState<string>('cash');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,6 +83,7 @@ export default function NewSalePage() {
           })),
         totalAmount: Number(totalAmount.toFixed(2)),
         soldBy: user.id,
+        paymentType: paymentType,
       };
       const created = await salesApi.create(token, payload);
       router.push(`/sales/${created.id}`);
@@ -108,14 +110,27 @@ export default function NewSalePage() {
       )}
 
       <section className="space-y-4 rounded border border-zinc-200 p-4">
-        <div className="flex flex-col gap-1">
-          <label className="text-sm text-zinc-600">Date & Time</label>
-          <input
-            type="datetime-local"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="rounded border border-zinc-300 px-3 py-2"
-          />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-zinc-600">Date & Time</label>
+            <input
+              type="datetime-local"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="rounded border border-zinc-300 px-3 py-2"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-zinc-600">Payment Type</label>
+            <select
+              value={paymentType}
+              onChange={(e) => setPaymentType(e.target.value)}
+              className="rounded border border-zinc-300 px-3 py-2"
+            >
+              <option value="cash">Cash</option>
+              <option value="UPI">UPI</option>
+            </select>
+          </div>
         </div>
 
         <div className="space-y-3">

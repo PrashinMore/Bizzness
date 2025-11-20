@@ -77,6 +77,10 @@ export default function SaleDetailPage() {
               <div className="text-sm text-zinc-500">Total Amount</div>
               <div>₹ {Number(sale.totalAmount).toFixed(2)}</div>
             </div>
+            <div>
+              <div className="text-sm text-zinc-500">Payment Type</div>
+              <div className="capitalize">{sale.paymentType || 'cash'}</div>
+            </div>
           </div>
 
           <div className="overflow-x-auto rounded border border-zinc-200">

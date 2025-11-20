@@ -27,6 +27,9 @@ export class Sale {
 	@Column({ length: 120 })
 	soldBy: string;
 
+	@Column({ type: 'varchar', length: 20, default: 'cash' })
+	paymentType: string;
+
 	@CreateDateColumn()
 	createdAt: Date;
 }

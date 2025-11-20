@@ -2,8 +2,10 @@ import {
 	ArrayMinSize,
 	IsArray,
 	IsDateString,
+	IsIn,
 	IsNotEmpty,
 	IsNumber,
+	IsOptional,
 	IsPositive,
 	IsString,
 	IsUUID,
@@ -41,6 +43,11 @@ export class CreateSaleDto {
 	@IsString()
 	@IsNotEmpty()
 	soldBy: string;
+
+	@IsString()
+	@IsIn(['cash', 'UPI'])
+	@IsOptional()
+	paymentType?: string;
 }
 
 

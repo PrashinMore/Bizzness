@@ -59,6 +59,7 @@ export class SalesService {
 				date: new Date(dto.date),
 				totalAmount: round2(dto.totalAmount),
 				soldBy: dto.soldBy,
+				paymentType: dto.paymentType || 'cash',
 			});
 			await manager.getRepository(Sale).save(sale);
 

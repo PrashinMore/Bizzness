@@ -23,6 +23,7 @@ export default function MenuPage() {
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [paymentType, setPaymentType] = useState<string>('cash');
   const [checkingOut, setCheckingOut] = useState(false);
 
   // Filter products by category "menu item" (case-insensitive)
@@ -122,6 +123,7 @@ export default function MenuPage() {
         })),
         totalAmount: Number(totalAmount.toFixed(2)),
         soldBy: user.id,
+        paymentType: paymentType,
       };
 
       const created = await salesApi.create(token, payload);
@@ -338,6 +340,19 @@ export default function MenuPage() {
                 </div>
 
                 <div className="mt-6 border-t border-zinc-200 pt-4">
+                  <div className="mb-4">
+                    <label className="mb-2 block text-sm font-medium text-zinc-700">
+                      Payment Type
+                    </label>
+                    <select
+                      value={paymentType}
+                      onChange={(e) => setPaymentType(e.target.value)}
+                      className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                    >
+                      <option value="cash">Cash</option>
+                      <option value="UPI">UPI</option>
+                    </select>
+                  </div>
                   <div className="flex items-center justify-between text-lg font-semibold text-zinc-900">
                     <span>Total</span>
                     <span>₹{totalAmount.toFixed(2)}</span>
