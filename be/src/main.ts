@@ -67,18 +67,28 @@ async function bootstrap() {
   return app;
 }
 
-// Export handler for serverless environments (Vercel format)
-export default async function handler(req: any, res: any) {
-  const app = await bootstrap();
-  const expressApp = app.getHttpAdapter().getInstance();
-  return expressApp(req, res);
-}
-
-// Export handler for AWS Lambda format (requires serverless-http or similar library)
-// For now, using a simple wrapper that works with Vercel and similar platforms
-export const serverlessHandler = handler;
-
 // Traditional bootstrap for non-serverless environments
 if (!process.env.AWS_LAMBDA_FUNCTION_NAME && !process.env.VERCEL && !process.env.IS_SERVERLESS && !process.cwd().startsWith('/var/task')) {
   bootstrap();
+}
+
+// Handler for serverless environments (Vercel format)
+// Defined as const to avoid hoisting issues with exports
+const handler = async (req: any, res: any) => {
+  const app = await bootstrap();
+  const expressApp = app.getHttpAdapter().getInstance();
+  return expressApp(req, res);
+};
+
+// Export handler for serverless environments
+export default handler;
+export { handler as serverlessHandler };
+
+// Ensure CommonJS compatibility for serverless platforms
+// This ensures exports are available even if ES modules aren't fully supported
+if (typeof module !== 'undefined') {
+  (module as any).exports = handler;
+  (module as any).exports.default = handler;
+  (module as any).exports.serverlessHandler = handler;
+  (module as any).exports.handler = handler;
 }
