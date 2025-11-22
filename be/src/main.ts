@@ -4,15 +4,22 @@ import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 
-async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+let cachedApp: NestExpressApplication | null = null;
 
+async function bootstrap() {
   // Detect serverless environment
   const isServerless = 
     !!process.env.AWS_LAMBDA_FUNCTION_NAME ||
     !!process.env.VERCEL ||
     !!process.env.IS_SERVERLESS ||
     process.cwd().startsWith('/var/task');
+
+  // Reuse cached app in serverless environments
+  if (isServerless && cachedApp) {
+    return cachedApp;
+  }
+
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Serve static files from uploads directory
   // In serverless, use /tmp; otherwise use process.cwd()
@@ -47,7 +54,43 @@ async function bootstrap() {
     }),
   );
 
+  // In serverless, don't call listen, just return the app
+  if (isServerless) {
+    await app.init();
+    cachedApp = app;
+    return app;
+  }
+
+  // Traditional server startup
   const port = Number(process.env.PORT) || 4000;
   await app.listen(port);
+  return app;
 }
-bootstrap();
+
+// Export handler for serverless environments (Vercel format)
+export default async function handler(req: any, res: any) {
+  const app = await bootstrap();
+  const expressApp = app.getHttpAdapter().getInstance();
+  return expressApp(req, res);
+}
+
+// Export handler for AWS Lambda format
+export const serverlessHandler = async (event: any, context: any) => {
+  const app = await bootstrap();
+  const expressApp = app.getHttpAdapter().getInstance();
+  
+  return new Promise((resolve, reject) => {
+    expressApp(event, context, (err: any, result: any) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
+  });
+};
+
+// Traditional bootstrap for non-serverless environments
+if (!process.env.AWS_LAMBDA_FUNCTION_NAME && !process.env.VERCEL && !process.env.IS_SERVERLESS && !process.cwd().startsWith('/var/task')) {
+  bootstrap();
+}
