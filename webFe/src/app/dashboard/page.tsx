@@ -108,7 +108,7 @@ export default function DashboardPage() {
   if (loading || !user || !token) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-50">
-        <p className="text-sm text-zinc-500">Loading your workspace…</p>
+        <p className="text-sm text-zinc-700">Loading your workspace…</p>
       </main>
     );
   }
@@ -119,13 +119,13 @@ export default function DashboardPage() {
         <header className="rounded-3xl bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-widest text-zinc-400">
+              <p className="text-sm uppercase tracking-widest text-zinc-700">
                 Dashboard
               </p>
               <h1 className="text-3xl font-semibold text-zinc-900">
                 Welcome, {user.name}
               </h1>
-              <p className="mt-2 text-sm text-zinc-500">
+              <p className="mt-2 text-sm text-zinc-700">
                 Overview of your business performance
               </p>
             </div>
@@ -142,25 +142,25 @@ export default function DashboardPage() {
         {summary && (
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-3xl bg-white p-6 shadow-sm">
-              <p className="text-sm uppercase tracking-wide text-zinc-400">
+              <p className="text-sm uppercase tracking-wide text-zinc-700">
                 Total Sales
               </p>
               <p className="mt-2 text-3xl font-bold text-zinc-900">
                 ₹{summary.totalSales.toFixed(2)}
               </p>
-              <p className="mt-1 text-xs text-zinc-500">Today</p>
+              <p className="mt-1 text-xs text-zinc-700">Today</p>
             </div>
             <div className="rounded-3xl bg-white p-6 shadow-sm">
-              <p className="text-sm uppercase tracking-wide text-zinc-400">
+              <p className="text-sm uppercase tracking-wide text-zinc-700">
                 Total Expenses
               </p>
               <p className="mt-2 text-3xl font-bold text-zinc-900">
                 ₹{summary.totalExpenses.toFixed(2)}
               </p>
-              <p className="mt-1 text-xs text-zinc-500">Today</p>
+              <p className="mt-1 text-xs text-zinc-700">Today</p>
             </div>
             <div className="rounded-3xl bg-white p-6 shadow-sm">
-              <p className="text-sm uppercase tracking-wide text-zinc-400">
+              <p className="text-sm uppercase tracking-wide text-zinc-700">
                 Net Profit
               </p>
               <p
@@ -170,16 +170,16 @@ export default function DashboardPage() {
               >
                 ₹{summary.netProfit.toFixed(2)}
               </p>
-              <p className="mt-1 text-xs text-zinc-500">Today</p>
+              <p className="mt-1 text-xs text-zinc-700">Today</p>
             </div>
             <div className="rounded-3xl bg-white p-6 shadow-sm">
-              <p className="text-sm uppercase tracking-wide text-zinc-400">
+              <p className="text-sm uppercase tracking-wide text-zinc-700">
                 Total Orders
               </p>
               <p className="mt-2 text-3xl font-bold text-zinc-900">
                 {summary.totalOrders}
               </p>
-              <p className="mt-1 text-xs text-zinc-500">Today</p>
+              <p className="mt-1 text-xs text-zinc-700">Today</p>
             </div>
           </section>
         )}
@@ -213,7 +213,7 @@ export default function DashboardPage() {
           </div>
           {fetching ? (
             <div className="flex h-64 items-center justify-center">
-              <p className="text-sm text-zinc-500">Loading chart…</p>
+              <p className="text-sm text-zinc-700">Loading chart…</p>
             </div>
           ) : salesTrend.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
@@ -257,7 +257,7 @@ export default function DashboardPage() {
             </ResponsiveContainer>
           ) : (
             <div className="flex h-64 items-center justify-center">
-              <p className="text-sm text-zinc-500">No sales data available</p>
+              <p className="text-sm text-zinc-700">No sales data available</p>
             </div>
           )}
         </section>
@@ -269,7 +269,7 @@ export default function DashboardPage() {
               Top Selling Products
             </h2>
             {fetching ? (
-              <p className="text-sm text-zinc-500">Loading…</p>
+              <p className="text-sm text-zinc-700">Loading…</p>
             ) : topProducts.length > 0 ? (
               <div className="space-y-3">
                 {topProducts.map((product, index) => (
@@ -285,7 +285,7 @@ export default function DashboardPage() {
                         <p className="text-sm font-semibold text-zinc-900">
                           {product.productName}
                         </p>
-                        <p className="text-xs text-zinc-500">
+                        <p className="text-xs text-zinc-700">
                           {product.totalQuantity} units sold
                         </p>
                       </div>
@@ -294,13 +294,13 @@ export default function DashboardPage() {
                       <p className="text-sm font-semibold text-zinc-900">
                         ₹{product.totalRevenue.toFixed(2)}
                       </p>
-                      <p className="text-xs text-zinc-500">Revenue</p>
+                      <p className="text-xs text-zinc-700">Revenue</p>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-zinc-500">No product sales data</p>
+              <p className="text-sm text-zinc-700">No product sales data</p>
             )}
           </section>
 
@@ -310,7 +310,7 @@ export default function DashboardPage() {
               Expenses by Category
             </h2>
             {fetching ? (
-              <p className="text-sm text-zinc-500">Loading…</p>
+              <p className="text-sm text-zinc-700">Loading…</p>
             ) : expensesSummary.length > 0 ? (
               <div className="flex flex-col items-center gap-4">
                 <ResponsiveContainer width="100%" height={250}>
@@ -361,7 +361,7 @@ export default function DashboardPage() {
                         <p className="text-xs font-medium text-zinc-900 truncate">
                           {expense.category}
                         </p>
-                        <p className="text-xs text-zinc-500">
+                        <p className="text-xs text-zinc-700">
                           ₹{expense.amount.toFixed(2)} ({expense.percentage}%)
                         </p>
                       </div>
@@ -370,7 +370,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-zinc-500">No expense data available</p>
+              <p className="text-sm text-zinc-700">No expense data available</p>
             )}
           </section>
         </div>
@@ -409,7 +409,7 @@ export default function DashboardPage() {
                     <p className="text-sm font-semibold text-zinc-900 truncate">
                       {item.name}
                     </p>
-                    <p className="text-xs text-zinc-500">{item.category}</p>
+                    <p className="text-xs text-zinc-700">{item.category}</p>
                     <p className="mt-1 text-xs font-medium text-amber-700">
                       Only {item.stock} {item.unit} remaining
                     </p>

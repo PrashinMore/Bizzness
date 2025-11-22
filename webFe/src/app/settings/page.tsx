@@ -176,7 +176,7 @@ export default function SettingsPage() {
   if (loading || !user || !token) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-50">
-        <p className="text-sm text-zinc-500">Loading…</p>
+        <p className="text-sm text-zinc-700">Loading…</p>
       </main>
     );
   }
@@ -194,7 +194,7 @@ export default function SettingsPage() {
       <div className="mx-auto w-full max-w-4xl">
         <header className="mb-8">
           <h1 className="text-3xl font-semibold text-zinc-900">Settings</h1>
-          <p className="mt-2 text-sm text-zinc-500">
+          <p className="mt-2 text-sm text-zinc-700">
             Manage your business configuration
           </p>
         </header>
@@ -218,7 +218,7 @@ export default function SettingsPage() {
             className={`px-4 py-2 text-sm font-medium transition ${
               activeTab === 'business'
                 ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-500 hover:text-zinc-700'
+                : 'text-zinc-700 hover:text-zinc-900'
             }`}
           >
             Business
@@ -228,7 +228,7 @@ export default function SettingsPage() {
             className={`px-4 py-2 text-sm font-medium transition ${
               activeTab === 'billing'
                 ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-500 hover:text-zinc-700'
+                : 'text-zinc-700 hover:text-zinc-900'
             }`}
           >
             Billing
@@ -238,7 +238,7 @@ export default function SettingsPage() {
             className={`px-4 py-2 text-sm font-medium transition ${
               activeTab === 'inventory'
                 ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-500 hover:text-zinc-700'
+                : 'text-zinc-700 hover:text-zinc-900'
             }`}
           >
             Inventory
@@ -247,7 +247,7 @@ export default function SettingsPage() {
 
         {loadingSettings ? (
           <div className="flex items-center justify-center py-12">
-            <p className="text-sm text-zinc-500">Loading settings…</p>
+            <p className="text-sm text-zinc-700">Loading settings…</p>
           </div>
         ) : (
           <div className="rounded-3xl bg-white p-6 shadow-sm">
@@ -282,7 +282,7 @@ export default function SettingsPage() {
                     type="file"
                     accept="image/*"
                     onChange={handleLogoChange}
-                    className="mt-1 block w-full text-sm text-zinc-500 file:mr-4 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-zinc-700 hover:file:bg-zinc-200"
+                    className="mt-1 block w-full text-sm text-zinc-700 file:mr-4 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-zinc-700 hover:file:bg-zinc-200"
                   />
                 </div>
 
@@ -476,7 +476,7 @@ export default function SettingsPage() {
                       Enable Stock Warning Alerts
                     </span>
                   </label>
-                  <p className="mt-1 text-xs text-zinc-500">
+                  <p className="mt-1 text-xs text-zinc-700">
                     Show alerts when products fall below the low stock threshold
                   </p>
                 </div>

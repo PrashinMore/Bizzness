@@ -143,7 +143,7 @@ export default function MenuPage() {
   if (loading || !user || !token) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-50">
-        <p className="text-sm text-zinc-500">Loading menu…</p>
+        <p className="text-sm text-zinc-700">Loading menu…</p>
       </main>
     );
   }
@@ -155,7 +155,7 @@ export default function MenuPage() {
         <div className="flex-1">
           <header className="mb-6">
             <h1 className="text-3xl font-semibold text-zinc-900">Menu</h1>
-            <p className="mt-2 text-sm text-zinc-500">
+            <p className="mt-2 text-sm text-zinc-700">
               Select items to add to your cart
             </p>
           </header>
@@ -167,10 +167,10 @@ export default function MenuPage() {
           )}
 
           {fetching ? (
-            <p className="text-sm text-zinc-500">Loading menu items…</p>
+            <p className="text-sm text-zinc-700">Loading menu items…</p>
           ) : menuItems.length === 0 ? (
             <div className="rounded-3xl bg-white p-8 shadow-sm">
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-zinc-700">
                 No menu items found. Add products with category containing "menu"
                 to see them here.
               </p>
@@ -202,14 +202,14 @@ export default function MenuPage() {
                       </div>
                     ) : (
                       <div className="mb-3 sm:mb-4 aspect-square w-full rounded-xl sm:rounded-2xl bg-zinc-100 flex items-center justify-center">
-                        <span className="text-zinc-400 text-xs sm:text-sm">No image</span>
+                        <span className="text-zinc-700 text-xs sm:text-sm">No image</span>
                       </div>
                     )}
 
                     <h3 className="text-sm sm:text-lg font-semibold text-zinc-900 line-clamp-2">
                       {product.name}
                     </h3>
-                    <p className="mt-1 text-xs sm:text-sm text-zinc-500 line-clamp-1">
+                    <p className="mt-1 text-xs sm:text-sm text-zinc-700 line-clamp-1">
                       {product.category}
                     </p>
 
@@ -219,7 +219,7 @@ export default function MenuPage() {
                           ₹{Number(product.sellingPrice).toFixed(2)}
                         </p>
                         {product.stock > 0 && (
-                          <p className="text-xs text-zinc-400">
+                          <p className="text-xs text-zinc-700">
                             {product.stock} in stock
                           </p>
                         )}
@@ -232,7 +232,7 @@ export default function MenuPage() {
                         {isOutOfStock ? (
                           <button
                             disabled
-                            className="w-full sm:w-auto rounded-full border border-zinc-200 px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-semibold text-zinc-400 cursor-not-allowed"
+                            className="w-full sm:w-auto rounded-full border border-zinc-200 px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-semibold text-zinc-700 cursor-not-allowed"
                           >
                             Out of Stock
                           </button>
@@ -282,7 +282,7 @@ export default function MenuPage() {
             <h2 className="text-xl font-semibold text-zinc-900">Cart</h2>
 
             {cart.length === 0 ? (
-              <p className="mt-4 text-sm text-zinc-500">Your cart is empty</p>
+              <p className="mt-4 text-sm text-zinc-700">Your cart is empty</p>
             ) : (
               <>
                 <div className="mt-4 space-y-3 max-h-96 overflow-y-auto">
@@ -305,7 +305,7 @@ export default function MenuPage() {
                         <h4 className="text-sm font-semibold text-zinc-900 truncate">
                           {item.product.name}
                         </h4>
-                        <p className="text-xs text-zinc-500">
+                        <p className="text-xs text-zinc-700">
                           ₹{item.sellingPrice.toFixed(2)} × {item.quantity}
                         </p>
                         <div className="mt-1 flex items-center gap-2">

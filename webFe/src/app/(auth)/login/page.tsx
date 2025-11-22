@@ -43,7 +43,7 @@ export default function LoginPage() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-4 py-16">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
         <h1 className="text-2xl font-semibold text-zinc-900">Welcome back</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-zinc-700">
           Log in with your email and password to access the dashboard.
         </p>
 
@@ -99,7 +99,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-zinc-500">
+        <p className="mt-6 text-center text-sm text-zinc-700">
           Don&apos;t have an account?{' '}
           <Link
             href="/signup"

@@ -223,7 +223,7 @@ export default function UsersManagementPage() {
   if (loading || !user || !token) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-50">
-        <p className="text-sm text-zinc-500">Loading user management…</p>
+        <p className="text-sm text-zinc-700">Loading user management…</p>
       </main>
     );
   }
@@ -235,7 +235,7 @@ export default function UsersManagementPage() {
           <h1 className="text-2xl font-semibold text-zinc-900">
             Team management
           </h1>
-          <p className="mt-2 text-sm text-zinc-500">
+          <p className="mt-2 text-sm text-zinc-700">
             Add staff, assign roles, reset passwords, and keep your roster up to
             date.
           </p>
@@ -326,7 +326,7 @@ export default function UsersManagementPage() {
             <h2 className="text-lg font-semibold text-zinc-900">
               Current team members
             </h2>
-            <span className="text-sm text-zinc-500">
+            <span className="text-sm text-zinc-700">
               {fetching ? 'Loading…' : `${users.length} users`}
             </span>
           </div>
@@ -345,9 +345,9 @@ export default function UsersManagementPage() {
 
           <div className="mt-6 space-y-4">
             {fetching ? (
-              <p className="text-sm text-zinc-500">Loading users…</p>
+              <p className="text-sm text-zinc-700">Loading users…</p>
             ) : sortedUsers.length === 0 ? (
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-zinc-700">
                 No users found. Create your first team member above.
               </p>
             ) : (
@@ -369,8 +369,8 @@ export default function UsersManagementPage() {
                         <h3 className="text-base font-semibold text-zinc-900">
                           {u.name}
                         </h3>
-                        <p className="text-sm text-zinc-500">{u.email}</p>
-                        <p className="text-xs uppercase tracking-wide text-zinc-400">
+                        <p className="text-sm text-zinc-700">{u.email}</p>
+                        <p className="text-xs uppercase tracking-wide text-zinc-700">
                           {u.role}
                         </p>
                       </div>

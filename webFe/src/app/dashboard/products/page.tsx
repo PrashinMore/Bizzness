@@ -312,7 +312,7 @@ export default function ProductsPage() {
   if (loading || !user || !token) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-50">
-        <p className="text-sm text-zinc-500">Loading product dashboard…</p>
+        <p className="text-sm text-zinc-700">Loading product dashboard…</p>
       </main>
     );
   }
@@ -323,17 +323,17 @@ export default function ProductsPage() {
         <header className="rounded-3xl bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-widest text-zinc-400">
+              <p className="text-sm uppercase tracking-widest text-zinc-700">
                 Inventory
               </p>
               <h1 className="text-3xl font-semibold text-zinc-900">
                 Product & stock management
               </h1>
-              <p className="mt-2 text-sm text-zinc-500">
+              <p className="mt-2 text-sm text-zinc-700">
                 Track costs, selling prices, and ensure you never run out of stock.
               </p>
             </div>
-            <div className="grid gap-2 text-sm text-zinc-500 md:text-right">
+            <div className="grid gap-2 text-sm text-zinc-700 md:text-right">
               <p>
                 <span className="font-semibold text-zinc-900">{products.length}</span>{' '}
                 products
@@ -357,7 +357,7 @@ export default function ProductsPage() {
         <section className="grid gap-6 md:grid-cols-2">
           <article className="rounded-3xl bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-zinc-900">Add a product</h2>
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1 text-sm text-zinc-700">
               Create new SKUs with costs, selling price, and stock thresholds.
             </p>
             <form className="mt-4 grid gap-4" onSubmit={handleCreate}>
@@ -554,7 +554,7 @@ export default function ProductsPage() {
             <h2 className="text-lg font-semibold text-zinc-900">
               Inventory overview
             </h2>
-            <span className="text-sm text-zinc-500">
+            <span className="text-sm text-zinc-700">
               {fetching ? 'Refreshing…' : `${products.length} items`}
             </span>
           </div>
@@ -573,9 +573,9 @@ export default function ProductsPage() {
 
           <div className="mt-6 space-y-4">
             {fetching ? (
-              <p className="text-sm text-zinc-500">Loading products…</p>
+              <p className="text-sm text-zinc-700">Loading products…</p>
             ) : products.length === 0 ? (
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-zinc-700">
                 No products found. Create one using the form above.
               </p>
             ) : (
@@ -623,15 +623,15 @@ export default function ProductsPage() {
                               </span>
                             ) : null}
                           </div>
-                          <p className="text-sm text-zinc-500">{product.category}</p>
-                          <p className="text-xs text-zinc-400">
+                          <p className="text-sm text-zinc-700">{product.category}</p>
+                          <p className="text-xs text-zinc-700">
                             Added {new Date(product.createdAt).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-4 text-sm text-zinc-600">
                         <div>
-                          <p className="text-xs uppercase tracking-wide text-zinc-400">
+                          <p className="text-xs uppercase tracking-wide text-zinc-700">
                             In stock
                           </p>
                           <p className="font-semibold text-zinc-900">
@@ -639,7 +639,7 @@ export default function ProductsPage() {
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs uppercase tracking-wide text-zinc-400">
+                          <p className="text-xs uppercase tracking-wide text-zinc-700">
                             Cost / Sell
                           </p>
                           <p className="font-semibold text-zinc-900">
@@ -648,7 +648,7 @@ export default function ProductsPage() {
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs uppercase tracking-wide text-zinc-400">
+                          <p className="text-xs uppercase tracking-wide text-zinc-700">
                             Profit / unit
                           </p>
                           <p className="font-semibold text-zinc-900">
@@ -678,7 +678,7 @@ export default function ProductsPage() {
 
                     <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end">
                       <div className="flex-1">
-                        <label className="block text-xs font-medium uppercase tracking-wide text-zinc-500">
+                        <label className="block text-xs font-medium uppercase tracking-wide text-zinc-700">
                           Adjust stock
                         </label>
                         <div className="mt-2 flex gap-3">
@@ -705,7 +705,7 @@ export default function ProductsPage() {
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-wide text-zinc-400">
+                        <p className="text-xs uppercase tracking-wide text-zinc-700">
                           Low stock threshold
                         </p>
                         <p className="text-sm font-semibold text-zinc-900">

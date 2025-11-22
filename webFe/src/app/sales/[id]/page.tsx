@@ -70,23 +70,23 @@ export default function SaleDetailPage() {
         <section className="space-y-4 rounded border border-zinc-200 p-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <div className="text-sm text-zinc-500">Sale ID</div>
+              <div className="text-sm text-zinc-700">Sale ID</div>
               <div className="font-mono text-sm">{sale.id}</div>
             </div>
             <div>
-              <div className="text-sm text-zinc-500">Date</div>
+              <div className="text-sm text-zinc-700">Date</div>
               <div>{new Date(sale.date).toLocaleString()}</div>
             </div>
             <div>
-              <div className="text-sm text-zinc-500">Sold By</div>
+              <div className="text-sm text-zinc-700">Sold By</div>
               <div>{userMap.get(sale.soldBy)?.name || sale.soldBy}</div>
             </div>
             <div>
-              <div className="text-sm text-zinc-500">Total Amount</div>
+              <div className="text-sm text-zinc-700">Total Amount</div>
               <div>₹ {Number(sale.totalAmount).toFixed(2)}</div>
             </div>
             <div>
-              <div className="text-sm text-zinc-500">Payment Type</div>
+              <div className="text-sm text-zinc-700">Payment Type</div>
               <div className="capitalize">{sale.paymentType || 'cash'}</div>
             </div>
           </div>

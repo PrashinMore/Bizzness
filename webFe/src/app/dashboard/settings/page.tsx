@@ -19,7 +19,7 @@ export default function SettingsPage() {
   if (loading || !user || !token) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-50">
-        <p className="text-sm text-zinc-500">Preparing settings…</p>
+        <p className="text-sm text-zinc-700">Preparing settings…</p>
       </main>
     );
   }
@@ -79,7 +79,7 @@ export default function SettingsPage() {
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
         <header className="rounded-3xl bg-white p-6 shadow-sm">
           <h1 className="text-2xl font-semibold text-zinc-900">Settings</h1>
-          <p className="mt-2 text-sm text-zinc-500">
+          <p className="mt-2 text-sm text-zinc-700">
             Keep your credentials up to date and refresh your profile details.
           </p>
         </header>
@@ -165,7 +165,7 @@ export default function SettingsPage() {
           <h2 className="text-lg font-semibold text-zinc-900">
             Refresh Profile
           </h2>
-          <p className="mt-2 text-sm text-zinc-500">
+          <p className="mt-2 text-sm text-zinc-700">
             Pull the latest user information from the server.
           </p>
           <button

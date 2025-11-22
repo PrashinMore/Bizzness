@@ -135,7 +135,7 @@ export default function ExpensesListPage() {
                 ))}
                 {!loading && monthly.length === 0 && (
                   <tr>
-                    <td className="px-4 py-6 text-center text-sm text-zinc-500" colSpan={2}>
+                    <td className="px-4 py-6 text-center text-sm text-zinc-700" colSpan={2}>
                       No data
                     </td>
                   </tr>
@@ -174,14 +174,14 @@ export default function ExpensesListPage() {
                 ))}
                 {loading && (
                   <tr>
-                    <td className="px-4 py-6 text-center text-sm text-zinc-500" colSpan={5}>
+                    <td className="px-4 py-6 text-center text-sm text-zinc-700" colSpan={5}>
                       Loading...
                     </td>
                   </tr>
                 )}
                 {!loading && expenses.length === 0 && (
                   <tr>
-                    <td className="px-4 py-6 text-center text-sm text-zinc-500" colSpan={5}>
+                    <td className="px-4 py-6 text-center text-sm text-zinc-700" colSpan={5}>
                       No expenses found
                     </td>
                   </tr>

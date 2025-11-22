@@ -148,7 +148,7 @@ export default function ReportsPage() {
   if (loading || !user || !token) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-50">
-        <p className="text-sm text-zinc-500">Loading…</p>
+        <p className="text-sm text-zinc-700">Loading…</p>
       </main>
     );
   }
@@ -166,7 +166,7 @@ export default function ReportsPage() {
       <div className="mx-auto w-full max-w-7xl">
         <header className="mb-8">
           <h1 className="text-3xl font-semibold text-zinc-900">Reports & Insights</h1>
-          <p className="mt-2 text-sm text-zinc-500">
+          <p className="mt-2 text-sm text-zinc-700">
             Analyze your business performance and export data
           </p>
         </header>
@@ -184,7 +184,7 @@ export default function ReportsPage() {
             className={`px-4 py-2 text-sm font-medium transition ${
               activeTab === 'sales'
                 ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-500 hover:text-zinc-700'
+                : 'text-zinc-700 hover:text-zinc-900'
             }`}
           >
             Sales Report
@@ -194,7 +194,7 @@ export default function ReportsPage() {
             className={`px-4 py-2 text-sm font-medium transition ${
               activeTab === 'profit-loss'
                 ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-500 hover:text-zinc-700'
+                : 'text-zinc-700 hover:text-zinc-900'
             }`}
           >
             Profit & Loss
@@ -204,7 +204,7 @@ export default function ReportsPage() {
             className={`px-4 py-2 text-sm font-medium transition ${
               activeTab === 'inventory'
                 ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-500 hover:text-zinc-700'
+                : 'text-zinc-700 hover:text-zinc-900'
             }`}
           >
             Inventory
@@ -214,7 +214,7 @@ export default function ReportsPage() {
             className={`px-4 py-2 text-sm font-medium transition ${
               activeTab === 'expenses'
                 ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-500 hover:text-zinc-700'
+                : 'text-zinc-700 hover:text-zinc-900'
             }`}
           >
             Expenses
@@ -258,7 +258,7 @@ export default function ReportsPage() {
         <div className="rounded-3xl bg-white p-6 shadow-sm">
           {loadingReport ? (
             <div className="flex items-center justify-center py-12">
-              <p className="text-sm text-zinc-500">Loading report…</p>
+              <p className="text-sm text-zinc-700">Loading report…</p>
             </div>
           ) : (
             <>
@@ -267,26 +267,26 @@ export default function ReportsPage() {
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-lg font-semibold text-zinc-900">Sales Report</h2>
-                    <p className="text-sm text-zinc-500">
+                    <p className="text-sm text-zinc-700">
                       {salesReport.period.from} to {salesReport.period.to}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-500">Total Sales</p>
+                      <p className="text-xs text-zinc-700">Total Sales</p>
                       <p className="mt-1 text-2xl font-semibold text-zinc-900">
                         ₹{salesReport.summary.totalSales.toFixed(2)}
                       </p>
                     </div>
                     <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-500">Total Orders</p>
+                      <p className="text-xs text-zinc-700">Total Orders</p>
                       <p className="mt-1 text-2xl font-semibold text-zinc-900">
                         {salesReport.summary.totalOrders}
                       </p>
                     </div>
                     <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-500">Average Order Value</p>
+                      <p className="text-xs text-zinc-700">Average Order Value</p>
                       <p className="mt-1 text-2xl font-semibold text-zinc-900">
                         ₹{salesReport.summary.averageOrderValue.toFixed(2)}
                       </p>
@@ -362,7 +362,7 @@ export default function ReportsPage() {
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-lg font-semibold text-zinc-900">Profit & Loss Report</h2>
-                    <p className="text-sm text-zinc-500">
+                    <p className="text-sm text-zinc-700">
                       {profitLossReport.period.from} to {profitLossReport.period.to}
                     </p>
                   </div>
@@ -419,19 +419,19 @@ export default function ReportsPage() {
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-500">Total Products</p>
+                      <p className="text-xs text-zinc-700">Total Products</p>
                       <p className="mt-1 text-2xl font-semibold text-zinc-900">
                         {inventoryReport.summary.totalProducts}
                       </p>
                     </div>
                     <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-500">Total Stock Value</p>
+                      <p className="text-xs text-zinc-700">Total Stock Value</p>
                       <p className="mt-1 text-2xl font-semibold text-zinc-900">
                         ₹{inventoryReport.summary.totalStockValue.toFixed(2)}
                       </p>
                     </div>
                     <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-500">Low Stock Items</p>
+                      <p className="text-xs text-zinc-700">Low Stock Items</p>
                       <p className="mt-1 text-2xl font-semibold text-zinc-900">
                         {inventoryReport.summary.lowStockItems}
                       </p>
@@ -501,26 +501,26 @@ export default function ReportsPage() {
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-lg font-semibold text-zinc-900">Expense Report</h2>
-                    <p className="text-sm text-zinc-500">
+                    <p className="text-sm text-zinc-700">
                       {expenseReport.period.from} to {expenseReport.period.to}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-500">Total Expenses</p>
+                      <p className="text-xs text-zinc-700">Total Expenses</p>
                       <p className="mt-1 text-2xl font-semibold text-zinc-900">
                         ₹{expenseReport.summary.totalExpenses.toFixed(2)}
                       </p>
                     </div>
                     <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-500">Total Transactions</p>
+                      <p className="text-xs text-zinc-700">Total Transactions</p>
                       <p className="mt-1 text-2xl font-semibold text-zinc-900">
                         {expenseReport.summary.totalTransactions}
                       </p>
                     </div>
                     <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-500">Average Expense</p>
+                      <p className="text-xs text-zinc-700">Average Expense</p>
                       <p className="mt-1 text-2xl font-semibold text-zinc-900">
                         ₹{expenseReport.summary.averageExpense.toFixed(2)}
                       </p>

@@ -46,7 +46,7 @@ export default function SignupPage() {
         <h1 className="text-2xl font-semibold text-zinc-900">
           Create your account
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-zinc-700">
           The first account created becomes an admin automatically.
         </p>
 
@@ -103,7 +103,7 @@ export default function SignupPage() {
               onChange={(event) => setPassword(event.target.value)}
               className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
             />
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-zinc-700">
               Use at least 8 characters to keep your account secure.
             </p>
           </div>
@@ -123,7 +123,7 @@ export default function SignupPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-zinc-500">
+        <p className="mt-6 text-center text-sm text-zinc-700">
           Already have an account?{' '}
           <Link
             href="/login"

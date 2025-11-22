@@ -215,21 +215,21 @@ export default function SalesListPage() {
                       View
                     </Link>
                   ) : (
-                    <span className="text-zinc-400">No ID</span>
+                    <span className="text-zinc-700">No ID</span>
                   )}
                 </td>
               </tr>
             ))}
             {loading && (
               <tr>
-                <td className="px-4 py-6 text-center text-sm text-zinc-500" colSpan={6}>
+                <td className="px-4 py-6 text-center text-sm text-zinc-700" colSpan={6}>
                   Loading...
                 </td>
               </tr>
             )}
             {!loading && sales.length === 0 && (
               <tr>
-                <td className="px-4 py-6 text-center text-sm text-zinc-500" colSpan={6}>
+                <td className="px-4 py-6 text-center text-sm text-zinc-700" colSpan={6}>
                   No sales found
                 </td>
               </tr>
