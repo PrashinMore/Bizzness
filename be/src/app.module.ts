@@ -30,8 +30,37 @@ import { ReportsModule } from './reports/reports.module';
         const host = configService.get<string>('DB_HOST') ?? configService.get<string>('DBHOST') ?? 'localhost';
         const isSupabase = host.includes('supabase.co');
         
+        // Detect serverless environment
+        const isServerless = 
+          !!process.env.AWS_LAMBDA_FUNCTION_NAME ||
+          !!process.env.VERCEL ||
+          !!process.env.IS_SERVERLESS ||
+          process.cwd().startsWith('/var/task');
+        
         const port = parseInt(configService.get<string>('DB_PORT') ?? '5432', 10);
         const isPooler = port === 6543; // Supabase connection pooler port
+        
+        // Serverless-optimized connection settings
+        const serverlessPoolConfig = {
+          max: 1, // Single connection for serverless
+          min: 0,
+          idleTimeoutMillis: 10000, // Close idle connections quickly
+          connectionTimeoutMillis: 5000, // Shorter timeout for serverless
+          statement_timeout: 5000, // Query timeout
+        };
+        
+        // Regular pool configuration
+        const regularPoolConfig = isPooler
+          ? {
+              max: 10, // Limit for Session mode pooler
+              idleTimeoutMillis: 30000,
+              connectionTimeoutMillis: 10000,
+            }
+          : {
+              max: 20, // Higher limit for direct connection
+              idleTimeoutMillis: 30000,
+              connectionTimeoutMillis: 10000,
+            };
         
         const baseConfig = {
           type: 'postgres' as const,
@@ -42,36 +71,33 @@ import { ReportsModule } from './reports/reports.module';
           database: configService.get<string>('DB_NAME') ?? 'biznes',
           entities: [User, Product, Sale, SaleItem, Expense, Settings],
           synchronize: true,
+          // Retry configuration for serverless
+          retryAttempts: isServerless ? 1 : 10,
+          retryDelay: isServerless ? 1000 : 3000,
+          // Auto-reconnect settings
+          autoLoadEntities: true,
+          keepConnectionAlive: !isServerless, // Don't keep connections alive in serverless
         };
 
         // SSL configuration for Supabase and other cloud databases
-        if (isSupabase) {
-          // Connection pool configuration to avoid "MaxClientsInSessionMode" error
-          // Supabase Session mode pooler (port 6543) has strict connection limits
-          const poolConfig = isPooler
-            ? {
-                max: 10, // Limit for Session mode pooler
-                idleTimeoutMillis: 30000,
-                connectionTimeoutMillis: 10000,
-              }
-            : {
-                max: 20, // Higher limit for direct connection
-                idleTimeoutMillis: 30000,
-                connectionTimeoutMillis: 10000,
-              };
-
+        if (isSupabase || isServerless) {
+          const poolConfig = isServerless ? serverlessPoolConfig : regularPoolConfig;
+          
           return {
             ...baseConfig,
             extra: {
-              ssl: {
+              ssl: isSupabase ? {
                 rejectUnauthorized: false,
-              },
+              } : undefined,
               ...poolConfig,
             },
           };
         }
 
-        return baseConfig;
+        return {
+          ...baseConfig,
+          extra: regularPoolConfig,
+        };
       },
       inject: [ConfigService],
     }),
