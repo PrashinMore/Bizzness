@@ -74,21 +74,9 @@ export default async function handler(req: any, res: any) {
   return expressApp(req, res);
 }
 
-// Export handler for AWS Lambda format
-export const serverlessHandler = async (event: any, context: any) => {
-  const app = await bootstrap();
-  const expressApp = app.getHttpAdapter().getInstance();
-  
-  return new Promise((resolve, reject) => {
-    expressApp(event, context, (err: any, result: any) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(result);
-      }
-    });
-  });
-};
+// Export handler for AWS Lambda format (requires serverless-http or similar library)
+// For now, using a simple wrapper that works with Vercel and similar platforms
+export const serverlessHandler = handler;
 
 // Traditional bootstrap for non-serverless environments
 if (!process.env.AWS_LAMBDA_FUNCTION_NAME && !process.env.VERCEL && !process.env.IS_SERVERLESS && !process.cwd().startsWith('/var/task')) {
