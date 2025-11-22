@@ -176,7 +176,7 @@ export default function MenuPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
               {menuItems.map((product) => {
                 const inCart = cart.find((item) => item.productId === product.id);
                 const cartQuantity = inCart?.quantity || 0;
@@ -213,8 +213,8 @@ export default function MenuPage() {
                       {product.category}
                     </p>
 
-                    <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <div>
+                    <div className="mt-3 sm:mt-4">
+                      <div className="mb-2 sm:mb-3">
                         <p className="text-base sm:text-2xl font-bold text-zinc-900">
                           ₹{Number(product.sellingPrice).toFixed(2)}
                         </p>
@@ -228,44 +228,46 @@ export default function MenuPage() {
                         )}
                       </div>
 
-                      {isOutOfStock ? (
-                        <button
-                          disabled
-                          className="rounded-full border border-zinc-200 px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-semibold text-zinc-400 cursor-not-allowed"
-                        >
-                          Out of Stock
-                        </button>
-                      ) : cartQuantity > 0 ? (
-                        <div className="flex items-center justify-center gap-2">
+                      <div className="flex items-center justify-center sm:justify-start">
+                        {isOutOfStock ? (
                           <button
-                            onClick={() =>
-                              updateQuantity(product.id, cartQuantity - 1)
-                            }
-                            className="rounded-full border border-zinc-200 px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+                            disabled
+                            className="w-full sm:w-auto rounded-full border border-zinc-200 px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-semibold text-zinc-400 cursor-not-allowed"
                           >
-                            −
+                            Out of Stock
                           </button>
-                          <span className="min-w-[1.5rem] sm:min-w-[2rem] text-center text-xs sm:text-sm font-semibold text-zinc-900">
-                            {cartQuantity}
-                          </span>
+                        ) : cartQuantity > 0 ? (
+                          <div className="w-full sm:w-auto flex items-center justify-center gap-2">
+                            <button
+                              onClick={() =>
+                                updateQuantity(product.id, cartQuantity - 1)
+                              }
+                              className="rounded-full border border-zinc-200 px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+                            >
+                              −
+                            </button>
+                            <span className="min-w-[1.5rem] sm:min-w-[2rem] text-center text-xs sm:text-sm font-semibold text-zinc-900">
+                              {cartQuantity}
+                            </span>
+                            <button
+                              onClick={() =>
+                                updateQuantity(product.id, cartQuantity + 1)
+                              }
+                              disabled={cartQuantity >= product.stock}
+                              className="rounded-full border border-zinc-200 px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              +
+                            </button>
+                          </div>
+                        ) : (
                           <button
-                            onClick={() =>
-                              updateQuantity(product.id, cartQuantity + 1)
-                            }
-                            disabled={cartQuantity >= product.stock}
-                            className="rounded-full border border-zinc-200 px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={() => addToCart(product)}
+                            className="w-full sm:w-auto rounded-full bg-zinc-900 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white transition hover:bg-zinc-700"
                           >
-                            +
+                            Add to Cart
                           </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => addToCart(product)}
-                          className="rounded-full bg-zinc-900 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white transition hover:bg-zinc-700"
-                        >
-                          Add to Cart
-                        </button>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
