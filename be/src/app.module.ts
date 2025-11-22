@@ -44,8 +44,8 @@ import { ReportsModule } from './reports/reports.module';
         const serverlessPoolConfig = {
           max: 1, // Single connection for serverless
           min: 0,
-          idleTimeoutMillis: 10000, // Close idle connections quickly
-          connectionTimeoutMillis: 5000, // Shorter timeout for serverless
+          idleTimeoutMillis: 5000, // Close idle connections quickly
+          connectionTimeoutMillis: 3000, // Very short timeout for serverless (3 seconds)
           statement_timeout: 5000, // Query timeout
         };
         
@@ -71,9 +71,9 @@ import { ReportsModule } from './reports/reports.module';
           database: configService.get<string>('DB_NAME') ?? 'biznes',
           entities: [User, Product, Sale, SaleItem, Expense, Settings],
           synchronize: true,
-          // Retry configuration for serverless
-          retryAttempts: isServerless ? 1 : 10,
-          retryDelay: isServerless ? 1000 : 3000,
+          // Disable retries completely in serverless to fail fast
+          retryAttempts: isServerless ? 0 : 10,
+          retryDelay: isServerless ? 0 : 3000,
           // Auto-reconnect settings
           autoLoadEntities: true,
           keepConnectionAlive: !isServerless, // Don't keep connections alive in serverless
@@ -90,6 +90,11 @@ import { ReportsModule } from './reports/reports.module';
                 rejectUnauthorized: false,
               } : undefined,
               ...poolConfig,
+              // Disable automatic retries in the pool
+              ...(isServerless && {
+                maxUses: 1, // Use connection only once in serverless
+                allowExitOnIdle: true, // Allow process to exit when idle
+              }),
             },
           };
         }
