@@ -196,6 +196,7 @@ export const salesApi = {
     items: { productId: string; quantity: number; sellingPrice: number }[];
     totalAmount: number;
     soldBy: string;
+    paymentType?: string;
   }): Promise<Sale> => request<Sale>('/sales', { method: 'POST', body: payload, token }),
   dailyTotals: (token: string, from?: string, to?: string): Promise<{ day: string; total: string }[]> => {
     const params = new URLSearchParams();
@@ -204,7 +205,22 @@ export const salesApi = {
     const qs = params.toString();
     const path = qs ? `/sales/totals/daily?${qs}` : '/sales/totals/daily';
     return request(path, { token });
-  }
+  },
+  getPaymentTypeTotals: (token: string, filters: SalesFilters = {}): Promise<{
+    cash: number;
+    UPI: number;
+    total: number;
+  }> => {
+    const params = new URLSearchParams();
+    if (filters.from) params.set('from', filters.from);
+    if (filters.to) params.set('to', filters.to);
+    if (filters.productId) params.set('productId', filters.productId);
+    if (filters.staff) params.set('staff', filters.staff);
+    // Note: paymentType is intentionally excluded
+    const qs = params.toString();
+    const path = qs ? `/sales/totals/payment-type?${qs}` : '/sales/totals/payment-type';
+    return request(path, { token });
+  },
 };
 
 type ExpensesFilters = {

@@ -13,6 +13,11 @@ export default function SalesListPage() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paymentTotals, setPaymentTotals] = useState<{
+    cash: number;
+    UPI: number;
+    total: number;
+  } | null>(null);
 
   const [from, setFrom] = useState<string>('');
   const [to, setTo] = useState<string>('');
@@ -49,14 +54,24 @@ export default function SalesListPage() {
       setLoading(true);
       setError(null);
       try {
-        const list = await salesApi.list(token, {
-          from: from || undefined,
-          to: to || undefined,
-          productId: productId || undefined,
-          staff: staff || undefined,
-          paymentType: paymentType || undefined,
-        });
+        const [list, totals] = await Promise.all([
+          salesApi.list(token, {
+            from: from || undefined,
+            to: to || undefined,
+            productId: productId || undefined,
+            staff: staff || undefined,
+            paymentType: paymentType || undefined,
+          }),
+          salesApi.getPaymentTypeTotals(token, {
+            from: from || undefined,
+            to: to || undefined,
+            productId: productId || undefined,
+            staff: staff || undefined,
+            // paymentType is intentionally excluded to get totals for both
+          }),
+        ]);
         setSales(list);
+        setPaymentTotals(totals);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load sales');
       } finally {
@@ -166,6 +181,36 @@ export default function SalesListPage() {
         <div className="rounded border border-red-300 bg-red-50 p-3 text-red-700">
           {error}
         </div>
+      )}
+
+      {/* Payment Type Totals */}
+      {paymentTotals && (
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+            <div className="text-sm uppercase tracking-widest text-zinc-700">
+              Cash Payments
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-zinc-900">
+              ₹{paymentTotals.cash.toFixed(2)}
+            </div>
+          </div>
+          <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+            <div className="text-sm uppercase tracking-widest text-zinc-700">
+              UPI Payments
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-zinc-900">
+              ₹{paymentTotals.UPI.toFixed(2)}
+            </div>
+          </div>
+          <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+            <div className="text-sm uppercase tracking-widest text-zinc-700">
+              Total
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-zinc-900">
+              ₹{paymentTotals.total.toFixed(2)}
+            </div>
+          </div>
+        </section>
       )}
 
       <section className="overflow-x-auto rounded border border-zinc-200">

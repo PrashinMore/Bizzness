@@ -143,6 +143,58 @@ export class SalesService {
 		if (!sale) throw new NotFoundException(`Sale ${id} not found`);
 		return sale;
 	}
+
+	async getPaymentTypeTotals(filters: {
+		from?: string;
+		to?: string;
+		productId?: string;
+		staff?: string;
+	}) {
+		const qb = this.saleRepo
+			.createQueryBuilder('sale')
+			.select('sale.paymentType', 'paymentType')
+			.addSelect('SUM(sale.totalAmount)', 'total')
+			.groupBy('sale.paymentType');
+
+		if (filters.from) {
+			qb.andWhere('sale.date >= :from', { from: filters.from });
+		}
+		if (filters.to) {
+			qb.andWhere('sale.date <= :to', { to: filters.to });
+		}
+		if (filters.productId) {
+			qb.leftJoin('sale.items', 'item')
+				.andWhere('item.productId = :pid', { pid: filters.productId });
+		}
+		if (filters.staff) {
+			qb.andWhere('sale.soldBy ILIKE :staff', { staff: `%${filters.staff}%` });
+		}
+
+		const results = await qb.getRawMany<{ paymentType: string; total: string }>();
+
+		// Initialize totals
+		const totals = {
+			cash: 0,
+			UPI: 0,
+		};
+
+		// Sum up totals by payment type
+		results.forEach((result) => {
+			const paymentType = result.paymentType || 'cash';
+			const total = parseFloat(result.total || '0');
+			if (paymentType.toLowerCase() === 'upi') {
+				totals.UPI += total;
+			} else {
+				totals.cash += total;
+			}
+		});
+
+		return {
+			cash: Number(totals.cash.toFixed(2)),
+			UPI: Number(totals.UPI.toFixed(2)),
+			total: Number((totals.cash + totals.UPI).toFixed(2)),
+		};
+	}
 }
 
 

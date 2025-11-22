@@ -23,6 +23,18 @@ export class SalesController {
 		return this.salesService.dailyTotals(from, to);
 	}
 
+	@Get('totals/payment-type')
+	getPaymentTypeTotals(@Query() query: ListSalesDto) {
+		return this.salesService.getPaymentTypeTotals({
+			from: query.from,
+			to: query.to,
+			productId: query.productId,
+			staff: query.staff,
+			// Note: paymentType filter is intentionally excluded
+			// so we get totals for both cash and UPI
+		});
+	}
+
 	@Get(':id')
 	findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
 		return this.salesService.findOne(id);
