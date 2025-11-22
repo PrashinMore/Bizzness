@@ -174,6 +174,7 @@ type SalesFilters = {
   to?: string;
   productId?: string;
   staff?: string;
+  paymentType?: string;
 };
 
 export const salesApi = {
@@ -183,6 +184,7 @@ export const salesApi = {
     if (filters.to) params.set('to', filters.to);
     if (filters.productId) params.set('productId', filters.productId);
     if (filters.staff) params.set('staff', filters.staff);
+    if (filters.paymentType) params.set('paymentType', filters.paymentType);
     const qs = params.toString();
     const path = qs ? `/sales?${qs}` : '/sales';
     return request<Sale[]>(path, { token });

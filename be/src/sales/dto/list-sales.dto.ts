@@ -16,6 +16,10 @@ export class ListSalesDto {
 	@IsOptional()
 	@IsString()
 	staff?: string;
+
+	@IsOptional()
+	@IsString()
+	paymentType?: string;
 }
 
 

@@ -18,6 +18,7 @@ export default function SalesListPage() {
   const [to, setTo] = useState<string>('');
   const [productId, setProductId] = useState<string>('');
   const [staff, setStaff] = useState<string>('');
+  const [paymentType, setPaymentType] = useState<string>('');
   const [products, setProducts] = useState<Product[]>([]);
   const [users, setUsers] = useState<User[]>([]);
 
@@ -53,6 +54,7 @@ export default function SalesListPage() {
           to: to || undefined,
           productId: productId || undefined,
           staff: staff || undefined,
+          paymentType: paymentType || undefined,
         });
         setSales(list);
       } catch (err) {
@@ -61,7 +63,7 @@ export default function SalesListPage() {
         setLoading(false);
       }
     },
-    [token, from, to, productId, staff],
+    [token, from, to, productId, staff, paymentType],
   );
 
   useEffect(() => {
@@ -81,7 +83,7 @@ export default function SalesListPage() {
       </header>
 
       <section className="rounded border border-zinc-200 p-4">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-5">
           <div className="flex flex-col gap-1">
             <label className="text-sm text-zinc-600">From</label>
             <input
@@ -125,6 +127,18 @@ export default function SalesListPage() {
               className="rounded border border-zinc-300 px-3 py-2"
             />
           </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-zinc-600">Payment Type</label>
+            <select
+              value={paymentType}
+              onChange={(e) => setPaymentType(e.target.value)}
+              className="rounded border border-zinc-300 px-3 py-2"
+            >
+              <option value="">All</option>
+              <option value="cash">Cash</option>
+              <option value="UPI">UPI</option>
+            </select>
+          </div>
         </div>
         <div className="mt-3 flex gap-2">
           <button
@@ -139,6 +153,7 @@ export default function SalesListPage() {
               setTo('');
               setProductId('');
               setStaff('');
+              setPaymentType('');
             }}
             className="rounded border border-zinc-300 px-4 py-2 hover:bg-zinc-50"
           >
@@ -167,6 +182,9 @@ export default function SalesListPage() {
                 Total
               </th>
               <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
+                Payment Type
+              </th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
                 Sold By
               </th>
               <th className="px-4 py-2"></th>
@@ -182,6 +200,11 @@ export default function SalesListPage() {
                   {s.items.reduce((sum, it) => sum + it.quantity, 0)} items
                 </td>
                 <td className="px-4 py-2 text-sm">₹ {Number(s.totalAmount).toFixed(2)}</td>
+                <td className="px-4 py-2 text-sm">
+                  <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-zinc-100 text-zinc-800">
+                    {s.paymentType || 'cash'}
+                  </span>
+                </td>
                 <td className="px-4 py-2 text-sm">{userMap.get(s.soldBy)?.name || s.soldBy}</td>
                 <td className="px-4 py-2 text-sm">
                   {s.id ? (
@@ -199,14 +222,14 @@ export default function SalesListPage() {
             ))}
             {loading && (
               <tr>
-                <td className="px-4 py-6 text-center text-sm text-zinc-500" colSpan={5}>
+                <td className="px-4 py-6 text-center text-sm text-zinc-500" colSpan={6}>
                   Loading...
                 </td>
               </tr>
             )}
             {!loading && sales.length === 0 && (
               <tr>
-                <td className="px-4 py-6 text-center text-sm text-zinc-500" colSpan={5}>
+                <td className="px-4 py-6 text-center text-sm text-zinc-500" colSpan={6}>
                   No sales found
                 </td>
               </tr>

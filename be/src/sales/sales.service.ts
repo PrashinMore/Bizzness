@@ -92,6 +92,7 @@ export class SalesService {
 		to?: string;
 		productId?: string;
 		staff?: string;
+		paymentType?: string;
 	}) {
 		const qb = this.saleRepo
 			.createQueryBuilder('sale')
@@ -109,6 +110,9 @@ export class SalesService {
 		}
 		if (filters.staff) {
 			qb.andWhere('sale.soldBy ILIKE :staff', { staff: `%${filters.staff}%` });
+		}
+		if (filters.paymentType) {
+			qb.andWhere('sale.paymentType = :paymentType', { paymentType: filters.paymentType });
 		}
 
 		return qb.getMany();

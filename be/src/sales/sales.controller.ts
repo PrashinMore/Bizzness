@@ -14,6 +14,7 @@ export class SalesController {
 			to: query.to,
 			productId: query.productId,
 			staff: query.staff,
+			paymentType: query.paymentType,
 		});
 	}
 
