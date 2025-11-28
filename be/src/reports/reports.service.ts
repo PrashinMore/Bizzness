@@ -22,16 +22,21 @@ export class ReportsService {
     private readonly userRepo: Repository<User>,
   ) {}
 
-  async getSalesReport(from?: string, to?: string) {
+  async getSalesReport(from?: string, to?: string, organizationIds?: string[]) {
     const startDate = from ? new Date(from) : new Date();
     startDate.setHours(0, 0, 0, 0);
     const endDate = to ? new Date(to) : new Date();
     endDate.setHours(23, 59, 59, 999);
 
+    const where: any = {
+      date: Between(startDate, endDate),
+    };
+    if (organizationIds && organizationIds.length > 0) {
+      where.organizationId = In(organizationIds);
+    }
+
     const sales = await this.saleRepo.find({
-      where: {
-        date: Between(startDate, endDate),
-      },
+      where,
       relations: ['items'],
     });
 
@@ -56,8 +61,12 @@ export class ReportsService {
     // Get product names
     const productIds = Array.from(productBreakdown.keys());
     if (productIds.length > 0) {
+      const productWhere: any = { id: In(productIds) };
+      if (organizationIds && organizationIds.length > 0) {
+        productWhere.organizationId = In(organizationIds);
+      }
       const products = await this.productRepo.find({
-        where: { id: In(productIds) },
+        where: productWhere,
       });
       const productMap = new Map(products.map((p) => [p.id, p.name]));
       for (const [productId, data] of productBreakdown.entries()) {
@@ -107,34 +116,47 @@ export class ReportsService {
     };
   }
 
-  async getProfitLossReport(from?: string, to?: string) {
+  async getProfitLossReport(from?: string, to?: string, organizationIds?: string[]) {
     const startDate = from ? new Date(from) : new Date();
     startDate.setHours(0, 0, 0, 0);
     const endDate = to ? new Date(to) : new Date();
     endDate.setHours(23, 59, 59, 999);
 
+    const saleWhere: any = {
+      date: Between(startDate, endDate),
+    };
+    const expenseWhere: any = {
+      date: Between(startDate, endDate),
+    };
+    if (organizationIds && organizationIds.length > 0) {
+      saleWhere.organizationId = In(organizationIds);
+      expenseWhere.organizationId = In(organizationIds);
+    }
+
     const [sales, expenses, saleItems] = await Promise.all([
       this.saleRepo.find({
-        where: {
-          date: Between(startDate, endDate),
-        },
+        where: saleWhere,
       }),
       this.expenseRepo.find({
-        where: {
-          date: Between(startDate, endDate),
-        },
+        where: expenseWhere,
       }),
-      this.saleItemRepo
-        .createQueryBuilder('item')
-        .innerJoin('item.sale', 'sale')
-        .innerJoin('product', 'product', 'product.id = item.productId')
-        .select('item.quantity', 'quantity')
-        .addSelect('product.costPrice', 'costPrice')
-        .where('sale.date >= :startDate AND sale.date <= :endDate', {
-          startDate,
-          endDate,
-        })
-        .getRawMany(),
+      (() => {
+        const qb = this.saleItemRepo
+          .createQueryBuilder('item')
+          .innerJoin('item.sale', 'sale')
+          .innerJoin('product', 'product', 'product.id = item.productId')
+          .where('sale.date >= :startDate AND sale.date <= :endDate', {
+            startDate,
+            endDate,
+          });
+        if (organizationIds && organizationIds.length > 0) {
+          qb.andWhere('sale.organizationId IN (:...organizationIds)', { organizationIds });
+        }
+        return qb
+          .select('item.quantity', 'quantity')
+          .addSelect('product.costPrice', 'costPrice')
+          .getRawMany();
+      })(),
     ]);
 
     const revenue = sales.reduce((sum, s) => sum + Number(s.totalAmount), 0);
@@ -162,8 +184,12 @@ export class ReportsService {
     };
   }
 
-  async getInventoryReport() {
-    const products = await this.productRepo.find();
+  async getInventoryReport(organizationIds?: string[]) {
+    const where: any = {};
+    if (organizationIds && organizationIds.length > 0) {
+      where.organizationId = In(organizationIds);
+    }
+    const products = await this.productRepo.find({ where });
 
     const inventoryValue = products.reduce(
       (sum, p) => sum + p.stock * Number(p.costPrice),
@@ -175,12 +201,18 @@ export class ReportsService {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     thirtyDaysAgo.setHours(0, 0, 0, 0);
 
-    const recentSales = await this.saleItemRepo
+    const recentSalesQuery = this.saleItemRepo
       .createQueryBuilder('item')
       .innerJoin('item.sale', 'sale')
       .select('item.productId', 'productId')
       .addSelect('SUM(item.quantity)', 'totalQuantity')
-      .where('sale.date >= :startDate', { startDate: thirtyDaysAgo })
+      .where('sale.date >= :startDate', { startDate: thirtyDaysAgo });
+    
+    if (organizationIds && organizationIds.length > 0) {
+      recentSalesQuery.andWhere('sale.organizationId IN (:...organizationIds)', { organizationIds });
+    }
+    
+    const recentSales = await recentSalesQuery
       .groupBy('item.productId')
       .getRawMany();
 
@@ -214,17 +246,22 @@ export class ReportsService {
     };
   }
 
-  async getExpenseReport(from?: string, to?: string) {
+  async getExpenseReport(from?: string, to?: string, organizationIds?: string[]) {
     const startDate = from ? new Date(from) : new Date();
     startDate.setMonth(startDate.getMonth() - 1);
     startDate.setHours(0, 0, 0, 0);
     const endDate = to ? new Date(to) : new Date();
     endDate.setHours(23, 59, 59, 999);
 
+    const where: any = {
+      date: Between(startDate, endDate),
+    };
+    if (organizationIds && organizationIds.length > 0) {
+      where.organizationId = In(organizationIds);
+    }
+
     const expenses = await this.expenseRepo.find({
-      where: {
-        date: Between(startDate, endDate),
-      },
+      where,
     });
 
     const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
@@ -275,8 +312,8 @@ export class ReportsService {
     };
   }
 
-  async exportSalesReportCSV(from?: string, to?: string): Promise<string> {
-    const report = await this.getSalesReport(from, to);
+  async exportSalesReportCSV(from?: string, to?: string, organizationIds?: string[]): Promise<string> {
+    const report = await this.getSalesReport(from, to, organizationIds);
     const lines: string[] = [];
 
     // Header

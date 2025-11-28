@@ -19,19 +19,48 @@ export default function MenuPage() {
   const { token } = useAuth();
   const router = useRouter();
 
-  const [products, setProducts] = useState<Product[]>([]);
+  const [allMenuItems, setAllMenuItems] = useState<Product[]>([]);
+  const [menuItems, setMenuItems] = useState<Product[]>([]);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [paymentType, setPaymentType] = useState<string>('cash');
   const [checkingOut, setCheckingOut] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('');
 
-  // Filter products by category "menu item" (case-insensitive)
-  const menuItems = useMemo(
-    () => products.filter((p) => p.category.toLowerCase().includes('menu')),
-    [products],
-  );
+  // Get unique categories from all menu items for the filter dropdown
+  const availableCategories = useMemo(() => {
+    const categories = new Set<string>();
+    allMenuItems.forEach((product) => {
+      if (product.category) {
+        categories.add(product.category);
+      }
+    });
+    return Array.from(categories).sort();
+  }, [allMenuItems]);
 
+  // Load all menu items initially to populate category dropdown
+  useEffect(() => {
+    async function loadAllProducts() {
+      if (!token) {
+        return;
+      }
+      try {
+        // Load all menu items (without filters) to get available categories
+        const data = await productsApi.list(token, { forMenu: true });
+        setAllMenuItems(data);
+      } catch (err) {
+        // Silent fail for category dropdown - we'll show error when loading filtered items
+      }
+    }
+
+    if (!loading && user && token) {
+      loadAllProducts();
+    }
+  }, [loading, user, token]);
+
+  // Load filtered menu items from backend
   useEffect(() => {
     async function loadProducts() {
       if (!token) {
@@ -40,8 +69,19 @@ export default function MenuPage() {
       setFetching(true);
       setError(null);
       try {
-        const data = await productsApi.list(token);
-        setProducts(data);
+        // Use forMenu=true to exclude raw material categories
+        // Include search and category filters
+        const filters: { forMenu: boolean; search?: string; category?: string } = {
+          forMenu: true,
+        };
+        if (searchQuery.trim()) {
+          filters.search = searchQuery.trim();
+        }
+        if (categoryFilter.trim()) {
+          filters.category = categoryFilter.trim();
+        }
+        const data = await productsApi.list(token, filters);
+        setMenuItems(data);
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -56,7 +96,7 @@ export default function MenuPage() {
     if (!loading && user && token) {
       loadProducts();
     }
-  }, [loading, user, token]);
+  }, [loading, user, token, searchQuery, categoryFilter]);
 
   const addToCart = (product: Product) => {
     setCart((prev) => {
@@ -160,6 +200,44 @@ export default function MenuPage() {
             </p>
           </header>
 
+          {/* Search and Filter Controls */}
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Search by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-lg border border-zinc-200 px-4 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+              />
+            </div>
+            <div className="sm:w-48">
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="w-full rounded-lg border border-zinc-200 px-4 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+              >
+                <option value="">All Categories</option>
+                {availableCategories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {(searchQuery || categoryFilter) && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setCategoryFilter('');
+                }}
+                className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
           {error && (
             <div className="mb-4 rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
               {error}
@@ -171,8 +249,9 @@ export default function MenuPage() {
           ) : menuItems.length === 0 ? (
             <div className="rounded-3xl bg-white p-8 shadow-sm">
               <p className="text-sm text-zinc-700">
-                No menu items found. Add products with category containing "menu"
-                to see them here.
+                {searchQuery || categoryFilter
+                  ? 'No menu items found matching your filters.'
+                  : 'No menu items found. Add products to see them here.'}
               </p>
             </div>
           ) : (

@@ -3,10 +3,13 @@ import {
   Get,
   Patch,
   Body,
+  Req,
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  ForbiddenException,
 } from '@nestjs/common';
+import { type Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SettingsService } from './settings.service';
 import { UpdateBusinessSettingsDto } from './dto/update-business-settings.dto';
@@ -16,6 +19,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { StorageService } from '../products/storage.service';
+import type { SanitizedUser } from '../users/users.types';
+
+type RequestWithUser = Request & { user: SanitizedUser };
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin')
@@ -26,9 +32,17 @@ export class SettingsController {
     private readonly storageService: StorageService,
   ) {}
 
+  private getFirstOrganizationId(user: SanitizedUser): string {
+    if (!user.organizations || user.organizations.length === 0) {
+      throw new ForbiddenException('You must be assigned to at least one organization');
+    }
+    return user.organizations[0].id;
+  }
+
   @Get()
-  getSettings() {
-    return this.settingsService.getSettings();
+  getSettings(@Req() req: RequestWithUser) {
+    const organizationId = this.getFirstOrganizationId(req.user);
+    return this.settingsService.getSettings(organizationId);
   }
 
   @Patch('business')
@@ -53,23 +67,27 @@ export class SettingsController {
     }),
   )
   updateBusinessSettings(
+    @Req() req: RequestWithUser,
     @Body() dto: UpdateBusinessSettingsDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
+    const organizationId = this.getFirstOrganizationId(req.user);
     if (file) {
       dto.businessLogo = this.storageService.getImageUrl(file.filename, 'business');
     }
-    return this.settingsService.updateBusinessSettings(dto);
+    return this.settingsService.updateBusinessSettings(dto, organizationId);
   }
 
   @Patch('billing')
-  updateBillingSettings(@Body() dto: UpdateBillingSettingsDto) {
-    return this.settingsService.updateBillingSettings(dto);
+  updateBillingSettings(@Req() req: RequestWithUser, @Body() dto: UpdateBillingSettingsDto) {
+    const organizationId = this.getFirstOrganizationId(req.user);
+    return this.settingsService.updateBillingSettings(dto, organizationId);
   }
 
   @Patch('inventory')
-  updateInventorySettings(@Body() dto: UpdateInventorySettingsDto) {
-    return this.settingsService.updateInventorySettings(dto);
+  updateInventorySettings(@Req() req: RequestWithUser, @Body() dto: UpdateInventorySettingsDto) {
+    const organizationId = this.getFirstOrganizationId(req.user);
+    return this.settingsService.updateInventorySettings(dto, organizationId);
   }
 }
 

@@ -1,0 +1,84 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { type Request } from 'express';
+import { Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OrganizationsService } from './organizations.service';
+import { CreateOrganizationDto } from './dto/create-organization.dto';
+import { UpdateOrganizationDto } from './dto/update-organization.dto';
+import { Organization } from './entities/organization.entity';
+import type { SanitizedUser } from '../users/users.types';
+
+type RequestWithUser = Request & { user: SanitizedUser };
+
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('organizations')
+export class OrganizationsController {
+  constructor(private readonly organizationsService: OrganizationsService) {}
+
+  @Roles('admin')
+  @Get()
+  findAll(): Promise<Organization[]> {
+    return this.organizationsService.findAll();
+  }
+
+  @Roles('admin')
+  @Get(':id')
+  findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string): Promise<Organization> {
+    return this.organizationsService.findOne(id);
+  }
+
+  @Roles('admin')
+  @Post()
+  create(
+    @Body() createDto: CreateOrganizationDto,
+    @Req() req: RequestWithUser,
+  ): Promise<Organization> {
+    return this.organizationsService.create(createDto, req.user.id);
+  }
+
+  @Roles('admin')
+  @Patch(':id')
+  update(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() updateDto: UpdateOrganizationDto,
+  ): Promise<Organization> {
+    return this.organizationsService.update(id, updateDto);
+  }
+
+  @Roles('admin')
+  @Delete(':id')
+  remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string): Promise<void> {
+    return this.organizationsService.remove(id);
+  }
+
+  @Roles('admin')
+  @Post(':id/users/:userId')
+  assignUser(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Param('userId', new ParseUUIDPipe({ version: '4' })) userId: string,
+  ): Promise<Organization> {
+    return this.organizationsService.assignUser(id, userId);
+  }
+
+  @Roles('admin')
+  @Delete(':id/users/:userId')
+  removeUser(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Param('userId', new ParseUUIDPipe({ version: '4' })) userId: string,
+  ): Promise<Organization> {
+    return this.organizationsService.removeUser(id, userId);
+  }
+}
+

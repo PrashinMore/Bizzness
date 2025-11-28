@@ -2,10 +2,12 @@ import {
 	Column,
 	CreateDateColumn,
 	Entity,
+	ManyToOne,
 	OneToMany,
 	PrimaryGeneratedColumn,
 } from 'typeorm';
 import { SaleItem } from './sale-item.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 @Entity()
 export class Sale {
@@ -29,6 +31,12 @@ export class Sale {
 
 	@Column({ type: 'varchar', length: 20, default: 'cash' })
 	paymentType: string;
+
+	@ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
+	organization!: Organization;
+
+	@Column({ default: '13df4863-961c-45c0-9da7-d0d14379d8fc' })
+	organizationId!: string;
 
 	@CreateDateColumn()
 	createdAt: Date;

@@ -2,9 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 @Entity()
 export class Settings {
@@ -55,6 +57,12 @@ export class Settings {
 
   @Column({ type: 'boolean', default: true })
   stockWarningAlerts: boolean;
+
+  @ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
+  organization!: Organization;
+
+  @Column({ unique: true, default: '13df4863-961c-45c0-9da7-d0d14379d8fc' })
+  organizationId!: string;
 
   @CreateDateColumn()
   createdAt: Date;

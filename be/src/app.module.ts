@@ -17,6 +17,10 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { SettingsModule } from './settings/settings.module';
 import { Settings } from './settings/entities/settings.entity';
 import { ReportsModule } from './reports/reports.module';
+import { OrganizationsModule } from './organizations/organizations.module';
+import { Organization } from './organizations/entities/organization.entity';
+import { CategoriesModule } from './categories/categories.module';
+import { Category } from './categories/entities/category.entity';
 
 @Module({
   imports: [
@@ -28,7 +32,8 @@ import { ReportsModule } from './reports/reports.module';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         const host = configService.get<string>('DB_HOST') ?? configService.get<string>('DBHOST') ?? 'localhost';
-        const isSupabase = host.includes('supabase.co');
+        // const isSupabase = host.includes('supabase.co');
+        const isSupabase = false;
         
         // Detect serverless environment
         const isServerless = 
@@ -69,7 +74,7 @@ import { ReportsModule } from './reports/reports.module';
           username: configService.get<string>('DB_USER') ?? 'postgres',
           password: configService.get<string>('DB_PASSWORD') ?? 'postgres',
           database: configService.get<string>('DB_NAME') ?? 'biznes',
-          entities: [User, Product, Sale, SaleItem, Expense, Settings],
+          entities: [User, Product, Sale, SaleItem, Expense, Settings, Organization, Category],
           synchronize: true,
           // Disable retries completely in serverless to fail fast
           retryAttempts: isServerless ? 0 : 10,
@@ -114,6 +119,8 @@ import { ReportsModule } from './reports/reports.module';
     DashboardModule,
     SettingsModule,
     ReportsModule,
+    OrganizationsModule,
+    CategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

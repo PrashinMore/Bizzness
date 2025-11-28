@@ -64,7 +64,10 @@ export class UsersService {
   }
 
   async findById(id: string): Promise<SanitizedUser | null> {
-    const user = await this.usersRepository.findOne({ where: { id } });
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      relations: ['organizations'],
+    });
     return user ? this.sanitizeUser(user) : null;
   }
 

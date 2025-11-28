@@ -16,7 +16,7 @@ export class SalesService {
 		private readonly dataSource: DataSource,
 	) {}
 
-	async create(dto: CreateSaleDto) {
+	async create(dto: CreateSaleDto & { organizationId: string }, organizationIds: string[]) {
 		// Basic consistency checks
 		const computedTotal = dto.items.reduce(
 			(sum, i) => sum + i.sellingPrice * i.quantity,
@@ -30,7 +30,10 @@ export class SalesService {
 		return this.dataSource.transaction(async (manager) => {
 			const productIds = dto.items.map((i) => i.productId);
 			const products = await manager.getRepository(Product).find({
-				where: { id: In(productIds) },
+				where: { 
+					id: In(productIds),
+					organizationId: In(organizationIds),
+				},
 			});
 			const productMap = new Map(products.map((p) => [p.id, p]));
 
@@ -60,6 +63,7 @@ export class SalesService {
 				totalAmount: round2(dto.totalAmount),
 				soldBy: dto.soldBy,
 				paymentType: dto.paymentType || 'cash',
+				organizationId: dto.organizationId,
 			});
 			await manager.getRepository(Sale).save(sale);
 
@@ -93,11 +97,20 @@ export class SalesService {
 		productId?: string;
 		staff?: string;
 		paymentType?: string;
+		organizationIds?: string[];
 	}) {
 		const qb = this.saleRepo
 			.createQueryBuilder('sale')
 			.leftJoinAndSelect('sale.items', 'item')
 			.orderBy('sale.date', 'DESC');
+
+		if (filters.organizationIds && filters.organizationIds.length > 0) {
+			qb.andWhere('sale.organizationId IN (:...organizationIds)', {
+				organizationIds: filters.organizationIds,
+			});
+		} else if (filters.organizationIds && filters.organizationIds.length === 0) {
+			qb.andWhere('1 = 0');
+		}
 
 		if (filters.from) {
 			qb.andWhere('sale.date >= :from', { from: filters.from });
@@ -118,7 +131,7 @@ export class SalesService {
 		return qb.getMany();
 	}
 
-	async dailyTotals(from?: string, to?: string) {
+	async dailyTotals(from?: string, to?: string, organizationIds?: string[]) {
 		const qb = this.saleRepo
 			.createQueryBuilder('sale')
 			.select("DATE_TRUNC('day', sale.date)", 'day')
@@ -126,21 +139,36 @@ export class SalesService {
 			.groupBy("DATE_TRUNC('day', sale.date)")
 			.orderBy('day', 'DESC');
 
+		if (organizationIds && organizationIds.length > 0) {
+			qb.andWhere('sale.organizationId IN (:...organizationIds)', {
+				organizationIds,
+			});
+		} else if (organizationIds && organizationIds.length === 0) {
+			qb.andWhere('1 = 0');
+		}
+
 		if (from) qb.andWhere('sale.date >= :from', { from });
 		if (to) qb.andWhere('sale.date <= :to', { to });
 
 		return qb.getRawMany<{ day: string; total: string }>();
 	}
 
-	async findOne(id: string) {
+	async findOne(id: string, organizationIds?: string[]) {
 		if (!id) {
 			throw new BadRequestException('id is required');
 		}
+		const where: any = { id };
+		if (organizationIds && organizationIds.length > 0) {
+			where.organizationId = In(organizationIds);
+		}
 		const sale = await this.saleRepo.findOne({
-			where: { id },
+			where,
 			relations: ['items'],
 		});
 		if (!sale) throw new NotFoundException(`Sale ${id} not found`);
+		if (organizationIds && organizationIds.length > 0 && !organizationIds.includes(sale.organizationId)) {
+			throw new NotFoundException(`Sale ${id} not found`);
+		}
 		return sale;
 	}
 
@@ -149,12 +177,21 @@ export class SalesService {
 		to?: string;
 		productId?: string;
 		staff?: string;
+		organizationIds?: string[];
 	}) {
 		const qb = this.saleRepo
 			.createQueryBuilder('sale')
 			.select('sale.paymentType', 'paymentType')
 			.addSelect('SUM(sale.totalAmount)', 'total')
 			.groupBy('sale.paymentType');
+
+		if (filters.organizationIds && filters.organizationIds.length > 0) {
+			qb.andWhere('sale.organizationId IN (:...organizationIds)', {
+				organizationIds: filters.organizationIds,
+			});
+		} else if (filters.organizationIds && filters.organizationIds.length === 0) {
+			qb.andWhere('1 = 0');
+		}
 
 		if (filters.from) {
 			qb.andWhere('sale.date >= :from', { from: filters.from });

@@ -19,7 +19,7 @@ export class DashboardService {
     private readonly expenseRepo: Repository<Expense>,
   ) {}
 
-  async getTodaySummary() {
+  async getTodaySummary(organizationIds: string[]) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -29,11 +29,13 @@ export class DashboardService {
       this.saleRepo.find({
         where: {
           date: Between(today, tomorrow),
+          organizationId: In(organizationIds),
         },
       }),
       this.expenseRepo.find({
         where: {
           date: Between(today, tomorrow),
+          organizationId: In(organizationIds),
         },
       }),
       this.saleItemRepo
@@ -45,6 +47,9 @@ export class DashboardService {
         .where('sale.date >= :startDate AND sale.date < :endDate', {
           startDate: today,
           endDate: tomorrow,
+        })
+        .andWhere('sale.organizationId IN (:...organizationIds)', {
+          organizationIds,
         })
         .getRawMany(),
     ]);
@@ -75,7 +80,7 @@ export class DashboardService {
     };
   }
 
-  async getSalesTrend(range: '7days' | '30days' = '7days') {
+  async getSalesTrend(range: '7days' | '30days' = '7days', organizationIds: string[]) {
     const days = range === '7days' ? 7 : 30;
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
@@ -85,7 +90,10 @@ export class DashboardService {
       .createQueryBuilder('sale')
       .select("DATE_TRUNC('day', sale.date)", 'date')
       .addSelect('SUM(sale.totalAmount)', 'totalSales')
-      .where('sale.date >= :startDate', { startDate })
+      .where('sale.date >= :startDate AND sale.organizationId IN (:...organizationIds)', { 
+        startDate,
+        organizationIds,
+      })
       .groupBy("DATE_TRUNC('day', sale.date)")
       .orderBy('date', 'ASC')
       .getRawMany();
@@ -96,7 +104,7 @@ export class DashboardService {
     }));
   }
 
-  async getTopProducts(limit: number = 5) {
+  async getTopProducts(limit: number = 5, organizationIds: string[]) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 30); // Last 30 days
 
@@ -106,7 +114,10 @@ export class DashboardService {
       .select('item.productId', 'productId')
       .addSelect('SUM(item.quantity)', 'totalQuantity')
       .addSelect('SUM(item.subtotal)', 'totalRevenue')
-      .where('sale.date >= :startDate', { startDate })
+      .where('sale.date >= :startDate AND sale.organizationId IN (:...organizationIds)', { 
+        startDate,
+        organizationIds,
+      })
       .groupBy('item.productId')
       .orderBy('SUM(item.quantity)', 'DESC')
       .limit(limit)
@@ -114,7 +125,10 @@ export class DashboardService {
 
     const productIds = topProducts.map((p) => p.productId);
     const products = await this.productRepo.find({
-      where: { id: In(productIds) },
+      where: { 
+        id: In(productIds),
+        organizationId: In(organizationIds),
+      },
     });
 
     const productMap = new Map(products.map((p) => [p.id, p]));
@@ -130,8 +144,10 @@ export class DashboardService {
     });
   }
 
-  async getLowStockAlerts() {
-    const products = await this.productRepo.find();
+  async getLowStockAlerts(organizationIds: string[]) {
+    const products = await this.productRepo.find({
+      where: { organizationId: In(organizationIds) },
+    });
     return products
       .filter((p) => p.stock < p.lowStockThreshold)
       .map((p) => ({
@@ -146,13 +162,14 @@ export class DashboardService {
       .sort((a, b) => a.stock - b.stock); // Sort by stock (lowest first)
   }
 
-  async getExpensesSummary() {
+  async getExpensesSummary(organizationIds: string[]) {
     const startDate = new Date();
     startDate.setMonth(startDate.getMonth() - 1); // Last month
 
     const expenses = await this.expenseRepo.find({
       where: {
         date: Between(startDate, new Date()),
+        organizationId: In(organizationIds),
       },
     });
 

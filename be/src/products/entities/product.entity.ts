@@ -2,9 +2,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Organization } from '../../organizations/entities/organization.entity';
+import { Category } from '../../categories/entities/category.entity';
 
 @Entity()
 export class Product {
@@ -16,6 +19,12 @@ export class Product {
 
   @Column({ length: 120 })
   category: string;
+
+  @ManyToOne(() => Category, { nullable: true, onDelete: 'SET NULL' })
+  categoryEntity?: Category | null;
+
+  @Column({ type: 'uuid', nullable: true })
+  categoryId?: string | null;
 
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   costPrice: number;
@@ -34,6 +43,12 @@ export class Product {
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   imageUrl: string | null;
+
+  @ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
+  organization!: Organization;
+
+  @Column({ type: 'uuid', default: '13df4863-961c-45c0-9da7-d0d14379d8fc' })
+  organizationId!: string;
 
   @CreateDateColumn()
   createdAt: Date;

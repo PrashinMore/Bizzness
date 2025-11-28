@@ -467,6 +467,14 @@ export default function DashboardPage() {
                       Manage Users
                     </Link>
                   </li>
+                  <li>
+                    <Link
+                      href="/dashboard/organizations"
+                      className="font-medium text-zinc-900 underline-offset-4 hover:underline"
+                    >
+                      Manage Organizations
+                    </Link>
+                  </li>
                 </>
               )}
             </ul>

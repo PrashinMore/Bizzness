@@ -1,3 +1,5 @@
+import { Organization } from './organization';
+
 export type UserRole = 'admin' | 'staff';
 
 export interface User {
@@ -5,6 +7,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  organizations?: Organization[];
   createdAt: string;
   updatedAt: string;
 }

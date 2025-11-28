@@ -13,15 +13,14 @@ export class SettingsService {
     private readonly settingsRepository: Repository<Settings>,
   ) {}
 
-  async getSettings(): Promise<Settings> {
+  async getSettings(organizationId: string): Promise<Settings> {
     let settings = await this.settingsRepository.findOne({
-      where: {},
-      order: { createdAt: 'ASC' },
+      where: { organizationId },
     });
 
     if (!settings) {
-      // Create default settings if none exist
-      settings = this.settingsRepository.create({});
+      // Create default settings if none exist for this organization
+      settings = this.settingsRepository.create({ organizationId });
       settings = await this.settingsRepository.save(settings);
     }
 
@@ -30,24 +29,27 @@ export class SettingsService {
 
   async updateBusinessSettings(
     dto: UpdateBusinessSettingsDto,
+    organizationId: string,
   ): Promise<Settings> {
-    const settings = await this.getSettings();
+    const settings = await this.getSettings(organizationId);
     Object.assign(settings, dto);
     return this.settingsRepository.save(settings);
   }
 
   async updateBillingSettings(
     dto: UpdateBillingSettingsDto,
+    organizationId: string,
   ): Promise<Settings> {
-    const settings = await this.getSettings();
+    const settings = await this.getSettings(organizationId);
     Object.assign(settings, dto);
     return this.settingsRepository.save(settings);
   }
 
   async updateInventorySettings(
     dto: UpdateInventorySettingsDto,
+    organizationId: string,
   ): Promise<Settings> {
-    const settings = await this.getSettings();
+    const settings = await this.getSettings(organizationId);
     Object.assign(settings, dto);
     return this.settingsRepository.save(settings);
   }

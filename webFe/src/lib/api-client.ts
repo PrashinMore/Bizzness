@@ -2,6 +2,7 @@ import { AuthResponse, User } from '@/types/user';
 import { Product } from '@/types/product';
 import { Sale } from '@/types/sale';
 import { Expense } from '@/types/expense';
+import { Organization } from '@/types/organization';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000';
@@ -104,6 +105,7 @@ type ProductFilters = {
   search?: string;
   category?: string;
   lowStockOnly?: boolean;
+  forMenu?: boolean;
 };
 
 export const productsApi = {
@@ -117,6 +119,9 @@ export const productsApi = {
     }
     if (filters.lowStockOnly) {
       params.set('lowStock', 'true');
+    }
+    if (filters.forMenu) {
+      params.set('forMenu', 'true');
     }
     const qs = params.toString();
     const path = qs ? `/products?${qs}` : '/products';
@@ -475,5 +480,57 @@ export const reportsApi = {
     const qs = params.toString();
     return request(`/reports/expenses${qs ? `?${qs}` : ''}`, { token });
   },
+};
+
+export const organizationsApi = {
+  list: (token: string): Promise<Organization[]> =>
+    request<Organization[]>('/organizations', { token }),
+  get: (token: string, id: string): Promise<Organization> =>
+    request<Organization>(`/organizations/${id}`, { token }),
+  create: (
+    token: string,
+    payload: { name: string; description?: string | null },
+  ): Promise<Organization> =>
+    request<Organization>('/organizations', {
+      method: 'POST',
+      body: payload,
+      token,
+    }),
+  update: (
+    token: string,
+    id: string,
+    payload: Partial<{ name: string; description?: string | null }>,
+  ): Promise<Organization> =>
+    request<Organization>(`/organizations/${id}`, {
+      method: 'PATCH',
+      body: payload,
+      token,
+    }),
+  remove: (token: string, id: string): Promise<void> =>
+    request<void>(`/organizations/${id}`, { method: 'DELETE', token }),
+  assignUser: (
+    token: string,
+    organizationId: string,
+    userId: string,
+  ): Promise<Organization> =>
+    request<Organization>(
+      `/organizations/${organizationId}/users/${userId}`,
+      {
+        method: 'POST',
+        token,
+      },
+    ),
+  removeUser: (
+    token: string,
+    organizationId: string,
+    userId: string,
+  ): Promise<Organization> =>
+    request<Organization>(
+      `/organizations/${organizationId}/users/${userId}`,
+      {
+        method: 'DELETE',
+        token,
+      },
+    ),
 };
 
