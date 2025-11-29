@@ -1,10 +1,11 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Organization } from './entities/organization.entity';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
@@ -39,6 +40,8 @@ export class OrganizationsService {
     const organization = this.organizationsRepository.create({
       name: createDto.name,
       description: createDto.description ?? null,
+      createdBy: creatorId,
+      creator: creator,
       users: [creator], // Automatically associate the creator
     });
 
@@ -51,32 +54,64 @@ export class OrganizationsService {
     }) || saved;
   }
 
-  async findAll(): Promise<Organization[]> {
-    return await this.organizationsRepository.find({
-      order: { createdAt: 'DESC' },
-    });
+  async findAll(userId: string, userRole: string): Promise<Organization[]> {
+    // If admin, return all organizations
+    if (userRole === 'admin') {
+      return await this.organizationsRepository.find({
+        order: { createdAt: 'DESC' },
+        relations: ['users', 'creator'],
+      });
+    }
+
+    // For non-admins, only return organizations they're part of or created
+    // Use query builder to properly handle ManyToMany relationship
+    return await this.organizationsRepository
+      .createQueryBuilder('organization')
+      .leftJoinAndSelect('organization.users', 'users')
+      .leftJoinAndSelect('organization.creator', 'creator')
+      .where('users.id = :userId OR organization.createdBy = :userId', { userId })
+      .orderBy('organization.createdAt', 'DESC')
+      .getMany();
   }
 
-  async findOne(id: string): Promise<Organization> {
+  async findOne(id: string, userId: string, userRole: string): Promise<Organization> {
     const organization = await this.organizationsRepository.findOne({
       where: { id },
-      relations: ['users'],
+      relations: ['users', 'creator'],
     });
     if (!organization) {
       throw new NotFoundException('Organization not found');
     }
+
+    // Check access: admin can see all, others can only see if they're a member
+    if (userRole !== 'admin') {
+      const isMember = organization.users.some(u => u.id === userId);
+      const isCreator = organization.createdBy === userId;
+      if (!isMember && !isCreator) {
+        throw new ForbiddenException('You do not have access to this organization');
+      }
+    }
+
     return organization;
   }
 
   async update(
     id: string,
     updateDto: UpdateOrganizationDto,
+    userId: string,
+    userRole: string,
   ): Promise<Organization> {
     const organization = await this.organizationsRepository.findOne({
       where: { id },
+      relations: ['users', 'creator'],
     });
     if (!organization) {
       throw new NotFoundException('Organization not found');
+    }
+
+    // Only admins can edit organizations
+    if (userRole !== 'admin') {
+      throw new ForbiddenException('Only admins can edit organizations');
     }
 
     // Check if name is being updated and if it conflicts with existing organization
@@ -99,19 +134,29 @@ export class OrganizationsService {
     return await this.organizationsRepository.save(organization);
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, userId: string, userRole: string): Promise<void> {
     const organization = await this.organizationsRepository.findOne({
       where: { id },
+      relations: ['users', 'creator'],
     });
     if (!organization) {
       throw new NotFoundException('Organization not found');
+    }
+
+    // Only admins can delete organizations
+    if (userRole !== 'admin') {
+      throw new ForbiddenException('Only admins can delete organizations');
     }
 
     // Many-to-many relationship will automatically remove join table entries
     await this.organizationsRepository.remove(organization);
   }
 
-  async assignUser(organizationId: string, userId: string): Promise<Organization> {
+  async assignUser(organizationId: string, userId: string, requesterRole: string): Promise<Organization> {
+    // Only admins can assign users
+    if (requesterRole !== 'admin') {
+      throw new ForbiddenException('Only admins can assign users to organizations');
+    }
     const organization = await this.organizationsRepository.findOne({
       where: { id: organizationId },
       relations: ['users'],
@@ -137,7 +182,11 @@ export class OrganizationsService {
     return await this.organizationsRepository.save(organization);
   }
 
-  async removeUser(organizationId: string, userId: string): Promise<Organization> {
+  async removeUser(organizationId: string, userId: string, requesterRole: string): Promise<Organization> {
+    // Only admins can remove users
+    if (requesterRole !== 'admin') {
+      throw new ForbiddenException('Only admins can remove users from organizations');
+    }
     const organization = await this.organizationsRepository.findOne({
       where: { id: organizationId },
       relations: ['users'],

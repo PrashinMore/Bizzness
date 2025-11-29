@@ -3,8 +3,10 @@ import {
   CreateDateColumn,
   Entity,
   ManyToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
@@ -18,6 +20,13 @@ export class Organization {
 
   @Column({ type: 'text', nullable: true })
   description?: string | null;
+
+  @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'createdBy' })
+  creator!: User;
+
+  @Column({ type: 'uuid' })
+  createdBy!: string;
 
   @CreateDateColumn()
   createdAt!: Date;

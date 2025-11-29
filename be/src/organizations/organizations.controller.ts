@@ -27,16 +27,17 @@ type RequestWithUser = Request & { user: SanitizedUser };
 export class OrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) {}
 
-  @Roles('admin')
   @Get()
-  findAll(): Promise<Organization[]> {
-    return this.organizationsService.findAll();
+  findAll(@Req() req: RequestWithUser): Promise<Organization[]> {
+    return this.organizationsService.findAll(req.user.id, req.user.role);
   }
 
-  @Roles('admin')
   @Get(':id')
-  findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string): Promise<Organization> {
-    return this.organizationsService.findOne(id);
+  findOne(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Req() req: RequestWithUser,
+  ): Promise<Organization> {
+    return this.organizationsService.findOne(id, req.user.id, req.user.role);
   }
 
   @Roles('admin')
@@ -53,14 +54,18 @@ export class OrganizationsController {
   update(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateDto: UpdateOrganizationDto,
+    @Req() req: RequestWithUser,
   ): Promise<Organization> {
-    return this.organizationsService.update(id, updateDto);
+    return this.organizationsService.update(id, updateDto, req.user.id, req.user.role);
   }
 
   @Roles('admin')
   @Delete(':id')
-  remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string): Promise<void> {
-    return this.organizationsService.remove(id);
+  remove(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Req() req: RequestWithUser,
+  ): Promise<void> {
+    return this.organizationsService.remove(id, req.user.id, req.user.role);
   }
 
   @Roles('admin')
@@ -68,8 +73,9 @@ export class OrganizationsController {
   assignUser(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Param('userId', new ParseUUIDPipe({ version: '4' })) userId: string,
+    @Req() req: RequestWithUser,
   ): Promise<Organization> {
-    return this.organizationsService.assignUser(id, userId);
+    return this.organizationsService.assignUser(id, userId, req.user.role);
   }
 
   @Roles('admin')
@@ -77,8 +83,9 @@ export class OrganizationsController {
   removeUser(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Param('userId', new ParseUUIDPipe({ version: '4' })) userId: string,
+    @Req() req: RequestWithUser,
   ): Promise<Organization> {
-    return this.organizationsService.removeUser(id, userId);
+    return this.organizationsService.removeUser(id, userId, req.user.role);
   }
 }
 
