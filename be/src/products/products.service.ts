@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Like, Repository, DataSource } from 'typeorm';
 import { Product } from './entities/product.entity';
@@ -6,6 +6,9 @@ import { GlobalProduct } from './entities/global-product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Category } from '../categories/entities/category.entity';
+import csv from 'csv-parser';
+import { stringify } from 'csv-stringify/sync';
+import { Readable } from 'stream';
 
 /**
  * Calculate Levenshtein distance between two strings
@@ -369,6 +372,141 @@ export class ProductsService {
     }
 
     return { isDuplicate: false };
+  }
+
+  async generateCsvTemplate(): Promise<string> {
+    const rows = [
+      { name: 'Example Product', category: 'Beverages', costPrice: '10.50', sellingPrice: '15.99', stock: '100', unit: 'pieces', lowStockThreshold: '10' },
+      { name: 'Another Product', category: 'Snacks', costPrice: '5.00', sellingPrice: '8.50', stock: '50', unit: 'pieces', lowStockThreshold: '5' },
+    ];
+
+    return stringify(rows, { header: true });
+  }
+
+  async bulkImportFromCsv(
+    file: Express.Multer.File,
+    organizationId: string,
+    organizationIds: string[],
+  ): Promise<{
+    created: number;
+    updated: number;
+    errors: Array<{ row: number; error: string }>;
+  }> {
+    const results = {
+      created: 0,
+      updated: 0,
+      errors: [] as Array<{ row: number; error: string }>,
+    };
+
+    const rows: any[] = [];
+    let rowNumber = 1; // Header is row 1, so data starts at row 2
+
+    return new Promise((resolve, reject) => {
+      const stream = Readable.from(file.buffer);
+      
+      stream
+        .pipe(csv())
+        .on('data', (row) => {
+          rowNumber++;
+          rows.push({ ...row, _rowNumber: rowNumber });
+        })
+        .on('end', async () => {
+          try {
+            // Process all rows in a transaction
+            await this.dataSource.transaction(async (manager) => {
+              // Get all existing products for this organization to check for duplicates
+              const existingProducts = await manager.getRepository(Product).find({
+                where: { organizationId: In(organizationIds) },
+              });
+              
+              const productMap = new Map<string, Product>();
+              existingProducts.forEach((p) => {
+                productMap.set(p.name.toLowerCase().trim(), p);
+              });
+
+              for (const row of rows) {
+                const rowNum = row._rowNumber;
+                try {
+                  // Validate required fields
+                  if (!row.name || !row.name.trim()) {
+                    results.errors.push({ row: rowNum, error: 'Name is required' });
+                    continue;
+                  }
+                  if (!row.category || !row.category.trim()) {
+                    results.errors.push({ row: rowNum, error: 'Category is required' });
+                    continue;
+                  }
+                  if (!row.costPrice || isNaN(parseFloat(row.costPrice))) {
+                    results.errors.push({ row: rowNum, error: 'Cost price must be a valid number' });
+                    continue;
+                  }
+                  if (!row.sellingPrice || isNaN(parseFloat(row.sellingPrice))) {
+                    results.errors.push({ row: rowNum, error: 'Selling price must be a valid number' });
+                    continue;
+                  }
+                  if (row.stock === undefined || row.stock === '' || isNaN(parseInt(row.stock))) {
+                    results.errors.push({ row: rowNum, error: 'Stock must be a valid integer' });
+                    continue;
+                  }
+                  if (!row.unit || !row.unit.trim()) {
+                    results.errors.push({ row: rowNum, error: 'Unit is required' });
+                    continue;
+                  }
+
+                  const productName = row.name.trim();
+                  const normalizedName = productName.toLowerCase();
+                  const existingProduct = productMap.get(normalizedName);
+
+                  const productData = {
+                    name: productName,
+                    category: row.category.trim(),
+                    costPrice: parseFloat(row.costPrice),
+                    sellingPrice: parseFloat(row.sellingPrice),
+                    stock: parseInt(row.stock),
+                    unit: row.unit.trim(),
+                    lowStockThreshold: row.lowStockThreshold
+                      ? parseInt(row.lowStockThreshold)
+                      : 10,
+                    organizationId,
+                  };
+
+                  if (existingProduct) {
+                    // Update existing product
+                    Object.assign(existingProduct, {
+                      category: productData.category,
+                      costPrice: productData.costPrice,
+                      sellingPrice: productData.sellingPrice,
+                      stock: productData.stock,
+                      unit: productData.unit,
+                      lowStockThreshold: productData.lowStockThreshold,
+                    });
+                    await manager.getRepository(Product).save(existingProduct);
+                    results.updated++;
+                  } else {
+                    // Create new product
+                    const newProduct = manager.getRepository(Product).create(productData);
+                    await manager.getRepository(Product).save(newProduct);
+                    productMap.set(normalizedName, newProduct);
+                    results.created++;
+                  }
+                } catch (err: any) {
+                  results.errors.push({
+                    row: rowNum,
+                    error: err.message || 'Failed to process row',
+                  });
+                }
+              }
+            });
+
+            resolve(results);
+          } catch (err: any) {
+            reject(new BadRequestException(`Failed to import CSV: ${err.message}`));
+          }
+        })
+        .on('error', (err) => {
+          reject(new BadRequestException(`Failed to parse CSV: ${err.message}`));
+        });
+    });
   }
 }
 

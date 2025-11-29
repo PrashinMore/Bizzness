@@ -21,6 +21,9 @@ async function bootstrap() {
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Set global API prefix
+  app.setGlobalPrefix('api');
+
   // Serve static files from uploads directory
   // In serverless, use /tmp; otherwise use process.cwd()
   const uploadsPath = isServerless 

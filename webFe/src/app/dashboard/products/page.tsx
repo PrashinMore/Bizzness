@@ -64,6 +64,15 @@ export default function ProductsPage() {
   const [adjustInputs, setAdjustInputs] = useState<Record<string, string>>({});
   const [adjusting, setAdjusting] = useState<Record<string, boolean>>({});
 
+  // CSV bulk import state
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{
+    created: number;
+    updated: number;
+    errors: Array<{ row: number; error: string }>;
+    totalProcessed: number;
+  } | null>(null);
+
   const loadProducts = async (activeFilters: FilterState) => {
     if (!token) {
       return;
@@ -309,6 +318,58 @@ export default function ProductsPage() {
     [products],
   );
 
+  const handleDownloadTemplate = async () => {
+    if (!token) return;
+    try {
+      const blob = await productsApi.downloadTemplate(token);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'products-template.csv';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setStatusMessage('Template downloaded successfully');
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Failed to download template');
+      }
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !token) return;
+
+    setImporting(true);
+    setError(null);
+    setStatusMessage(null);
+    setImportResult(null);
+
+    try {
+      const result = await productsApi.bulkImport(token, file);
+      setImportResult(result);
+      setStatusMessage(result.message);
+      
+      // Reload products to show updates
+      await loadProducts(appliedFilters);
+      
+      // Clear file input
+      event.target.value = '';
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Failed to import products');
+      }
+    } finally {
+      setImporting(false);
+    }
+  };
+
   if (loading || !user || !token) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-50">
@@ -327,7 +388,7 @@ export default function ProductsPage() {
                 Inventory
               </p>
               <h1 className="text-3xl font-semibold text-zinc-900">
-                Product & stock management
+                Product & stock managementsss
               </h1>
               <p className="mt-2 text-sm text-zinc-700">
                 Track costs, selling prices, and ensure you never run out of stock.
@@ -353,6 +414,64 @@ export default function ProductsPage() {
             </div>
           </div>
         </header>
+
+        {/* CSV Bulk Import Section */}
+        <section className="rounded-3xl bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-zinc-900">Bulk Import Products</h2>
+          <p className="mt-1 text-sm text-zinc-700">
+            Import multiple products at once using a CSV file. Existing products with the same name will be updated.
+          </p>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={handleDownloadTemplate}
+              className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+            >
+              📥 Download Template
+            </button>
+            <label className="flex cursor-pointer items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleFileUpload}
+                disabled={importing}
+                className="hidden"
+              />
+              {importing ? '⏳ Uploading...' : '📤 Upload CSV'}
+            </label>
+          </div>
+          {importResult && (
+            <div className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+              <p className="text-sm font-medium text-zinc-900">
+                {importResult.created + importResult.updated} products processed
+              </p>
+              <div className="mt-2 grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-zinc-600">Created:</span>{' '}
+                  <span className="font-semibold text-green-600">{importResult.created}</span>
+                </div>
+                <div>
+                  <span className="text-zinc-600">Updated:</span>{' '}
+                  <span className="font-semibold text-blue-600">{importResult.updated}</span>
+                </div>
+              </div>
+              {importResult.errors.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-sm font-medium text-red-600">
+                    {importResult.errors.length} error(s) found:
+                  </p>
+                  <ul className="mt-2 max-h-32 space-y-1 overflow-y-auto text-xs text-red-600">
+                    {importResult.errors.map((error, i) => (
+                      <li key={i}>
+                        Row {error.row}: {error.error}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
 
         <section className="grid gap-6 md:grid-cols-2">
           <article className="rounded-3xl bg-white p-6 shadow-sm">

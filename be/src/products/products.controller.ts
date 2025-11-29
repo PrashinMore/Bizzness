@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -15,7 +16,7 @@ import {
   ValidationPipe,
   ForbiddenException,
 } from '@nestjs/common';
-import { type Request } from 'express';
+import { type Request, type Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -25,6 +26,8 @@ import { StorageService } from './storage.service';
 import { TransformMultipartPipe } from './pipes/transform-multipart.pipe';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { SanitizedUser } from '../users/users.types';
+import { Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
 
 type RequestWithUser = Request & { user: SanitizedUser };
 
@@ -197,6 +200,56 @@ export class ProductsController {
   remove(@Req() req: RequestWithUser, @Param('id') id: string) {
     const organizationIds = this.getOrganizationIds(req.user);
     return this.productsService.remove(id, organizationIds);
+  }
+
+  @Roles('admin')
+  @Get('template')
+  async downloadTemplate(@Res() res: Response) {
+    const csvContent = await this.productsService.generateCsvTemplate();
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="products-template.csv"');
+    res.send(csvContent);
+  }
+
+  @Roles('admin')
+  @Post('bulk-import')
+  @UseInterceptors(FileInterceptor('file', {
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only CSV files are allowed'), false);
+      }
+    },
+  }))
+  async bulkImport(
+    @Req() req: RequestWithUser,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new ForbiddenException('CSV file is required');
+    }
+
+    const organizationId = this.getFirstOrganizationId(req.user);
+    const organizationIds = this.getOrganizationIds(req.user);
+
+    const result = await this.productsService.bulkImportFromCsv(
+      file,
+      organizationId,
+      organizationIds,
+    );
+
+    return {
+      success: true,
+      message: `Import completed: ${result.created} created, ${result.updated} updated`,
+      created: result.created,
+      updated: result.updated,
+      errors: result.errors,
+      totalProcessed: result.created + result.updated + result.errors.length,
+    };
   }
 }
 

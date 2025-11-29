@@ -27,7 +27,7 @@ async function request<T>(
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${API_BASE_URL}/api${path}`, {
     method,
     headers,
     body: isFormData ? (body as FormData) : (body ? JSON.stringify(body) : undefined),
@@ -206,6 +206,46 @@ export const productsApi = {
       message?: string;
       similarProduct?: { id: string; name: string };
     }>(`/products/check-duplicate?${params.toString()}`, { token });
+  },
+  downloadTemplate: async (token: string): Promise<Blob> => {
+    const response = await fetch(`${API_BASE_URL}/api/products/template`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to download template');
+    }
+    return response.blob();
+  },
+  bulkImport: async (
+    token: string,
+    file: File,
+  ): Promise<{
+    success: boolean;
+    message: string;
+    created: number;
+    updated: number;
+    errors: Array<{ row: number; error: string }>;
+    totalProcessed: number;
+  }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/api/products/bulk-import`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to import products');
+    }
+
+    return response.json();
   },
 };
 
