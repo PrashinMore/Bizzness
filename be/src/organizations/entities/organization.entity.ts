@@ -25,7 +25,7 @@ export class Organization {
   @JoinColumn({ name: 'createdBy' })
   creator!: User;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', default: '6095e6de-2862-4f2c-8f4c-8897807a9ba8' })
   createdBy!: string;
 
   @CreateDateColumn()
