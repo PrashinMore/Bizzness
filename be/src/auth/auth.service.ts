@@ -6,11 +6,13 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcryptjs';
+import { randomBytes } from 'crypto';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AuthTokenResponse, SanitizedUser } from '../users/users.types';
+import { JWT_CONFIG } from './jwt.config';
 
 @Injectable()
 export class AuthService {
@@ -30,7 +32,8 @@ export class AuthService {
     );
 
     const accessToken = await this.generateToken(user);
-    return { user, accessToken };
+    const refreshToken = await this.generateAndSaveRefreshToken(user.id);
+    return { user, accessToken, refreshToken };
   }
 
   async login(loginDto: LoginDto): Promise<AuthTokenResponse> {
@@ -49,7 +52,34 @@ export class AuthService {
     }
 
     const accessToken = await this.generateToken(sanitized);
-    return { user: sanitized, accessToken };
+    const refreshToken = await this.generateAndSaveRefreshToken(sanitized.id);
+    return { user: sanitized, accessToken, refreshToken };
+  }
+
+  async refreshToken(refreshToken: string): Promise<AuthTokenResponse> {
+    const userEntity = await this.usersService.findByRefreshToken(refreshToken);
+    
+    if (!userEntity) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    // Check if refresh token is expired
+    if (userEntity.refreshTokenExpiresAt && userEntity.refreshTokenExpiresAt < new Date()) {
+      // Clear expired token
+      await this.usersService.clearRefreshToken(userEntity.id);
+      throw new UnauthorizedException('Refresh token expired');
+    }
+
+    const sanitized = await this.usersService.findById(userEntity.id);
+    if (!sanitized) {
+      throw new UnauthorizedException('User no longer exists');
+    }
+
+    // Generate new tokens
+    const accessToken = await this.generateToken(sanitized);
+    const newRefreshToken = await this.generateAndSaveRefreshToken(sanitized.id);
+    
+    return { user: sanitized, accessToken, refreshToken: newRefreshToken };
   }
 
   async resetPassword(
@@ -95,11 +125,30 @@ export class AuthService {
   }
 
   private async generateToken(user: SanitizedUser): Promise<string> {
-    return this.jwtService.signAsync({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    });
+    return this.jwtService.signAsync(
+      {
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+      },
+      {
+        expiresIn: JWT_CONFIG.expiresIn,
+      },
+    );
+  }
+
+  private async generateAndSaveRefreshToken(userId: string): Promise<string> {
+    // Generate a secure random token
+    const token = randomBytes(64).toString('hex');
+    
+    // Calculate expiration date (7 days from now)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+    
+    // Save to database
+    await this.usersService.saveRefreshToken(userId, token, expiresAt);
+    
+    return token;
   }
 }
 

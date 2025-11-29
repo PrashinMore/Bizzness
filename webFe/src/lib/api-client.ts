@@ -75,6 +75,11 @@ export const authApi = {
       body: payload,
       token,
     }),
+  refresh: (refreshToken: string): Promise<AuthResponse> =>
+    request<AuthResponse>('/auth/refresh', {
+      method: 'POST',
+      body: { refreshToken },
+    }),
 };
 
 export const usersApi = {

@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import type { AuthTokenResponse, SanitizedUser } from '../users/users.types';
 
 type RequestWithUser = Request & { user: SanitizedUser };
@@ -21,6 +22,11 @@ export class AuthController {
   @Post('login')
   login(@Body() loginDto: LoginDto): Promise<AuthTokenResponse> {
     return this.authService.login(loginDto);
+  }
+
+  @Post('refresh')
+  refresh(@Body() refreshTokenDto: RefreshTokenDto): Promise<AuthTokenResponse> {
+    return this.authService.refreshToken(refreshTokenDto.refreshToken);
   }
 
   @UseGuards(JwtAuthGuard)

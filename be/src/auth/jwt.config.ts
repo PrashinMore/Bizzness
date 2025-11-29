@@ -4,7 +4,8 @@
  */
 export const JWT_CONFIG = {
   secret: process.env.JWT_SECRET ?? 'changeme',
-  expiresIn: '1h' as const,
+  expiresIn: '24h' as const,
+  refreshExpiresIn: '7d' as const,
 };
 
 // Log warning if using default secret

@@ -27,6 +27,12 @@ export class User {
   @Column({ type: 'text', default: 'staff' })
   role!: UserRole;
 
+  @Column({ type: 'text', nullable: true })
+  refreshToken?: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  refreshTokenExpiresAt?: Date | null;
+
   @ManyToMany(() => Organization, (organization) => organization.users)
   @JoinTable({
     name: 'user_organizations',

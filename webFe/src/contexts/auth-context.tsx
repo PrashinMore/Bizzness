@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const persist = useCallback(
-    (payload: { user: User | null; token: string | null }) => {
+    (payload: { user: User | null; token: string | null; refreshToken?: string | null }) => {
       if (typeof window === 'undefined') {
         return;
       }
@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           JSON.stringify({
             user: payload.user,
             accessToken: payload.token,
+            refreshToken: payload.refreshToken || null,
           }),
         );
       } else {
@@ -59,15 +60,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (auth) {
         setUser(auth.user);
         setToken(auth.accessToken);
-        persist({ user: auth.user, token: auth.accessToken });
+        persist({ user: auth.user, token: auth.accessToken, refreshToken: auth.refreshToken });
       } else {
         setUser(null);
         setToken(null);
-        persist({ user: null, token: null });
+        persist({ user: null, token: null, refreshToken: null });
       }
     },
     [persist],
   );
+
+  const refreshToken = useCallback(async (): Promise<boolean> => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) {
+      return false;
+    }
+    try {
+      const parsed = JSON.parse(stored) as AuthResponse & { refreshToken?: string };
+      if (!parsed?.refreshToken) {
+        return false;
+      }
+      const response = await authApi.refresh(parsed.refreshToken);
+      setAuthState(response);
+      return true;
+    } catch (err) {
+      console.error('Token refresh failed:', err);
+      setAuthState(null);
+      return false;
+    }
+  }, [setAuthState]);
 
   useEffect(() => {
     async function bootstrap() {
@@ -80,23 +104,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       try {
-        const parsed = JSON.parse(stored) as AuthResponse;
+        const parsed = JSON.parse(stored) as AuthResponse & { refreshToken?: string };
         if (parsed?.accessToken) {
-          const profile = await usersApi.profile(parsed.accessToken);
-          setUser(profile);
-          setToken(parsed.accessToken);
+          try {
+            const profile = await usersApi.profile(parsed.accessToken);
+            setUser(profile);
+            setToken(parsed.accessToken);
+            if (parsed.refreshToken) {
+              persist({ user: profile, token: parsed.accessToken, refreshToken: parsed.refreshToken });
+            }
+          } catch (err) {
+            // Access token expired, try to refresh
+            if (parsed.refreshToken) {
+              const refreshed = await refreshToken();
+              if (!refreshed) {
+                persist({ user: null, token: null, refreshToken: null });
+              }
+            } else {
+              persist({ user: null, token: null, refreshToken: null });
+            }
+          }
         } else {
-          persist({ user: null, token: null });
+          persist({ user: null, token: null, refreshToken: null });
         }
       } catch (err) {
         console.error(err);
-        persist({ user: null, token: null });
+        persist({ user: null, token: null, refreshToken: null });
       } finally {
         setLoading(false);
       }
     }
     bootstrap();
-  }, [persist]);
+  }, [persist, refreshToken]);
 
   const handleAuthResponse = useCallback(
     async (promise: Promise<AuthResponse>) => {

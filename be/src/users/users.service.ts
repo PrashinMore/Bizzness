@@ -138,6 +138,30 @@ export class UsersService {
     return user;
   }
 
+  async saveRefreshToken(
+    userId: string,
+    token: string,
+    expiresAt: Date,
+  ): Promise<void> {
+    await this.usersRepository.update(userId, {
+      refreshToken: token,
+      refreshTokenExpiresAt: expiresAt,
+    });
+  }
+
+  async findByRefreshToken(refreshToken: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { refreshToken },
+    });
+  }
+
+  async clearRefreshToken(userId: string): Promise<void> {
+    await this.usersRepository.update(userId, {
+      refreshToken: null,
+      refreshTokenExpiresAt: null,
+    });
+  }
+
   private resolveRole(
     role: UserRole | undefined,
     allowAdminRole: boolean,
