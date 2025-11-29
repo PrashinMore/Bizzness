@@ -172,6 +172,41 @@ export const productsApi = {
     request<Product>(`/products/${id}/stock`, { method: 'PATCH', body: { delta }, token }),
   remove: (token: string, id: string): Promise<void> =>
     request<void>(`/products/${id}`, { method: 'DELETE', token }),
+  getSuggestions: (
+    token: string,
+    query: string,
+    limit?: number,
+  ): Promise<Array<{ name: string; type: 'existing' | 'global'; score: number; category?: string }>> => {
+    const params = new URLSearchParams();
+    params.set('q', query);
+    if (limit) {
+      params.set('limit', limit.toString());
+    }
+    return request<Array<{ name: string; type: 'existing' | 'global'; score: number; category?: string }>>(
+      `/products/suggestions?${params.toString()}`,
+      { token },
+    );
+  },
+  checkDuplicate: (
+    token: string,
+    name: string,
+    excludeId?: string,
+  ): Promise<{
+    isDuplicate: boolean;
+    message?: string;
+    similarProduct?: { id: string; name: string };
+  }> => {
+    const params = new URLSearchParams();
+    params.set('name', name);
+    if (excludeId) {
+      params.set('excludeId', excludeId);
+    }
+    return request<{
+      isDuplicate: boolean;
+      message?: string;
+      similarProduct?: { id: string; name: string };
+    }>(`/products/check-duplicate?${params.toString()}`, { token });
+  },
 };
 
 type SalesFilters = {
@@ -202,7 +237,12 @@ export const salesApi = {
     totalAmount: number;
     soldBy: string;
     paymentType?: string;
+    isPaid?: boolean;
   }): Promise<Sale> => request<Sale>('/sales', { method: 'POST', body: payload, token }),
+  update: (token: string, id: string, payload: {
+    paymentType?: string;
+    isPaid?: boolean;
+  }): Promise<Sale> => request<Sale>(`/sales/${id}`, { method: 'PATCH', body: payload, token }),
   dailyTotals: (token: string, from?: string, to?: string): Promise<{ day: string; total: string }[]> => {
     const params = new URLSearchParams();
     if (from) params.set('from', from);

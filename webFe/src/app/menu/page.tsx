@@ -25,6 +25,7 @@ export default function MenuPage() {
   const [error, setError] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [paymentType, setPaymentType] = useState<string>('cash');
+  const [isPaid, setIsPaid] = useState<boolean>(false);
   const [checkingOut, setCheckingOut] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
@@ -164,6 +165,7 @@ export default function MenuPage() {
         totalAmount: Number(totalAmount.toFixed(2)),
         soldBy: user.id,
         paymentType: paymentType,
+        isPaid: isPaid,
       };
 
       const created = await salesApi.create(token, payload);
@@ -433,6 +435,19 @@ export default function MenuPage() {
                       <option value="cash">Cash</option>
                       <option value="UPI">UPI</option>
                     </select>
+                  </div>
+                  <div className="mb-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isPaid}
+                        onChange={(e) => setIsPaid(e.target.checked)}
+                        className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-2 focus:ring-zinc-200"
+                      />
+                      <span className="text-sm font-medium text-zinc-700">
+                        Mark payment as completed
+                      </span>
+                    </label>
                   </div>
                   <div className="flex items-center justify-between text-lg font-semibold text-zinc-900">
                     <span>Total</span>

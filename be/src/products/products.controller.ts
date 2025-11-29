@@ -68,6 +68,49 @@ export class ProductsController {
     });
   }
 
+  @Get('suggestions')
+  getSuggestions(
+    @Req() req: RequestWithUser,
+    @Query('q') query?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const organizationIds = this.getOrganizationIds(req.user);
+    const limitNum = limit ? parseInt(limit, 10) : 10;
+    const validLimit = isNaN(limitNum) || limitNum < 1 || limitNum > 50 ? 10 : limitNum;
+    return this.productsService.getSuggestions(query || '', organizationIds, validLimit);
+  }
+
+  @Get('check-duplicate')
+  async checkDuplicate(
+    @Req() req: RequestWithUser,
+    @Query('name') name?: string,
+    @Query('excludeId') excludeId?: string,
+  ) {
+    if (!name || !name.trim()) {
+      return { isDuplicate: false };
+    }
+
+    const organizationIds = this.getOrganizationIds(req.user);
+    const result = await this.productsService.checkDuplicate(
+      name.trim(),
+      organizationIds,
+      excludeId,
+    );
+
+    if (result.isDuplicate && result.similarProduct) {
+      return {
+        isDuplicate: true,
+        message: 'A product with a similar name may already exist',
+        similarProduct: {
+          id: result.similarProduct.id,
+          name: result.similarProduct.name,
+        },
+      };
+    }
+
+    return { isDuplicate: false };
+  }
+
   @Post()
   @UseInterceptors(FileInterceptor('image', {
     storage: new StorageService().getStorageConfig(),

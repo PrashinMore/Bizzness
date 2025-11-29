@@ -21,6 +21,7 @@ import { OrganizationsModule } from './organizations/organizations.module';
 import { Organization } from './organizations/entities/organization.entity';
 import { CategoriesModule } from './categories/categories.module';
 import { Category } from './categories/entities/category.entity';
+import { GlobalProduct } from './products/entities/global-product.entity';
 
 @Module({
   imports: [
@@ -74,7 +75,7 @@ import { Category } from './categories/entities/category.entity';
           username: configService.get<string>('DB_USER') ?? 'postgres',
           password: configService.get<string>('DB_PASSWORD') ?? 'postgres',
           database: configService.get<string>('DB_NAME') ?? 'biznes',
-          entities: [User, Product, Sale, SaleItem, Expense, Settings, Organization, Category],
+          entities: [User, Product, Sale, SaleItem, Expense, Settings, Organization, Category, GlobalProduct],
           synchronize: true,
           // Disable retries completely in serverless to fail fast
           retryAttempts: isServerless ? 0 : 10,

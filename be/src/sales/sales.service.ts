@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
 import { CreateSaleDto } from './dto/create-sale.dto';
+import { UpdateSaleDto } from './dto/update-sale.dto';
 import { Sale } from './entities/sale.entity';
 import { SaleItem } from './entities/sale-item.entity';
 import { Product } from '../products/entities/product.entity';
@@ -63,6 +64,7 @@ export class SalesService {
 				totalAmount: round2(dto.totalAmount),
 				soldBy: dto.soldBy,
 				paymentType: dto.paymentType || 'cash',
+				isPaid: dto.isPaid ?? false,
 				organizationId: dto.organizationId,
 			});
 			await manager.getRepository(Sale).save(sale);
@@ -231,6 +233,19 @@ export class SalesService {
 			UPI: Number(totals.UPI.toFixed(2)),
 			total: Number((totals.cash + totals.UPI).toFixed(2)),
 		};
+	}
+
+	async update(id: string, dto: UpdateSaleDto, organizationIds?: string[]) {
+		const sale = await this.findOne(id, organizationIds);
+		
+		if (dto.paymentType !== undefined) {
+			sale.paymentType = dto.paymentType;
+		}
+		if (dto.isPaid !== undefined) {
+			sale.isPaid = dto.isPaid;
+		}
+
+		return await this.saleRepo.save(sale);
 	}
 }
 

@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post, Query, ParseUUIDPipe, Req, UseGuards, ForbiddenException } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Patch, Query, ParseUUIDPipe, Req, UseGuards, ForbiddenException } from '@nestjs/common';
 import { type Request } from 'express';
 import { SalesService } from './sales.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
+import { UpdateSaleDto } from './dto/update-sale.dto';
 import { ListSalesDto } from './dto/list-sales.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { SanitizedUser } from '../users/users.types';
@@ -71,6 +72,16 @@ export class SalesController {
 		const organizationId = this.getFirstOrganizationId(req.user);
 		const organizationIds = this.getOrganizationIds(req.user);
 		return this.salesService.create({ ...dto, organizationId }, organizationIds);
+	}
+
+	@Patch(':id')
+	update(
+		@Req() req: RequestWithUser,
+		@Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+		@Body() dto: UpdateSaleDto,
+	) {
+		const organizationIds = this.getOrganizationIds(req.user);
+		return this.salesService.update(id, dto, organizationIds);
 	}
 }
 

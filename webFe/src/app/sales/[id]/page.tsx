@@ -19,6 +19,9 @@ export default function SaleDetailPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [updating, setUpdating] = useState(false);
+  const [localPaymentType, setLocalPaymentType] = useState<string>('');
+  const [localIsPaid, setLocalIsPaid] = useState<boolean>(false);
 
   const productMap = useMemo(() => {
     return new Map(products.map((p) => [p.id, p]));
@@ -42,6 +45,8 @@ export default function SaleDetailPage() {
         setSale(saleData);
         setProducts(productsData);
         setUsers(usersData);
+        setLocalPaymentType(saleData.paymentType || 'cash');
+        setLocalIsPaid(saleData.isPaid || false);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load sale');
       } finally {
@@ -50,6 +55,23 @@ export default function SaleDetailPage() {
     }
     load();
   }, [token, validId]);
+
+  const handleUpdatePayment = async () => {
+    if (!token || !validId) return;
+    setUpdating(true);
+    setError(null);
+    try {
+      const updated = await salesApi.update(token, validId, {
+        paymentType: localPaymentType,
+        isPaid: localIsPaid,
+      });
+      setSale(updated);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update payment');
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   return (
     <main className="mx-auto max-w-3xl p-6 space-y-6">
@@ -88,6 +110,52 @@ export default function SaleDetailPage() {
             <div>
               <div className="text-sm text-zinc-700">Payment Type</div>
               <div className="capitalize">{sale.paymentType || 'cash'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-zinc-700">Payment Status</div>
+              <div className={sale.isPaid ? 'text-green-600 font-medium' : 'text-orange-600 font-medium'}>
+                {sale.isPaid ? 'Paid' : 'Pending'}
+              </div>
+            </div>
+          </div>
+
+          {/* Payment Update Section */}
+          <div className="mt-6 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+            <h3 className="mb-4 text-lg font-semibold text-zinc-900">Update Payment</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-zinc-700">
+                  Payment Type
+                </label>
+                <select
+                  value={localPaymentType}
+                  onChange={(e) => setLocalPaymentType(e.target.value)}
+                  className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                >
+                  <option value="cash">Cash</option>
+                  <option value="UPI">UPI</option>
+                </select>
+              </div>
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={localIsPaid}
+                    onChange={(e) => setLocalIsPaid(e.target.checked)}
+                    className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-2 focus:ring-zinc-200"
+                  />
+                  <span className="text-sm font-medium text-zinc-700">
+                    Mark payment as completed
+                  </span>
+                </label>
+              </div>
+              <button
+                onClick={handleUpdatePayment}
+                disabled={updating || (localPaymentType === sale.paymentType && localIsPaid === sale.isPaid)}
+                className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {updating ? 'Updating...' : 'Update Payment'}
+              </button>
             </div>
           </div>
 

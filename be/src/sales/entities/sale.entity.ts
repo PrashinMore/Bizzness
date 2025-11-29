@@ -32,6 +32,9 @@ export class Sale {
 	@Column({ type: 'varchar', length: 20, default: 'cash' })
 	paymentType: string;
 
+	@Column({ type: 'boolean', default: false })
+	isPaid: boolean;
+
 	@ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
 	organization!: Organization;
 

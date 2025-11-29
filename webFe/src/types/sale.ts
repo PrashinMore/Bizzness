@@ -13,6 +13,7 @@ export interface Sale {
   totalAmount: number;
   soldBy: string;
   paymentType: string;
+  isPaid: boolean;
   createdAt: string;
 }
 
