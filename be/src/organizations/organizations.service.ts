@@ -55,16 +55,7 @@ export class OrganizationsService {
   }
 
   async findAll(userId: string, userRole: string): Promise<Organization[]> {
-    // If admin, return all organizations
-    if (userRole === 'admin') {
-      return await this.organizationsRepository.find({
-        order: { createdAt: 'DESC' },
-        relations: ['users', 'creator'],
-      });
-    }
-
-    // For non-admins, only return organizations they're part of or created
-    // Use query builder to properly handle ManyToMany relationship
+    // All users (including admins) only see organizations they created or are a member of
     return await this.organizationsRepository
       .createQueryBuilder('organization')
       .leftJoinAndSelect('organization.users', 'users')
@@ -83,13 +74,11 @@ export class OrganizationsService {
       throw new NotFoundException('Organization not found');
     }
 
-    // Check access: admin can see all, others can only see if they're a member
-    if (userRole !== 'admin') {
-      const isMember = organization.users.some(u => u.id === userId);
-      const isCreator = organization.createdBy === userId;
-      if (!isMember && !isCreator) {
-        throw new ForbiddenException('You do not have access to this organization');
-      }
+    // All users can only see organizations they created or are a member of
+    const isMember = organization.users.some(u => u.id === userId);
+    const isCreator = organization.createdBy === userId;
+    if (!isMember && !isCreator) {
+      throw new ForbiddenException('You do not have access to this organization');
     }
 
     return organization;
