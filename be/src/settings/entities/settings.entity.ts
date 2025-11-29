@@ -61,7 +61,7 @@ export class Settings {
   @ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
   organization!: Organization;
 
-  @Column({ unique: true, default: '13df4863-961c-45c0-9da7-d0d14379d8fc' })
+  @Column({ type: 'uuid', unique: true })
   organizationId!: string;
 
   @CreateDateColumn()
