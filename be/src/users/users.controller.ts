@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -27,7 +28,10 @@ export class UsersController {
 
   @Roles('admin')
   @Get()
-  findAll(): Promise<SanitizedUser[]> {
+  findAll(@Query('search') search?: string): Promise<SanitizedUser[]> {
+    if (search) {
+      return this.usersService.searchByEmail(search, 20);
+    }
     return this.usersService.findAll();
   }
 

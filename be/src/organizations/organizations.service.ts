@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Organization } from './entities/organization.entity';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
@@ -139,36 +139,6 @@ export class OrganizationsService {
 
     // Many-to-many relationship will automatically remove join table entries
     await this.organizationsRepository.remove(organization);
-  }
-
-  async assignUser(organizationId: string, userId: string, requesterRole: string): Promise<Organization> {
-    // Only admins can assign users
-    if (requesterRole !== 'admin') {
-      throw new ForbiddenException('Only admins can assign users to organizations');
-    }
-    const organization = await this.organizationsRepository.findOne({
-      where: { id: organizationId },
-      relations: ['users'],
-    });
-    if (!organization) {
-      throw new NotFoundException('Organization not found');
-    }
-
-    const user = await this.usersRepository.findOne({
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    // Check if user is already assigned
-    const isAlreadyAssigned = organization.users.some(u => u.id === userId);
-    if (isAlreadyAssigned) {
-      throw new ConflictException('User is already assigned to this organization');
-    }
-
-    organization.users.push(user);
-    return await this.organizationsRepository.save(organization);
   }
 
   async removeUser(organizationId: string, userId: string, requesterRole: string): Promise<Organization> {

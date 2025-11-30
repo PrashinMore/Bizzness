@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import { hash, compare } from 'bcryptjs';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -60,6 +60,17 @@ export class UsersService {
 
   async findAll(): Promise<SanitizedUser[]> {
     const users = await this.usersRepository.find();
+    return users.map((user) => this.sanitizeUser(user));
+  }
+
+  async searchByEmail(query: string, limit: number = 10): Promise<SanitizedUser[]> {
+    const users = await this.usersRepository.find({
+      where: {
+        email: Like(`%${query}%`),
+      },
+      take: limit,
+      order: { email: 'ASC' },
+    });
     return users.map((user) => this.sanitizeUser(user));
   }
 

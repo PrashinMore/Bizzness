@@ -68,16 +68,10 @@ export class OrganizationsController {
     return this.organizationsService.remove(id, req.user.id, req.user.role);
   }
 
-  @Roles('admin')
-  @Post(':id/users/:userId')
-  assignUser(
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @Param('userId', new ParseUUIDPipe({ version: '4' })) userId: string,
-    @Req() req: RequestWithUser,
-  ): Promise<Organization> {
-    return this.organizationsService.assignUser(id, userId, req.user.role);
-  }
-
+  /**
+   * Remove a user from an organization (admin only)
+   * Note: Users are added via invites, not direct assignment
+   */
   @Roles('admin')
   @Delete(':id/users/:userId')
   removeUser(

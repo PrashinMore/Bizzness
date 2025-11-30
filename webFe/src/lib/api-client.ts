@@ -3,6 +3,7 @@ import { Product } from '@/types/product';
 import { Sale } from '@/types/sale';
 import { Expense } from '@/types/expense';
 import { Organization } from '@/types/organization';
+import { OrganizationInvite } from '@/types/invite';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000';
@@ -85,8 +86,10 @@ export const authApi = {
 export const usersApi = {
   profile: (token: string): Promise<User> =>
     request<User>('/users/me', { token }),
-  list: (token: string): Promise<User[]> =>
-    request<User[]>('/users', { token }),
+  list: (token: string, search?: string): Promise<User[]> => {
+    const path = search ? `/users?search=${encodeURIComponent(search)}` : '/users';
+    return request<User[]>(path, { token });
+  },
   create: (
     token: string,
     payload: { name: string; email: string; password: string; role: string },
@@ -617,5 +620,65 @@ export const organizationsApi = {
         token,
       },
     ),
+};
+
+export const invitesApi = {
+  // Get all pending invites for current user
+  getMyInvites: (token: string): Promise<OrganizationInvite[]> =>
+    request<OrganizationInvite[]>('/invites/my', { token }),
+
+  // Get all invites for an organization (admin only)
+  getOrganizationInvites: (
+    token: string,
+    organizationId: string,
+  ): Promise<OrganizationInvite[]> =>
+    request<OrganizationInvite[]>(`/invites/organization/${organizationId}`, { token }),
+
+  // Create an invite (admin only)
+  create: (
+    token: string,
+    organizationId: string,
+    payload: { email: string },
+  ): Promise<OrganizationInvite> =>
+    request<OrganizationInvite>(`/invites/organization/${organizationId}`, {
+      method: 'POST',
+      body: payload,
+      token,
+    }),
+
+  // Respond to invite by ID
+  respondById: (
+    token: string,
+    inviteId: string,
+    action: 'accept' | 'decline',
+  ): Promise<OrganizationInvite> =>
+    request<OrganizationInvite>(`/invites/${inviteId}/respond`, {
+      method: 'POST',
+      body: { action },
+      token,
+    }),
+
+  // Respond to invite by token
+  respondByToken: (
+    authToken: string,
+    inviteToken: string,
+    action: 'accept' | 'decline',
+  ): Promise<OrganizationInvite> =>
+    request<OrganizationInvite>('/invites/token/respond', {
+      method: 'POST',
+      body: { token: inviteToken, action },
+      token: authToken,
+    }),
+
+  // Cancel an invite (admin only)
+  cancel: (token: string, inviteId: string): Promise<void> =>
+    request<void>(`/invites/${inviteId}`, { method: 'DELETE', token }),
+
+  // Resend an invite (admin only)
+  resend: (token: string, inviteId: string): Promise<OrganizationInvite> =>
+    request<OrganizationInvite>(`/invites/${inviteId}/resend`, {
+      method: 'POST',
+      token,
+    }),
 };
 

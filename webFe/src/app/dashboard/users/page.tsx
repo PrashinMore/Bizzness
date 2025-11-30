@@ -1,10 +1,12 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useRequireAuth } from '@/hooks/use-require-auth';
-import { usersApi } from '@/lib/api-client';
+import { usersApi, invitesApi, organizationsApi } from '@/lib/api-client';
 import type { User, UserRole } from '@/types/user';
+import type { OrganizationInvite } from '@/types/invite';
+import type { Organization } from '@/types/organization';
 
 interface CreateUserFormState {
   name: string;
@@ -41,6 +43,17 @@ export default function UsersManagementPage() {
   const [editForms, setEditForms] = useState<Record<string, EditFormState>>({});
   const [saving, setSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  // Invite state
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [emailSearchResults, setEmailSearchResults] = useState<User[]>([]);
+  const [showEmailSuggestions, setShowEmailSuggestions] = useState(false);
+  const [searchingEmails, setSearchingEmails] = useState(false);
+  const [inviting, setInviting] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteSuccess, setInviteSuccess] = useState(false);
 
   const sortedUsers = useMemo(
     () =>
@@ -80,6 +93,92 @@ export default function UsersManagementPage() {
       loadUsers();
     }
   }, [loading, user, token]);
+
+  // Load organizations
+  useEffect(() => {
+    async function loadOrganizations() {
+      if (!token) {
+        return;
+      }
+      try {
+        const orgs = await organizationsApi.list(token);
+        setOrganizations(orgs);
+        if (orgs.length > 0 && !selectedOrgId) {
+          setSelectedOrgId(orgs[0].id);
+        }
+      } catch (err) {
+        console.error('Failed to load organizations', err);
+      }
+    }
+
+    if (!loading && user && token) {
+      loadOrganizations();
+    }
+  }, [loading, user, token, selectedOrgId]);
+
+  // Email search with debounce
+  const searchEmails = useCallback(
+    async (query: string) => {
+      if (!token || query.length < 2) {
+        setEmailSearchResults([]);
+        setShowEmailSuggestions(false);
+        return;
+      }
+
+      setSearchingEmails(true);
+      try {
+        const results = await usersApi.list(token, query);
+        setEmailSearchResults(results);
+        setShowEmailSuggestions(true);
+      } catch (err) {
+        console.error('Failed to search emails', err);
+        setEmailSearchResults([]);
+      } finally {
+        setSearchingEmails(false);
+      }
+    },
+    [token],
+  );
+
+  // Debounced email search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      searchEmails(inviteEmail);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [inviteEmail, searchEmails]);
+
+  const handleInviteSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!token || !selectedOrgId || !inviteEmail.trim()) {
+      return;
+    }
+
+    setInviting(true);
+    setInviteError(null);
+    setInviteSuccess(false);
+
+    try {
+      await invitesApi.create(token, selectedOrgId, {
+        email: inviteEmail.trim(),
+      });
+      setInviteEmail('');
+      setEmailSearchResults([]);
+      setShowEmailSuggestions(false);
+      setInviteSuccess(true);
+      setTimeout(() => setInviteSuccess(false), 3000);
+    } catch (err) {
+      setInviteError(err instanceof Error ? err.message : 'Failed to send invite');
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleEmailSelect = (email: string) => {
+    setInviteEmail(email);
+    setShowEmailSuggestions(false);
+  };
 
   const handleCreateUser = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -244,6 +343,99 @@ export default function UsersManagementPage() {
         <section className="rounded-3xl bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-zinc-900">
             Invite a new member
+          </h2>
+          <p className="mt-1 text-sm text-zinc-700">
+            Search for existing users by email or enter any email address to send an invite.
+          </p>
+          <form className="mt-4 space-y-4" onSubmit={handleInviteSubmit}>
+            {organizations.length > 1 && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-zinc-700" htmlFor="invite-org">
+                  Organization
+                </label>
+                <select
+                  id="invite-org"
+                  value={selectedOrgId || ''}
+                  onChange={(e) => setSelectedOrgId(e.target.value)}
+                  className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  required
+                >
+                  {organizations.map((org) => (
+                    <option key={org.id} value={org.id}>
+                      {org.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-zinc-700" htmlFor="invite-email">
+                Email address
+              </label>
+              <div className="relative">
+                <input
+                  id="invite-email"
+                  type="email"
+                  required
+                  value={inviteEmail}
+                  onChange={(e) => {
+                    setInviteEmail(e.target.value);
+                    setInviteError(null);
+                  }}
+                  onFocus={() => {
+                    if (emailSearchResults.length > 0) {
+                      setShowEmailSuggestions(true);
+                    }
+                  }}
+                  onBlur={() => {
+                    // Delay to allow clicking on suggestions
+                    setTimeout(() => setShowEmailSuggestions(false), 200);
+                  }}
+                  placeholder="Search by email or enter any email address"
+                  className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                />
+                {searchingEmails && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600"></div>
+                  </div>
+                )}
+                {showEmailSuggestions && emailSearchResults.length > 0 && (
+                  <div className="absolute z-10 mt-1 w-full rounded-lg border border-zinc-200 bg-white shadow-lg">
+                    <ul className="max-h-48 overflow-y-auto">
+                      {emailSearchResults.map((user) => (
+                        <li
+                          key={user.id}
+                          onClick={() => handleEmailSelect(user.email)}
+                          className="cursor-pointer px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+                        >
+                          <div className="font-medium">{user.email}</div>
+                          <div className="text-xs text-zinc-500">{user.name}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+              {inviteError && (
+                <p className="text-sm text-red-600">{inviteError}</p>
+              )}
+              {inviteSuccess && (
+                <p className="text-sm text-emerald-600">Invite sent successfully!</p>
+              )}
+            </div>
+            <button
+              type="submit"
+              disabled={inviting || !selectedOrgId}
+              className="rounded-full bg-zinc-900 px-6 py-2 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {inviting ? 'Sending…' : 'Send Invite'}
+            </button>
+          </form>
+        </section>
+
+        <section className="rounded-3xl bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-zinc-900">
+            Create user account
           </h2>
           <form className="mt-4 grid gap-4 md:grid-cols-2" onSubmit={handleCreateUser}>
             <div className="space-y-2">
