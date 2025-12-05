@@ -183,12 +183,43 @@ export default function InvoicesListPage() {
                   )}
                 </td>
                 <td className="px-4 py-2 text-sm">
-                  <Link
-                    className="text-zinc-900 underline hover:text-zinc-700"
-                    href={`/invoices/${invoice.id}`}
-                  >
-                    View
-                  </Link>
+                  {invoice.pdfUrl ? (
+                    <button
+                      onClick={async () => {
+                        if (!token || !organizationId) return;
+                        try {
+                          const pdfUrl = invoicesApi.getPdfUrl(token, organizationId, invoice.id);
+                          const response = await fetch(pdfUrl, {
+                            headers: {
+                              Authorization: `Bearer ${token}`,
+                            },
+                            credentials: 'include',
+                          });
+                          
+                          if (!response.ok) {
+                            throw new Error('Failed to load PDF');
+                          }
+                          
+                          const blob = await response.blob();
+                          const blobUrl = URL.createObjectURL(blob);
+                          window.open(blobUrl, '_blank');
+                        } catch (err) {
+                          // Fallback to invoice page if PDF fails
+                          window.location.href = `/invoices/${invoice.id}`;
+                        }
+                      }}
+                      className="text-blue-600 underline hover:text-blue-700 cursor-pointer"
+                    >
+                      View PDF
+                    </button>
+                  ) : (
+                    <Link
+                      className="text-zinc-900 underline hover:text-zinc-700"
+                      href={`/invoices/${invoice.id}`}
+                    >
+                      View
+                    </Link>
+                  )}
                 </td>
               </tr>
             ))}

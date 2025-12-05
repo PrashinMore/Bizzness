@@ -121,9 +121,54 @@ export default function SaleDetailPage() {
       );
       setInvoice(result.invoice);
       setShowInvoiceForm(false);
+      
+      // Always try to open PDF, even if it's queued
       if (result.status === 'ready' && result.pdfUrl) {
-        // Open PDF in new tab
-        window.open(invoicesApi.getPdfUrl(token, organizationId, result.invoice.id), '_blank');
+        // PDF is ready, open it directly
+        const pdfUrl = invoicesApi.getPdfUrl(token, organizationId, result.invoice.id);
+        const response = await fetch(pdfUrl, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: 'include',
+        });
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, '_blank');
+        }
+      } else {
+        // PDF is queued, generate it and then open
+        try {
+          await invoicesApi.generatePdf(token, organizationId, result.invoice.id);
+          // Poll for PDF to be ready
+          let attempts = 0;
+          const maxAttempts = 15;
+          while (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const updated = await invoicesApi.get(token, organizationId, result.invoice.id);
+            if (updated.pdfUrl) {
+              const pdfUrl = invoicesApi.getPdfUrl(token, organizationId, result.invoice.id);
+              const response = await fetch(pdfUrl, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+                credentials: 'include',
+              });
+              
+              if (response.ok) {
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                window.open(blobUrl, '_blank');
+              }
+              break;
+            }
+            attempts++;
+          }
+        } catch (err) {
+          console.error('Failed to generate/open PDF:', err);
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate invoice');
@@ -138,12 +183,55 @@ export default function SaleDetailPage() {
         <h1 className="text-2xl font-semibold">Sale Details</h1>
         <div className="flex gap-2">
           {invoice ? (
-            <Link
-              href={`/invoices/${invoice.id}`}
+            <button
+              onClick={async () => {
+                if (!token || !organizationId) return;
+                try {
+                  // If PDF not ready, generate it first
+                  if (!invoice.pdfUrl) {
+                    await invoicesApi.generatePdf(token, organizationId, invoice.id);
+                    // Poll for PDF to be ready
+                    let attempts = 0;
+                    const maxAttempts = 10;
+                    while (attempts < maxAttempts) {
+                      await new Promise(resolve => setTimeout(resolve, 1000));
+                      const updated = await invoicesApi.get(token, organizationId, invoice.id);
+                      if (updated.pdfUrl) {
+                        invoice.pdfUrl = updated.pdfUrl;
+                        break;
+                      }
+                      attempts++;
+                    }
+                  }
+                  
+                  if (!invoice.pdfUrl) {
+                    throw new Error('PDF generation timed out');
+                  }
+                  
+                  const pdfUrl = invoicesApi.getPdfUrl(token, organizationId, invoice.id);
+                  const response = await fetch(pdfUrl, {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                    credentials: 'include',
+                  });
+                  
+                  if (!response.ok) {
+                    throw new Error('Failed to load PDF');
+                  }
+                  
+                  const blob = await response.blob();
+                  const blobUrl = URL.createObjectURL(blob);
+                  window.open(blobUrl, '_blank');
+                } catch (err) {
+                  // Fallback to invoice page if PDF fails
+                  router.push(`/invoices/${invoice.id}`);
+                }
+              }}
               className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700"
             >
               View Invoice
-            </Link>
+            </button>
           ) : (
             <button
               onClick={() => setShowInvoiceForm(true)}
