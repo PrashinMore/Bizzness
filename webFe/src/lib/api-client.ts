@@ -622,6 +622,115 @@ export const organizationsApi = {
     ),
 };
 
+export const invoicesApi = {
+  getSettings: (token: string, orgId: string): Promise<import('@/types/invoice').OrganizationInvoiceSettings> =>
+    request<import('@/types/invoice').OrganizationInvoiceSettings>(
+      `/organizations/${orgId}/invoices/settings`,
+      { token },
+    ),
+  updateSettings: (
+    token: string,
+    orgId: string,
+    payload: {
+      enableInvoices?: boolean;
+      gstEnabled?: boolean;
+      invoicePrefix?: string;
+      invoiceBranchPrefix?: boolean;
+      invoiceResetCycle?: 'never' | 'monthly' | 'yearly';
+      invoicePadding?: number;
+      invoiceDisplayFormat?: 'A4' | 'thermal';
+      includeLogo?: boolean;
+      logoUrl?: string | null;
+    },
+  ): Promise<import('@/types/invoice').OrganizationInvoiceSettings> =>
+    request<import('@/types/invoice').OrganizationInvoiceSettings>(
+      `/organizations/${orgId}/invoices/settings`,
+      { method: 'POST', body: payload, token },
+    ),
+  createFromSale: (
+    token: string,
+    orgId: string,
+    saleId: string,
+    payload: import('@/types/invoice').CreateInvoiceFromSaleDto,
+  ): Promise<{
+    invoice: import('@/types/invoice').Invoice;
+    status: 'ready' | 'queued';
+    pdfUrl?: string | null;
+  }> =>
+    request<{
+      invoice: import('@/types/invoice').Invoice;
+      status: 'ready' | 'queued';
+      pdfUrl?: string | null;
+    }>(`/organizations/${orgId}/invoices/from-sale/${saleId}`, {
+      method: 'POST',
+      body: payload,
+      token,
+    }),
+  list: (
+    token: string,
+    orgId: string,
+    filters?: {
+      from?: string;
+      to?: string;
+      branch?: string;
+      customer?: string;
+      page?: number;
+      size?: number;
+    },
+  ): Promise<{
+    invoices: import('@/types/invoice').Invoice[];
+    total: number;
+  }> => {
+    const params = new URLSearchParams();
+    if (filters?.from) params.set('from', filters.from);
+    if (filters?.to) params.set('to', filters.to);
+    if (filters?.branch) params.set('branch', filters.branch);
+    if (filters?.customer) params.set('customer', filters.customer);
+    if (filters?.page) params.set('page', filters.page.toString());
+    if (filters?.size) params.set('size', filters.size.toString());
+    const qs = params.toString();
+    return request<{
+      invoices: import('@/types/invoice').Invoice[];
+      total: number;
+    }>(`/organizations/${orgId}/invoices${qs ? `?${qs}` : ''}`, { token });
+  },
+  get: (
+    token: string,
+    orgId: string,
+    invoiceId: string,
+  ): Promise<{
+    invoice: import('@/types/invoice').Invoice;
+    status: 'ready' | 'queued';
+    pdfUrl?: string | null;
+  }> =>
+    request<{
+      invoice: import('@/types/invoice').Invoice;
+      status: 'ready' | 'queued';
+      pdfUrl?: string | null;
+    }>(`/organizations/${orgId}/invoices/${invoiceId}`, { token }),
+  getPdfUrl: (token: string, orgId: string, invoiceId: string): string => {
+    const baseUrl = API_BASE_URL;
+    return `${baseUrl}/api/organizations/${orgId}/invoices/${invoiceId}/pdf`;
+  },
+  generatePdf: (
+    token: string,
+    orgId: string,
+    invoiceId: string,
+  ): Promise<{
+    invoice: import('@/types/invoice').Invoice;
+    status: 'ready' | 'queued';
+    pdfUrl?: string | null;
+  }> =>
+    request<{
+      invoice: import('@/types/invoice').Invoice;
+      status: 'ready' | 'queued';
+      pdfUrl?: string | null;
+    }>(`/organizations/${orgId}/invoices/${invoiceId}/generate-pdf`, {
+      method: 'POST',
+      token,
+    }),
+};
+
 export const invitesApi = {
   // Get all pending invites for current user
   getMyInvites: (token: string): Promise<OrganizationInvite[]> =>

@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useRequireAuth } from '@/hooks/use-require-auth';
-import { settingsApi, type Settings } from '@/lib/api-client';
+import { settingsApi, type Settings, invoicesApi } from '@/lib/api-client';
+import type { OrganizationInvoiceSettings } from '@/types/invoice';
 
-type Tab = 'business' | 'billing' | 'inventory';
+type Tab = 'business' | 'billing' | 'inventory' | 'invoices';
 
 export default function SettingsPage() {
   const { user, loading } = useRequireAuth();
@@ -38,6 +39,21 @@ export default function SettingsPage() {
   const [defaultUnit, setDefaultUnit] = useState('unit');
   const [stockWarningAlerts, setStockWarningAlerts] = useState(true);
 
+  // Invoice settings state
+  const [invoiceSettings, setInvoiceSettings] = useState<OrganizationInvoiceSettings | null>(null);
+  const [enableInvoices, setEnableInvoices] = useState(true);
+  const [gstEnabled, setGstEnabled] = useState(false);
+  const [invoiceSettingsPrefix, setInvoiceSettingsPrefix] = useState('INV');
+  const [invoiceBranchPrefix, setInvoiceBranchPrefix] = useState(true);
+  const [invoiceResetCycle, setInvoiceResetCycle] = useState<'never' | 'monthly' | 'yearly'>('monthly');
+  const [invoicePadding, setInvoicePadding] = useState(5);
+  const [invoiceDisplayFormat, setInvoiceDisplayFormat] = useState<'A4' | 'thermal'>('A4');
+  const [includeLogo, setIncludeLogo] = useState(true);
+
+  const organizationId = useMemo(() => {
+    return user?.organizations?.[0]?.id || '';
+  }, [user]);
+
   useEffect(() => {
     async function loadSettings() {
       if (!token || loading || !user) return;
@@ -61,6 +77,24 @@ export default function SettingsPage() {
         setDefaultLowStockThreshold(data.defaultLowStockThreshold);
         setDefaultUnit(data.defaultUnit);
         setStockWarningAlerts(data.stockWarningAlerts);
+
+        // Load invoice settings
+        if (organizationId && token) {
+          try {
+            const invSettings = await invoicesApi.getSettings(token, organizationId);
+            setInvoiceSettings(invSettings);
+            setEnableInvoices(invSettings.enableInvoices);
+            setGstEnabled(invSettings.gstEnabled);
+            setInvoiceSettingsPrefix(invSettings.invoicePrefix);
+            setInvoiceBranchPrefix(invSettings.invoiceBranchPrefix);
+            setInvoiceResetCycle(invSettings.invoiceResetCycle);
+            setInvoicePadding(invSettings.invoicePadding);
+            setInvoiceDisplayFormat(invSettings.invoiceDisplayFormat);
+            setIncludeLogo(invSettings.includeLogo);
+          } catch {
+            // Ignore invoice settings errors
+          }
+        }
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -72,7 +106,7 @@ export default function SettingsPage() {
       }
     }
     loadSettings();
-  }, [token, loading, user]);
+  }, [token, loading, user, organizationId]);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -173,6 +207,37 @@ export default function SettingsPage() {
     }
   };
 
+  const handleInvoiceSettingsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !organizationId) return;
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const updated = await invoicesApi.updateSettings(token, organizationId, {
+        enableInvoices,
+        gstEnabled,
+        invoicePrefix: invoiceSettingsPrefix,
+        invoiceBranchPrefix,
+        invoiceResetCycle,
+        invoicePadding,
+        invoiceDisplayFormat,
+        includeLogo,
+      });
+      setInvoiceSettings(updated);
+      setSuccess('Invoice settings updated successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Unable to update invoice settings.');
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading || !user || !token) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-50">
@@ -242,6 +307,16 @@ export default function SettingsPage() {
             }`}
           >
             Inventory
+          </button>
+          <button
+            onClick={() => setActiveTab('invoices')}
+            className={`px-4 py-2 text-sm font-medium transition ${
+              activeTab === 'invoices'
+                ? 'border-b-2 border-zinc-900 text-zinc-900'
+                : 'text-zinc-700 hover:text-zinc-900'
+            }`}
+          >
+            Invoices
           </button>
         </div>
 
@@ -487,6 +562,133 @@ export default function SettingsPage() {
                   className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Save Inventory Settings'}
+                </button>
+              </form>
+            )}
+
+            {/* Invoice Settings */}
+            {activeTab === 'invoices' && (
+              <form onSubmit={handleInvoiceSettingsSubmit} className="space-y-6">
+                <div>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={enableInvoices}
+                      onChange={(e) => setEnableInvoices(e.target.checked)}
+                      className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                    />
+                    <span className="text-sm font-medium text-zinc-900">
+                      Enable Invoice Generation
+                    </span>
+                  </label>
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={gstEnabled}
+                      onChange={(e) => setGstEnabled(e.target.checked)}
+                      className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                    />
+                    <span className="text-sm font-medium text-zinc-900">
+                      Enable GST/Tax on Invoices
+                    </span>
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900">
+                      Invoice Prefix
+                    </label>
+                    <input
+                      type="text"
+                      value={invoiceSettingsPrefix}
+                      onChange={(e) => setInvoiceSettingsPrefix(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      placeholder="INV"
+                      maxLength={20}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900">
+                      Serial Number Padding
+                    </label>
+                    <input
+                      type="number"
+                      min="3"
+                      max="10"
+                      value={invoicePadding}
+                      onChange={(e) => setInvoicePadding(parseInt(e.target.value, 10) || 5)}
+                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-zinc-900">
+                    Invoice Reset Cycle
+                  </label>
+                  <select
+                    value={invoiceResetCycle}
+                    onChange={(e) => setInvoiceResetCycle(e.target.value as 'never' | 'monthly' | 'yearly')}
+                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                  >
+                    <option value="never">Never (Continuous)</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-zinc-900">
+                    Invoice Display Format
+                  </label>
+                  <select
+                    value={invoiceDisplayFormat}
+                    onChange={(e) => setInvoiceDisplayFormat(e.target.value as 'A4' | 'thermal')}
+                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                  >
+                    <option value="A4">A4</option>
+                    <option value="thermal">Thermal</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={invoiceBranchPrefix}
+                      onChange={(e) => setInvoiceBranchPrefix(e.target.checked)}
+                      className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                    />
+                    <span className="text-sm font-medium text-zinc-900">
+                      Include Branch Prefix in Invoice Number
+                    </span>
+                  </label>
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={includeLogo}
+                      onChange={(e) => setIncludeLogo(e.target.checked)}
+                      className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                    />
+                    <span className="text-sm font-medium text-zinc-900">
+                      Include Business Logo on Invoices
+                    </span>
+                  </label>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50"
+                >
+                  {saving ? 'Saving…' : 'Save Invoice Settings'}
                 </button>
               </form>
             )}

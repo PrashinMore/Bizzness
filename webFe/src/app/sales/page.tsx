@@ -89,12 +89,20 @@ export default function SalesListPage() {
     <main className="mx-auto max-w-6xl p-6 space-y-6">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Sales</h1>
+        <div className="flex gap-2">
+        <Link
+          href="/invoices"
+          className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700"
+        >
+          Invoices
+        </Link>
         <Link
           href="/sales/new"
           className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700"
         >
           New Sale
         </Link>
+          </div>
       </header>
 
       <section className="rounded border border-zinc-200 p-4">

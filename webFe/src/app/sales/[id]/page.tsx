@@ -1,16 +1,18 @@
 'use client';
 
 import { useAuth } from '@/contexts/auth-context';
-import { salesApi, productsApi, usersApi } from '@/lib/api-client';
+import { salesApi, productsApi, usersApi, invoicesApi } from '@/lib/api-client';
 import type { Sale } from '@/types/sale';
 import type { Product } from '@/types/product';
 import type { User } from '@/types/user';
+import type { Invoice } from '@/types/invoice';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
 
 export default function SaleDetailPage() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  const router = useRouter();
   const params = useParams<{ id: string }>();
   const id = params?.id;
   const validId = typeof id === 'string' && id !== 'undefined' ? id : null;
@@ -22,6 +24,12 @@ export default function SaleDetailPage() {
   const [updating, setUpdating] = useState(false);
   const [localPaymentType, setLocalPaymentType] = useState<string>('');
   const [localIsPaid, setLocalIsPaid] = useState<boolean>(false);
+  const [generatingInvoice, setGeneratingInvoice] = useState(false);
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [showInvoiceForm, setShowInvoiceForm] = useState(false);
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerGstin, setCustomerGstin] = useState('');
 
   const productMap = useMemo(() => {
     return new Map(products.map((p) => [p.id, p]));
@@ -30,6 +38,10 @@ export default function SaleDetailPage() {
   const userMap = useMemo(() => {
     return new Map(users.map((u) => [u.id, u]));
   }, [users]);
+
+  const organizationId = useMemo(() => {
+    return user?.organizations?.[0]?.id || '';
+  }, [user]);
 
   useEffect(() => {
     async function load() {
@@ -47,6 +59,24 @@ export default function SaleDetailPage() {
         setUsers(usersData);
         setLocalPaymentType(saleData.paymentType || 'cash');
         setLocalIsPaid(saleData.isPaid || false);
+
+        // Check if invoice exists
+        if (organizationId) {
+          try {
+            const invoices = await invoicesApi.list(token, organizationId, {
+              page: 1,
+              size: 100,
+            });
+            const existingInvoice = invoices.invoices.find(
+              (inv) => inv.billingSessionId === validId,
+            );
+            if (existingInvoice) {
+              setInvoice(existingInvoice);
+            }
+          } catch {
+            // Ignore invoice errors
+          }
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load sale');
       } finally {
@@ -54,7 +84,7 @@ export default function SaleDetailPage() {
       }
     }
     load();
-  }, [token, validId]);
+  }, [token, validId, organizationId]);
 
   const handleUpdatePayment = async () => {
     if (!token || !validId) return;
@@ -73,13 +103,59 @@ export default function SaleDetailPage() {
     }
   };
 
+  const handleGenerateInvoice = async () => {
+    if (!token || !validId || !organizationId) return;
+    setGeneratingInvoice(true);
+    setError(null);
+    try {
+      const result = await invoicesApi.createFromSale(
+        token,
+        organizationId,
+        validId,
+        {
+          customerName: customerName || undefined,
+          customerPhone: customerPhone || undefined,
+          customerGstin: customerGstin || undefined,
+          forceSyncPdf: false,
+        },
+      );
+      setInvoice(result.invoice);
+      setShowInvoiceForm(false);
+      if (result.status === 'ready' && result.pdfUrl) {
+        // Open PDF in new tab
+        window.open(invoicesApi.getPdfUrl(token, organizationId, result.invoice.id), '_blank');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate invoice');
+    } finally {
+      setGeneratingInvoice(false);
+    }
+  };
+
   return (
     <main className="mx-auto max-w-3xl p-6 space-y-6">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Sale Details</h1>
-        <Link href="/sales" className="text-zinc-900 underline">
-          Back to Sales
-        </Link>
+        <div className="flex gap-2">
+          {invoice ? (
+            <Link
+              href={`/invoices/${invoice.id}`}
+              className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+            >
+              View Invoice
+            </Link>
+          ) : (
+            <button
+              onClick={() => setShowInvoiceForm(true)}
+              className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700"
+            >
+              Generate Invoice
+            </button>
+          )}
+          <Link href="/sales" className="text-zinc-900 underline">
+            Back to Sales
+          </Link>
+        </div>
       </header>
 
       {loading && <div>Loading...</div>}
@@ -118,6 +194,71 @@ export default function SaleDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Invoice Generation Form */}
+          {showInvoiceForm && !invoice && (
+            <div className="mt-6 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+              <h3 className="mb-4 text-lg font-semibold text-zinc-900">Generate Invoice</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-zinc-700">
+                    Customer Name (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Enter customer name"
+                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-zinc-700">
+                    Customer Phone (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    placeholder="Enter customer phone"
+                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-zinc-700">
+                    Customer GSTIN (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={customerGstin}
+                    onChange={(e) => setCustomerGstin(e.target.value)}
+                    placeholder="Enter customer GSTIN"
+                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleGenerateInvoice}
+                    disabled={generatingInvoice}
+                    className="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {generatingInvoice ? 'Generating...' : 'Generate Invoice'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowInvoiceForm(false);
+                      setCustomerName('');
+                      setCustomerPhone('');
+                      setCustomerGstin('');
+                    }}
+                    className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Payment Update Section */}
           <div className="mt-6 rounded-lg border border-zinc-200 bg-zinc-50 p-4">

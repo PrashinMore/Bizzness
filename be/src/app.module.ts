@@ -22,6 +22,10 @@ import { Organization } from './organizations/entities/organization.entity';
 import { CategoriesModule } from './categories/categories.module';
 import { Category } from './categories/entities/category.entity';
 import { GlobalProduct } from './products/entities/global-product.entity';
+import { InvoicesModule } from './invoices/invoices.module';
+import { Invoice } from './invoices/entities/invoice.entity';
+import { InvoiceCounter } from './invoices/entities/invoice-counter.entity';
+import { OrganizationInvoiceSettings } from './invoices/entities/organization-invoice-settings.entity';
 
 @Module({
   imports: [
@@ -75,7 +79,7 @@ import { GlobalProduct } from './products/entities/global-product.entity';
           username: configService.get<string>('DB_USER') ?? 'postgres',
           password: configService.get<string>('DB_PASSWORD') ?? 'postgres',
           database: configService.get<string>('DB_NAME') ?? 'biznes',
-          entities: [User, Product, Sale, SaleItem, Expense, Settings, Organization, Category, GlobalProduct],
+          entities: [User, Product, Sale, SaleItem, Expense, Settings, Organization, Category, GlobalProduct, Invoice, InvoiceCounter, OrganizationInvoiceSettings],
           synchronize: true,
           // Disable retries completely in serverless to fail fast
           retryAttempts: isServerless ? 0 : 10,
@@ -122,6 +126,7 @@ import { GlobalProduct } from './products/entities/global-product.entity';
     ReportsModule,
     OrganizationsModule,
     CategoriesModule,
+    InvoicesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -67,24 +67,53 @@ export function SideNav() {
         ☰
       </button>
 
+      {!open && (
+        <button
+          aria-label="Show sidebar"
+          onClick={toggle}
+          className="fixed left-3 top-3 z-50 hidden md:flex rounded border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm hover:bg-zinc-50 transition"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      )}
+
       <aside
-        className={`fixed left-0 top-0 z-40 h-full w-56 border-r border-zinc-200 bg-white shadow-sm transition-transform duration-200 md:translate-x-0 ${
+        className={`fixed left-0 top-0 z-40 h-full w-56 border-r border-zinc-200 bg-white shadow-sm transition-transform duration-200 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex h-14 items-center gap-3 px-4">
-          {businessLogo && (
-            <img
-              src={`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'}${businessLogo}`}
-              alt={businessName}
-              className="h-8 w-8 rounded object-cover"
-              onError={(e) => {
-                // Hide image if it fails to load
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-          )}
-          <span className="text-sm font-semibold text-zinc-900">{businessName}</span>
+        <div className="flex h-14 items-center justify-between gap-3 px-4">
+          <div className="flex items-center gap-3">
+            {businessLogo && (
+              <img
+                src={`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'}${businessLogo}`}
+                alt={businessName}
+                className="h-8 w-8 rounded object-cover"
+                onError={(e) => {
+                  // Hide image if it fails to load
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            )}
+            <span className="text-sm font-semibold text-zinc-900">{businessName}</span>
+          </div>
+          <button
+            onClick={toggle}
+            aria-label="Toggle sidebar"
+            className="hidden md:flex rounded p-1.5 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition"
+          >
+            {open ? (
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
         </div>
         <nav className="flex h-[calc(100vh-3.5rem)] flex-col">
           <div className="flex-1 space-y-1 overflow-y-auto px-2 py-2">
