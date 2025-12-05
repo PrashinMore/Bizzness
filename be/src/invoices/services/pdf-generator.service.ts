@@ -72,7 +72,7 @@ export class PdfGeneratorService {
 
     // Build logo URL - handle leading slashes properly
     // Use NEXT_PUBLIC_API_BASE_URL for consistency with frontend, or fallback to localhost
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.API_BASE_URL || 'http://localhost:4000';
+    const baseUrl = process.env.BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || process.env.API_BASE_URL || 'http://localhost:4000';
     let logoUrl: string | null = null;
     if (invoiceSettings.includeLogo && businessSettings.businessLogo) {
       const logoPath = businessSettings.businessLogo;
