@@ -3,55 +3,10 @@ import * as puppeteer from 'puppeteer';
 import { Invoice } from '../entities/invoice.entity';
 import { OrganizationInvoiceSettings } from '../entities/organization-invoice-settings.entity';
 import { Settings } from '../../settings/entities/settings.entity';
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
 
 @Injectable()
 export class PdfGeneratorService {
   private readonly logger = new Logger(PdfGeneratorService.name);
-
-  private getLogoAsBase64(logoPath: string | null): string | null {
-    if (!logoPath) return null;
-
-    try {
-      // Remove leading slashes and clean up the path
-      let relativePath = logoPath;
-      // Remove multiple leading slashes
-      while (relativePath.startsWith('/')) {
-        relativePath = relativePath.slice(1);
-      }
-      
-      const fullPath = join(process.cwd(), relativePath);
-      this.logger.log(`Looking for logo at: ${fullPath}`);
-
-      if (!existsSync(fullPath)) {
-        this.logger.warn(`Logo file not found: ${fullPath}`);
-        return null;
-      }
-
-      const fileBuffer = readFileSync(fullPath);
-      const base64 = fileBuffer.toString('base64');
-      
-      // Determine mime type from extension
-      const ext = logoPath.toLowerCase().split('.').pop();
-      let mimeType = 'image/png';
-      if (ext === 'jpg' || ext === 'jpeg') {
-        mimeType = 'image/jpeg';
-      } else if (ext === 'gif') {
-        mimeType = 'image/gif';
-      } else if (ext === 'webp') {
-        mimeType = 'image/webp';
-      } else if (ext === 'svg') {
-        mimeType = 'image/svg+xml';
-      }
-
-      this.logger.log(`Successfully converted logo to base64`);
-      return `data:${mimeType};base64,${base64}`;
-    } catch (error) {
-      this.logger.error(`Failed to read logo file: ${logoPath}`, error);
-      return null;
-    }
-  }
 
   async generateInvoicePdf(
     invoice: Invoice,
@@ -115,10 +70,24 @@ export class PdfGeneratorService {
       });
     };
 
-    // Convert logo to base64 if available
-    const logoBase64 = invoiceSettings.includeLogo && businessSettings.businessLogo
-      ? this.getLogoAsBase64(businessSettings.businessLogo)
-      : null;
+    // Build logo URL - handle leading slashes properly
+    // Use NEXT_PUBLIC_API_BASE_URL for consistency with frontend, or fallback to localhost
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.API_BASE_URL || 'http://localhost:4000';
+    let logoUrl: string | null = null;
+    if (invoiceSettings.includeLogo && businessSettings.businessLogo) {
+      const logoPath = businessSettings.businessLogo;
+      
+      // Check if logoPath is already a full URL
+      if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
+        logoUrl = logoPath;
+      } else {
+        // Remove trailing slash from baseUrl and leading slash from logo path
+        const cleanBaseUrl = baseUrl.replace(/\/+$/, '');
+        const cleanLogoPath = logoPath.replace(/^\/+/, '');
+        logoUrl = `${cleanBaseUrl}/${cleanLogoPath}`;
+      }
+      this.logger.log(`Logo URL constructed: ${logoUrl} (from path: ${logoPath})`);
+    }
       
     return `
 <!DOCTYPE html>
@@ -284,7 +253,7 @@ export class PdfGeneratorService {
   <div class="invoice-container">
     <div class="header">
       <div class="business-info">
-        ${logoBase64 ? `<img src="${logoBase64}" alt="Logo" class="business-logo" />` : ''}
+        ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="business-logo" />` : ''}
         <div class="business-name">${businessSettings.businessName || 'Business Name'}</div>
         <div class="business-details">
           ${businessSettings.businessAddress ? `<div>${businessSettings.businessAddress}</div>` : ''}
