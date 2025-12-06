@@ -16,6 +16,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { DeleteAccountDto } from './dto/delete-account.dto';
 import { UsersService } from './users.service';
 import type { SanitizedUser } from './users.types';
 
@@ -38,6 +39,22 @@ export class UsersController {
   @Get('me')
   getProfile(@Req() req: RequestWithUser): SanitizedUser {
     return req.user;
+  }
+
+  @Delete('me')
+  async deleteMyAccount(
+    @Req() req: RequestWithUser,
+    @Body() deleteAccountDto: DeleteAccountDto,
+  ): Promise<{ message: string; scheduledHardDeleteOn: string }> {
+    await this.usersService.deleteAccount(req.user.id, deleteAccountDto.password);
+    
+    const hardDeleteDate = new Date();
+    hardDeleteDate.setDate(hardDeleteDate.getDate() + 30);
+    
+    return {
+      message: 'Account deletion initiated',
+      scheduledHardDeleteOn: hardDeleteDate.toISOString(),
+    };
   }
 
   @Roles('admin')

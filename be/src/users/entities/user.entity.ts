@@ -33,6 +33,15 @@ export class User {
   @Column({ type: 'timestamp', nullable: true })
   refreshTokenExpiresAt?: Date | null;
 
+  @Column({ type: 'timestamp', nullable: true, name: 'deleted_at' })
+  deletedAt?: Date | null;
+
+  @Column({ type: 'text', default: 'ACTIVE', name: 'status' })
+  status!: 'ACTIVE' | 'DELETED';
+
+  @Column({ type: 'timestamp', nullable: true, name: 'hard_delete_scheduled_at' })
+  hardDeleteScheduledAt?: Date | null;
+
   @ManyToMany(() => Organization, (organization) => organization.users)
   @JoinTable({
     name: 'user_organizations',

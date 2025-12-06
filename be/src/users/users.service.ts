@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
@@ -59,7 +60,9 @@ export class UsersService {
   }
 
   async findAll(): Promise<SanitizedUser[]> {
-    const users = await this.usersRepository.find();
+    const users = await this.usersRepository.find({
+      where: { status: 'ACTIVE' },
+    });
     return users.map((user) => this.sanitizeUser(user));
   }
 
@@ -67,6 +70,7 @@ export class UsersService {
     const users = await this.usersRepository.find({
       where: {
         email: Like(`%${query}%`),
+        status: 'ACTIVE',
       },
       take: limit,
       order: { email: 'ASC' },
@@ -76,14 +80,16 @@ export class UsersService {
 
   async findById(id: string): Promise<SanitizedUser | null> {
     const user = await this.usersRepository.findOne({
-      where: { id },
+      where: { id, status: 'ACTIVE' },
       relations: ['organizations'],
     });
     return user ? this.sanitizeUser(user) : null;
   }
 
   async findEntityById(id: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { id } });
+    return this.usersRepository.findOne({ 
+      where: { id, status: 'ACTIVE' },
+    });
   }
 
   async update(
@@ -136,7 +142,9 @@ export class UsersService {
     email: string,
     password: string,
   ): Promise<User | null> {
-    const user = await this.usersRepository.findOne({ where: { email } });
+    const user = await this.usersRepository.findOne({ 
+      where: { email, status: 'ACTIVE' },
+    });
     if (!user) {
       return null;
     }
@@ -162,7 +170,7 @@ export class UsersService {
 
   async findByRefreshToken(refreshToken: string): Promise<User | null> {
     return this.usersRepository.findOne({
-      where: { refreshToken },
+      where: { refreshToken, status: 'ACTIVE' },
     });
   }
 
@@ -171,6 +179,52 @@ export class UsersService {
       refreshToken: null,
       refreshTokenExpiresAt: null,
     });
+  }
+
+  async deleteAccount(userId: string, password: string): Promise<void> {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ['organizations'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Verify password
+    const isPasswordValid = await compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid password');
+    }
+
+    // Check if already deleted
+    if (user.status === 'DELETED' || user.deletedAt) {
+      throw new BadRequestException('Account is already deleted');
+    }
+
+    // Calculate hard delete date (30 days from now)
+    const hardDeleteDate = new Date();
+    hardDeleteDate.setDate(hardDeleteDate.getDate() + 30);
+
+    // Soft delete: mark as deleted, anonymize data, clear tokens
+    await this.usersRepository.update(userId, {
+      deletedAt: new Date(),
+      status: 'DELETED',
+      email: `deleted+${userId}@deleted.local`,
+      name: 'Deleted User',
+      refreshToken: null,
+      refreshTokenExpiresAt: null,
+      hardDeleteScheduledAt: hardDeleteDate,
+    });
+
+    // Remove user from all organizations
+    if (user.organizations && user.organizations.length > 0) {
+      await this.usersRepository
+        .createQueryBuilder()
+        .relation(User, 'organizations')
+        .of(userId)
+        .remove(user.organizations.map(org => org.id));
+    }
   }
 
   private resolveRole(

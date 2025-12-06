@@ -107,6 +107,15 @@ export const usersApi = {
     }),
   remove: (token: string, id: string): Promise<void> =>
     request<void>(`/users/${id}`, { method: 'DELETE', token }),
+  deleteAccount: (
+    token: string,
+    password: string,
+  ): Promise<{ message: string; scheduledHardDeleteOn: string }> =>
+    request<{ message: string; scheduledHardDeleteOn: string }>('/users/me', {
+      method: 'DELETE',
+      body: { password },
+      token,
+    }),
 };
 
 type ProductFilters = {

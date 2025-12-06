@@ -53,6 +53,19 @@ export default function ProfilePage() {
             </div>
           </dl>
         </article>
+
+        <article className="rounded-3xl bg-white p-6 shadow-sm border-l-4 border-red-500">
+          <h2 className="text-lg font-semibold text-red-900 mb-2">Danger Zone</h2>
+          <p className="text-sm text-zinc-600 mb-4">
+            Once you delete your account, there is no going back. Please be certain.
+          </p>
+          <Link
+            href="/profile/delete-account"
+            className="inline-block px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm font-medium"
+          >
+            Delete Account
+          </Link>
+        </article>
       </div>
     </main>
   );
