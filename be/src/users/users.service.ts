@@ -97,9 +97,16 @@ export class UsersService {
     updateDto: UpdateUserDto,
     options?: { allowRoleChange?: boolean },
   ): Promise<SanitizedUser> {
-    const user = await this.usersRepository.findOne({ where: { id } });
+    const user = await this.usersRepository.findOne({ 
+      where: { id, status: 'ACTIVE' },
+    });
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+    
+    // Prevent updating deleted accounts
+    if (user.status === 'DELETED' || user.deletedAt) {
+      throw new BadRequestException('Cannot update a deleted account');
     }
 
     if (updateDto.email && updateDto.email !== user.email) {
@@ -132,6 +139,14 @@ export class UsersService {
   }
 
   async remove(id: string): Promise<void> {
+    // Check if user exists and is active
+    const user = await this.usersRepository.findOne({ 
+      where: { id, status: 'ACTIVE' },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    
     const result = await this.usersRepository.delete(id);
     if (!result.affected) {
       throw new NotFoundException('User not found');
@@ -182,6 +197,7 @@ export class UsersService {
   }
 
   async deleteAccount(userId: string, password: string): Promise<void> {
+    // Find user with organizations - don't filter by status here to check if already deleted
     const user = await this.usersRepository.findOne({
       where: { id: userId },
       relations: ['organizations'],
@@ -191,15 +207,15 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
+    // Check if already deleted first (more efficient - no need to verify password)
+    if (user.status === 'DELETED' || user.deletedAt) {
+      throw new BadRequestException('Account is already deleted');
+    }
+
     // Verify password
     const isPasswordValid = await compare(password, user.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid password');
-    }
-
-    // Check if already deleted
-    if (user.status === 'DELETED' || user.deletedAt) {
-      throw new BadRequestException('Account is already deleted');
     }
 
     // Calculate hard delete date (30 days from now)

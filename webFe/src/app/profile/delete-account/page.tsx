@@ -14,11 +14,15 @@ export default function DeleteAccountPage() {
   const [confirmText, setConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [scheduledDeleteDate, setScheduledDeleteDate] = useState<string | null>(null);
 
   const handleDelete = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setShowSuccess(false);
 
+    // Client-side validation
     if (!password) {
       setError('Password is required');
       return;
@@ -30,7 +34,7 @@ export default function DeleteAccountPage() {
     }
 
     if (!token) {
-      setError('Authentication required');
+      setError('Authentication required. Please log in again.');
       return;
     }
 
@@ -38,17 +42,33 @@ export default function DeleteAccountPage() {
     try {
       const result = await usersApi.deleteAccount(token, password);
       
-      // Show success message briefly
-      alert(`Account deletion initiated. Your account will be permanently deleted on ${new Date(result.scheduledHardDeleteOn).toLocaleDateString()}.`);
+      // Show success message
+      setScheduledDeleteDate(result.scheduledHardDeleteOn);
+      setShowSuccess(true);
       
-      // Logout and redirect to login
-      logout();
-      router.push('/login');
+      // Wait a moment to show success message, then logout and redirect
+      setTimeout(() => {
+        logout();
+        router.push('/login');
+      }, 3000);
     } catch (err) {
+      // Enhanced error handling
       if (err instanceof Error) {
-        setError(err.message);
+        // Handle specific error messages from API
+        const errorMessage = err.message;
+        if (errorMessage.includes('Invalid password') || errorMessage.includes('password')) {
+          setError('Invalid password. Please enter your current password.');
+        } else if (errorMessage.includes('already deleted')) {
+          setError('This account has already been deleted.');
+        } else if (errorMessage.includes('Unauthorized') || errorMessage.includes('Authentication')) {
+          setError('Authentication failed. Please log in again.');
+        } else if (errorMessage.includes('not found')) {
+          setError('User account not found.');
+        } else {
+          setError(errorMessage || 'Failed to delete account. Please try again.');
+        }
       } else {
-        setError('Failed to delete account. Please try again.');
+        setError('An unexpected error occurred. Please try again.');
       }
     } finally {
       setIsDeleting(false);
@@ -149,8 +169,43 @@ export default function DeleteAccountPage() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                {error}
+              <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showSuccess && scheduledDeleteDate && (
+              <div className="bg-green-50 border-l-4 border-green-500 text-green-700 px-4 py-3 rounded">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium">Account deletion initiated successfully</p>
+                    <p className="mt-1 text-sm">
+                      Your account will be permanently deleted on{' '}
+                      <span className="font-semibold">
+                        {new Date(scheduledDeleteDate).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </span>
+                      . You will be logged out in a few seconds...
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -158,17 +213,27 @@ export default function DeleteAccountPage() {
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
-                disabled={isDeleting}
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isDeleting || showSuccess}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={isDeleting || confirmText !== 'DELETE' || !password}
-                className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                disabled={isDeleting || showSuccess || confirmText !== 'DELETE' || !password}
+                className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
               >
-                {isDeleting ? 'Deleting Account...' : 'Delete My Account'}
+                {isDeleting ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Deleting Account...
+                  </span>
+                ) : (
+                  'Delete My Account'
+                )}
               </button>
             </div>
           </form>
