@@ -28,6 +28,43 @@ export class SalesService {
 			throw new BadRequestException('totalAmount does not match items sum');
 		}
 
+		// Handle partial payments
+		let cashAmount = dto.cashAmount ?? 0;
+		let upiAmount = dto.upiAmount ?? 0;
+		
+		// Backward compatibility: if paymentType is provided but amounts are not, derive amounts
+		if (dto.cashAmount === undefined && dto.upiAmount === undefined && dto.paymentType) {
+			if (dto.paymentType === 'UPI') {
+				upiAmount = dto.totalAmount;
+				cashAmount = 0;
+			} else if (dto.paymentType === 'cash') {
+				cashAmount = dto.totalAmount;
+				upiAmount = 0;
+			}
+		}
+		
+		const totalPaid = round2(cashAmount + upiAmount);
+
+		// Validate payment amounts
+		if (cashAmount < 0 || upiAmount < 0) {
+			throw new BadRequestException('Payment amounts cannot be negative');
+		}
+		if (totalPaid > round2(dto.totalAmount)) {
+			throw new BadRequestException('Total paid amount cannot exceed total amount');
+		}
+
+		// Determine payment type and isPaid status
+		let paymentType = dto.paymentType || 'cash';
+		if (cashAmount > 0 && upiAmount > 0) {
+			paymentType = 'mixed';
+		} else if (upiAmount > 0) {
+			paymentType = 'UPI';
+		} else if (cashAmount > 0) {
+			paymentType = 'cash';
+		}
+
+		const isPaid = round2(totalPaid) === round2(dto.totalAmount);
+
 		return this.dataSource.transaction(async (manager) => {
 			const productIds = dto.items.map((i) => i.productId);
 			const products = await manager.getRepository(Product).find({
@@ -63,8 +100,10 @@ export class SalesService {
 				date: new Date(dto.date),
 				totalAmount: round2(dto.totalAmount),
 				soldBy: dto.soldBy,
-				paymentType: dto.paymentType || 'cash',
-				isPaid: dto.isPaid ?? false,
+				paymentType: paymentType,
+				cashAmount: round2(cashAmount),
+				upiAmount: round2(upiAmount),
+				isPaid: dto.isPaid ?? isPaid,
 				organizationId: dto.organizationId,
 			});
 			await manager.getRepository(Sale).save(sale);
@@ -183,9 +222,9 @@ export class SalesService {
 	}) {
 		const qb = this.saleRepo
 			.createQueryBuilder('sale')
-			.select('sale.paymentType', 'paymentType')
-			.addSelect('SUM(sale.totalAmount)', 'total')
-			.groupBy('sale.paymentType');
+			.select('COALESCE(SUM(sale.cashAmount), 0)', 'cashTotal')
+			.addSelect('COALESCE(SUM(sale.upiAmount), 0)', 'upiTotal')
+			.addSelect('COALESCE(SUM(sale.totalAmount), 0)', 'grandTotal');
 
 		if (filters.organizationIds && filters.organizationIds.length > 0) {
 			qb.andWhere('sale.organizationId IN (:...organizationIds)', {
@@ -209,34 +248,102 @@ export class SalesService {
 			qb.andWhere('sale.soldBy ILIKE :staff', { staff: `%${filters.staff}%` });
 		}
 
-		const results = await qb.getRawMany<{ paymentType: string; total: string }>();
+		const result = await qb.getRawOne<{ cashTotal: string; upiTotal: string; grandTotal: string }>();
 
-		// Initialize totals
-		const totals = {
-			cash: 0,
-			UPI: 0,
-		};
+		const cashTotal = parseFloat(result?.cashTotal || '0');
+		const upiTotal = parseFloat(result?.upiTotal || '0');
+		const grandTotal = parseFloat(result?.grandTotal || '0');
 
-		// Sum up totals by payment type
-		results.forEach((result) => {
+		// For backward compatibility, also check old paymentType field for records without cashAmount/upiAmount
+		const legacyQb = this.saleRepo
+			.createQueryBuilder('sale')
+			.select('sale.paymentType', 'paymentType')
+			.addSelect('SUM(sale.totalAmount)', 'total')
+			.where('(sale.cashAmount IS NULL OR sale.cashAmount = 0) AND (sale.upiAmount IS NULL OR sale.upiAmount = 0)')
+			.groupBy('sale.paymentType');
+
+		if (filters.organizationIds && filters.organizationIds.length > 0) {
+			legacyQb.andWhere('sale.organizationId IN (:...organizationIds)', {
+				organizationIds: filters.organizationIds,
+			});
+		} else if (filters.organizationIds && filters.organizationIds.length === 0) {
+			legacyQb.andWhere('1 = 0');
+		}
+
+		if (filters.from) {
+			legacyQb.andWhere('sale.date >= :from', { from: filters.from });
+		}
+		if (filters.to) {
+			legacyQb.andWhere('sale.date <= :to', { to: filters.to });
+		}
+		if (filters.productId) {
+			legacyQb.leftJoin('sale.items', 'item')
+				.andWhere('item.productId = :pid', { pid: filters.productId });
+		}
+		if (filters.staff) {
+			legacyQb.andWhere('sale.soldBy ILIKE :staff', { staff: `%${filters.staff}%` });
+		}
+
+		const legacyResults = await legacyQb.getRawMany<{ paymentType: string; total: string }>();
+
+		let legacyCash = 0;
+		let legacyUPI = 0;
+
+		legacyResults.forEach((result) => {
 			const paymentType = result.paymentType || 'cash';
 			const total = parseFloat(result.total || '0');
 			if (paymentType.toLowerCase() === 'upi') {
-				totals.UPI += total;
+				legacyUPI += total;
 			} else {
-				totals.cash += total;
+				legacyCash += total;
 			}
 		});
 
+		const finalCash = cashTotal + legacyCash;
+		const finalUPI = upiTotal + legacyUPI;
+
 		return {
-			cash: Number(totals.cash.toFixed(2)),
-			UPI: Number(totals.UPI.toFixed(2)),
-			total: Number((totals.cash + totals.UPI).toFixed(2)),
+			cash: Number(finalCash.toFixed(2)),
+			UPI: Number(finalUPI.toFixed(2)),
+			total: Number((finalCash + finalUPI).toFixed(2)),
 		};
 	}
 
 	async update(id: string, dto: UpdateSaleDto, organizationIds?: string[]) {
 		const sale = await this.findOne(id, organizationIds);
+		const round2 = (n: number) => Math.round(n * 100) / 100;
+		
+		// Handle partial payment updates
+		let cashAmount = dto.cashAmount !== undefined ? dto.cashAmount : (sale.cashAmount ?? 0);
+		let upiAmount = dto.upiAmount !== undefined ? dto.upiAmount : (sale.upiAmount ?? 0);
+		
+		// Validate payment amounts
+		if (dto.cashAmount !== undefined || dto.upiAmount !== undefined) {
+			if (cashAmount < 0 || upiAmount < 0) {
+				throw new BadRequestException('Payment amounts cannot be negative');
+			}
+			const totalPaid = round2(cashAmount + upiAmount);
+			if (totalPaid > round2(sale.totalAmount)) {
+				throw new BadRequestException('Total paid amount cannot exceed total amount');
+			}
+			
+			// Update payment amounts
+			sale.cashAmount = round2(cashAmount);
+			sale.upiAmount = round2(upiAmount);
+			
+			// Determine payment type
+			if (cashAmount > 0 && upiAmount > 0) {
+				sale.paymentType = 'mixed';
+			} else if (upiAmount > 0) {
+				sale.paymentType = 'UPI';
+			} else if (cashAmount > 0) {
+				sale.paymentType = 'cash';
+			}
+			
+			// Update isPaid status
+			const totalPaidAmount = round2(cashAmount + upiAmount);
+			sale.isPaid = round2(totalPaidAmount) === round2(sale.totalAmount);
+		}
 		
 		if (dto.paymentType !== undefined) {
 			sale.paymentType = dto.paymentType;

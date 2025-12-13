@@ -32,6 +32,12 @@ export class Sale {
 	@Column({ type: 'varchar', length: 20, default: 'cash' })
 	paymentType: string;
 
+	@Column({ type: 'decimal', precision: 14, scale: 2, default: 0, nullable: true })
+	cashAmount?: number;
+
+	@Column({ type: 'decimal', precision: 14, scale: 2, default: 0, nullable: true })
+	upiAmount?: number;
+
 	@Column({ type: 'boolean', default: false })
 	isPaid: boolean;
 

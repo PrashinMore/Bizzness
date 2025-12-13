@@ -46,9 +46,17 @@ export class CreateSaleDto {
 	soldBy: string;
 
 	@IsString()
-	@IsIn(['cash', 'UPI'])
+	@IsIn(['cash', 'UPI', 'mixed'])
 	@IsOptional()
 	paymentType?: string;
+
+	@IsNumber()
+	@IsOptional()
+	cashAmount?: number;
+
+	@IsNumber()
+	@IsOptional()
+	upiAmount?: number;
 
 	@IsBoolean()
 	@IsOptional()
