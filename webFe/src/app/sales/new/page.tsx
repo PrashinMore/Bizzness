@@ -1,8 +1,9 @@
 'use client';
 
 import { useAuth } from '@/contexts/auth-context';
-import { productsApi, salesApi } from '@/lib/api-client';
+import { productsApi, salesApi, tablesApi, settingsApi } from '@/lib/api-client';
 import type { Product } from '@/types/product';
+import type { DiningTable } from '@/types/table';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -23,13 +24,29 @@ export default function NewSalePage() {
   const [paymentType, setPaymentType] = useState<string>('cash');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tablesEnabled, setTablesEnabled] = useState(false);
+  const [tables, setTables] = useState<DiningTable[]>([]);
+  const [selectedTableId, setSelectedTableId] = useState<string>('');
 
   useEffect(() => {
     async function load() {
       if (!token) return;
       try {
-        const prods = await productsApi.list(token);
+        const [prods, settings] = await Promise.all([
+          productsApi.list(token),
+          settingsApi.get(token),
+        ]);
         setProducts(prods);
+        setTablesEnabled(settings.enableTables);
+        
+        if (settings.enableTables) {
+          try {
+            const tablesData = await tablesApi.list(token);
+            setTables(tablesData);
+          } catch (err) {
+            console.error('Failed to load tables:', err);
+          }
+        }
       } catch (err) {
         console.error(err);
       }
@@ -86,6 +103,17 @@ export default function NewSalePage() {
         paymentType: paymentType,
       };
       const created = await salesApi.create(token, payload);
+      
+      // Assign table if selected
+      if (selectedTableId && created.id) {
+        try {
+          await tablesApi.assignTableToSale(token, created.id, selectedTableId);
+        } catch (err) {
+          console.error('Failed to assign table:', err);
+          // Continue even if table assignment fails
+        }
+      }
+      
       router.push(`/sales/${created.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create sale');
@@ -132,6 +160,26 @@ export default function NewSalePage() {
             </select>
           </div>
         </div>
+
+        {tablesEnabled && (
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-zinc-600">Table (Optional)</label>
+            <select
+              value={selectedTableId}
+              onChange={(e) => setSelectedTableId(e.target.value)}
+              className="rounded border border-zinc-300 px-3 py-2"
+            >
+              <option value="">No table</option>
+              {tables
+                .filter((t) => t.status === 'AVAILABLE' || t.status === 'RESERVED')
+                .map((table) => (
+                  <option key={table.id} value={table.id}>
+                    {table.name} ({table.capacity} seats){table.area ? ` - ${table.area}` : ''} - {table.status}
+                  </option>
+                ))}
+            </select>
+          </div>
+        )}
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">

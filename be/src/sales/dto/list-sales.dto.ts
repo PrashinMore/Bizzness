@@ -1,4 +1,5 @@
-import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsDateString, IsOptional, IsString, IsUUID, IsInt, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class ListSalesDto {
 	@IsOptional()
@@ -20,6 +21,18 @@ export class ListSalesDto {
 	@IsOptional()
 	@IsString()
 	paymentType?: string;
+
+	@IsOptional()
+	@Type(() => Number)
+	@IsInt()
+	@Min(1)
+	page?: number;
+
+	@IsOptional()
+	@Type(() => Number)
+	@IsInt()
+	@Min(1)
+	size?: number;
 }
 
 

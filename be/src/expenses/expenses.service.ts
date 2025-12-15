@@ -37,12 +37,28 @@ export class ExpensesService {
 		if (filters.category) qb.andWhere('expense.category = :cat', { cat: filters.category });
 	}
 
-	async findAll(filters: { from?: string; to?: string; category?: string; organizationIds?: string[] }): Promise<Expense[]> {
+	async findAll(filters: { 
+		from?: string; 
+		to?: string; 
+		category?: string; 
+		organizationIds?: string[];
+		page?: number;
+		size?: number;
+	}): Promise<{ expenses: Expense[]; total: number }> {
 		const qb = this.expenseRepo
 			.createQueryBuilder('expense')
 			.orderBy('expense.date', 'DESC');
 		this.applyFilters(qb, filters);
-		return qb.getMany();
+		
+		const total = await qb.getCount();
+		
+		if (filters.page && filters.size) {
+			qb.skip((filters.page - 1) * filters.size).take(filters.size);
+		}
+		
+		const expenses = await qb.getMany();
+		
+		return { expenses, total };
 	}
 
 	async monthlySummary(from?: string, to?: string, organizationIds?: string[]): Promise<{ month: string; total: string }[]> {

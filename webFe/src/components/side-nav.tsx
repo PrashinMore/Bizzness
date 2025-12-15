@@ -135,6 +135,11 @@ export function SideNav() {
             <Link href="/products" className={linkClasses('/products')} prefetch={false}>
               Inventory & Stock
             </Link>
+            {settings?.enableTables && (
+              <Link href="/dashboard/tables" className={linkClasses('/dashboard/tables')} prefetch={false}>
+                Tables
+              </Link>
+            )}
           <Link href="/settings" className={linkClasses('/settings')} prefetch={false}>
             Settings
           </Link>

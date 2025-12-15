@@ -26,6 +26,8 @@ import { InvoicesModule } from './invoices/invoices.module';
 import { Invoice } from './invoices/entities/invoice.entity';
 import { InvoiceCounter } from './invoices/entities/invoice-counter.entity';
 import { OrganizationInvoiceSettings } from './invoices/entities/organization-invoice-settings.entity';
+import { TablesModule } from './tables/tables.module';
+import { DiningTable } from './tables/entities/dining-table.entity';
 
 @Module({
   imports: [
@@ -79,7 +81,7 @@ import { OrganizationInvoiceSettings } from './invoices/entities/organization-in
           username: configService.get<string>('DB_USER') ?? 'postgres',
           password: configService.get<string>('DB_PASSWORD') ?? 'postgres',
           database: configService.get<string>('DB_NAME') ?? 'biznes',
-          entities: [User, Product, Sale, SaleItem, Expense, Settings, Organization, Category, GlobalProduct, Invoice, InvoiceCounter, OrganizationInvoiceSettings],
+          entities: [User, Product, Sale, SaleItem, Expense, Settings, Organization, Category, GlobalProduct, Invoice, InvoiceCounter, OrganizationInvoiceSettings, DiningTable],
           synchronize: true,
           // Disable retries completely in serverless to fail fast
           retryAttempts: isServerless ? 0 : 10,
@@ -127,6 +129,7 @@ import { OrganizationInvoiceSettings } from './invoices/entities/organization-in
     OrganizationsModule,
     CategoriesModule,
     InvoicesModule,
+    TablesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

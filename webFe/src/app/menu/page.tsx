@@ -3,8 +3,9 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useRequireAuth } from '@/hooks/use-require-auth';
-import { productsApi, salesApi } from '@/lib/api-client';
+import { productsApi, salesApi, tablesApi, settingsApi } from '@/lib/api-client';
 import type { Product } from '@/types/product';
+import type { DiningTable, Sale } from '@/types/table';
 import { useRouter } from 'next/navigation';
 
 type CartItem = {
@@ -29,6 +30,11 @@ export default function MenuPage() {
   const [checkingOut, setCheckingOut] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
+  const [tablesEnabled, setTablesEnabled] = useState(false);
+  const [tables, setTables] = useState<DiningTable[]>([]);
+  const [selectedTableId, setSelectedTableId] = useState<string>('');
+  const [activeSale, setActiveSale] = useState<Sale | null>(null);
+  const [loadingActiveSale, setLoadingActiveSale] = useState(false);
 
   // Get unique categories from all menu items for the filter dropdown
   const availableCategories = useMemo(() => {
@@ -40,6 +46,32 @@ export default function MenuPage() {
     });
     return Array.from(categories).sort();
   }, [allMenuItems]);
+
+  // Load settings and tables
+  useEffect(() => {
+    async function loadSettingsAndTables() {
+      if (!token) return;
+      try {
+        const settings = await settingsApi.get(token);
+        setTablesEnabled(settings.enableTables);
+        
+        if (settings.enableTables) {
+          try {
+            const tablesData = await tablesApi.list(token);
+            setTables(tablesData);
+          } catch (err) {
+            console.error('Failed to load tables:', err);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load settings:', err);
+      }
+    }
+
+    if (!loading && user && token) {
+      loadSettingsAndTables();
+    }
+  }, [loading, user, token]);
 
   // Load all menu items initially to populate category dropdown
   useEffect(() => {
@@ -60,6 +92,53 @@ export default function MenuPage() {
       loadAllProducts();
     }
   }, [loading, user, token]);
+
+  // Check for tableId in URL params
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tableIdFromUrl = params.get('tableId');
+      if (tableIdFromUrl && tableIdFromUrl !== selectedTableId) {
+        setSelectedTableId(tableIdFromUrl);
+      }
+    }
+  }, []);
+
+  // Load active sale when table is selected
+  useEffect(() => {
+    async function loadActiveSale() {
+      if (!token || !selectedTableId) {
+        setActiveSale(null);
+        return;
+      }
+
+      setLoadingActiveSale(true);
+      try {
+        const sale = await tablesApi.getActiveSale(token, selectedTableId);
+        setActiveSale(sale || null);
+        if (sale) {
+          // Don't load existing items into cart - let user add new items
+          // Just show the active sale info
+          setPaymentType(sale.paymentType || 'cash');
+          setIsPaid(sale.isPaid);
+          // Clear cart so user can add new items
+          setCart([]);
+        } else {
+          // No active sale, clear cart
+          setCart([]);
+          setPaymentType('cash');
+          setIsPaid(false);
+        }
+      } catch (err) {
+        console.error('Failed to load active sale:', err);
+        setActiveSale(null);
+      } finally {
+        setLoadingActiveSale(false);
+      }
+    }
+
+    loadActiveSale();
+  }, [token, selectedTableId]);
 
   // Load filtered menu items from backend
   useEffect(() => {
@@ -122,13 +201,14 @@ export default function MenuPage() {
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
-    if (quantity <= 0) {
+    const numQuantity = Number(quantity) || 0;
+    if (numQuantity <= 0) {
       removeFromCart(productId);
       return;
     }
     setCart((prev) =>
       prev.map((item) =>
-        item.productId === productId ? { ...item, quantity } : item,
+        item.productId === productId ? { ...item, quantity: numQuantity } : item,
       ),
     );
   };
@@ -137,14 +217,17 @@ export default function MenuPage() {
     setCart((prev) => prev.filter((item) => item.productId !== productId));
   };
 
-  const totalAmount = useMemo(
-    () =>
-      cart.reduce(
-        (sum, item) => sum + item.sellingPrice * item.quantity,
-        0,
-      ),
-    [cart],
-  );
+  const totalAmount = useMemo(() => {
+    const total = cart.reduce(
+      (sum, item) => {
+        const price = Number(item.sellingPrice) || 0;
+        const qty = Number(item.quantity) || 0;
+        return sum + price * qty;
+      },
+      0,
+    );
+    return total;
+  }, [cart]);
 
   const handleCheckout = async () => {
     if (!token || !user || cart.length === 0) {
@@ -155,22 +238,61 @@ export default function MenuPage() {
     setError(null);
 
     try {
-      const payload = {
-        date: new Date().toISOString(),
-        items: cart.map((item) => ({
+      // If there's an active sale, add items to it; otherwise create new sale
+      if (activeSale) {
+        // Only add items that are new or different from existing items
+        // Compare by productId, quantity, and sellingPrice
+        const existingProductIds = new Set(
+          activeSale.items.map((si) => `${si.productId}-${si.quantity}-${si.sellingPrice}`)
+        );
+        
+        // All items in cart are new items to be added
+        const newItems = cart.map((item) => ({
           productId: item.productId,
-          quantity: item.quantity,
-          sellingPrice: item.sellingPrice,
-        })),
-        totalAmount: Number(totalAmount.toFixed(2)),
-        soldBy: user.id,
-        paymentType: paymentType,
-        isPaid: isPaid,
-      };
+          quantity: Number(item.quantity) || 0,
+          sellingPrice: Number(item.sellingPrice) || 0,
+        }));
 
-      const created = await salesApi.create(token, payload);
-      setCart([]);
-      router.push(`/sales/${created.id}`);
+        if (newItems.length === 0) {
+          // No new items to add, just navigate to sale
+          router.push(`/sales/${activeSale.id}`);
+          return;
+        }
+
+        await salesApi.addItems(token, activeSale.id, newItems);
+        
+        // Reload active sale to get updated total
+        if (selectedTableId) {
+          const refreshed = await tablesApi.getActiveSale(token, selectedTableId);
+          if (refreshed) {
+            setActiveSale(refreshed);
+          }
+        }
+        
+        setCart([]);
+        router.push(`/sales/${activeSale.id}`);
+      } else {
+        // Create new sale
+        const payload = {
+          date: new Date().toISOString(),
+          items: cart.map((item) => ({
+            productId: item.productId,
+            quantity: Number(item.quantity) || 0,
+            sellingPrice: Number(item.sellingPrice) || 0,
+          })),
+          totalAmount: Number(totalAmount.toFixed(2)),
+          soldBy: user.id,
+          paymentType: paymentType,
+          isPaid: isPaid,
+          tableId: selectedTableId || undefined,
+        };
+
+        const created = await salesApi.create(token, payload);
+        setCart([]);
+        setSelectedTableId('');
+        setActiveSale(null);
+        router.push(`/sales/${created.id}`);
+      }
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -362,6 +484,47 @@ export default function MenuPage() {
           <div className="sticky top-6 rounded-3xl bg-white p-6 shadow-sm">
             <h2 className="text-xl font-semibold text-zinc-900">Cart</h2>
 
+            {tablesEnabled && (
+              <div className="mt-4">
+                <label className="mb-2 block text-sm font-medium text-zinc-700">
+                  Table (Optional)
+                </label>
+                <select
+                  value={selectedTableId}
+                  onChange={(e) => setSelectedTableId(e.target.value)}
+                  className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  disabled={loadingActiveSale}
+                >
+                  <option value="">No table</option>
+                  {tables
+                    .filter((t) => t.status === 'AVAILABLE' || t.status === 'OCCUPIED' || t.status === 'RESERVED')
+                    .map((table) => (
+                      <option key={table.id} value={table.id}>
+                        {table.name} ({table.capacity} seats){table.area ? ` - ${table.area}` : ''} - {table.status}
+                      </option>
+                    ))}
+                </select>
+                {loadingActiveSale && (
+                  <p className="mt-1 text-xs text-zinc-500">Loading...</p>
+                )}
+                {activeSale && !loadingActiveSale && (
+                  <div className="mt-2 rounded-lg bg-blue-50 border border-blue-200 p-2">
+                    <p className="text-xs text-blue-800">
+                      Adding to existing order #{activeSale.id.slice(0, 8)}...
+                    </p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      Current total: ₹{Number(activeSale.totalAmount || 0).toFixed(2)}
+                    </p>
+                    {activeSale.items && activeSale.items.length > 0 && (
+                      <p className="text-xs text-blue-600 mt-1">
+                        {activeSale.items.length} item(s) in current order
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {cart.length === 0 ? (
               <p className="mt-4 text-sm text-zinc-700">Your cart is empty</p>
             ) : (
@@ -387,7 +550,7 @@ export default function MenuPage() {
                           {item.product.name}
                         </h4>
                         <p className="text-xs text-zinc-700">
-                          ₹{item.sellingPrice.toFixed(2)} × {item.quantity}
+                          ₹{Number(item.sellingPrice || 0).toFixed(2)} × {Number(item.quantity || 0)}
                         </p>
                         <div className="mt-1 flex items-center gap-2">
                           <button
@@ -450,15 +613,27 @@ export default function MenuPage() {
                     </label>
                   </div>
                   <div className="flex items-center justify-between text-lg font-semibold text-zinc-900">
-                    <span>Total</span>
-                    <span>₹{totalAmount.toFixed(2)}</span>
+                    <span>{activeSale ? 'New Items Total' : 'Total'}</span>
+                    <span>₹{Number(totalAmount || 0).toFixed(2)}</span>
                   </div>
+                  {activeSale && (
+                    <div className="flex items-center justify-between text-sm text-zinc-600 border-t border-zinc-200 pt-2">
+                      <span>Current Order Total</span>
+                      <span>₹{Number(activeSale.totalAmount || 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {activeSale && (
+                    <div className="flex items-center justify-between text-base font-semibold text-zinc-900 border-t border-zinc-200 pt-2">
+                      <span>New Total After Adding</span>
+                      <span>₹{(Number(activeSale.totalAmount || 0) + Number(totalAmount || 0)).toFixed(2)}</span>
+                    </div>
+                  )}
                   <button
                     onClick={handleCheckout}
                     disabled={checkingOut || cart.length === 0}
                     className="mt-4 w-full rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    {checkingOut ? 'Processing…' : 'Checkout'}
+                    {checkingOut ? 'Processing…' : activeSale ? 'Add to Order' : 'Checkout'}
                   </button>
                 </div>
               </>

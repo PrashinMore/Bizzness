@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { SaleItem } from './sale-item.entity';
 import { Organization } from '../../organizations/entities/organization.entity';
+import { DiningTable } from '../../tables/entities/dining-table.entity';
 
 @Entity()
 export class Sale {
@@ -41,11 +42,23 @@ export class Sale {
 	@Column({ type: 'boolean', default: false })
 	isPaid: boolean;
 
+	@Column({ type: 'uuid', nullable: true })
+	tableId?: string | null;
+
+	@ManyToOne(() => DiningTable, { nullable: true, onDelete: 'SET NULL' })
+	table?: DiningTable | null;
+
 	@ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
 	organization!: Organization;
 
 	@Column({ type: 'uuid' })
 	organizationId!: string;
+
+	@Column({ type: 'timestamptz', nullable: true })
+	openedAt?: Date | null;
+
+	@Column({ type: 'timestamptz', nullable: true })
+	closedAt?: Date | null;
 
 	@CreateDateColumn()
 	createdAt: Date;

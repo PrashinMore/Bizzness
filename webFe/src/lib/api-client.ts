@@ -4,6 +4,7 @@ import { Sale } from '@/types/sale';
 import { Expense } from '@/types/expense';
 import { Organization } from '@/types/organization';
 import { OrganizationInvite } from '@/types/invite';
+import { DiningTable, DiningTableWithOrders, TableStatus } from '@/types/table';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000';
@@ -50,7 +51,28 @@ async function request<T>(
     return undefined as T;
   }
 
-  return (await response.json()) as T;
+  // Get response text once
+  const text = await response.text();
+  
+  // Handle empty responses
+  if (!text || text.trim() === '') {
+    return null as T;
+  }
+
+  // Check content type
+  const contentType = response.headers.get('content-type');
+  if (!contentType?.includes('application/json')) {
+    return null as T;
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch (e) {
+    // If JSON parsing fails, return null for nullable endpoints
+    // This can happen when backend returns empty body or invalid JSON
+    console.warn('Failed to parse JSON response:', e, 'Response text:', text.substring(0, 100));
+    return null as T;
+  }
 }
 
 export const authApi = {
@@ -272,19 +294,23 @@ type SalesFilters = {
   productId?: string;
   staff?: string;
   paymentType?: string;
+  page?: number;
+  size?: number;
 };
 
 export const salesApi = {
-  list: (token: string, filters: SalesFilters = {}): Promise<Sale[]> => {
+  list: (token: string, filters: SalesFilters = {}): Promise<{ sales: Sale[]; total: number }> => {
     const params = new URLSearchParams();
     if (filters.from) params.set('from', filters.from);
     if (filters.to) params.set('to', filters.to);
     if (filters.productId) params.set('productId', filters.productId);
     if (filters.staff) params.set('staff', filters.staff);
     if (filters.paymentType) params.set('paymentType', filters.paymentType);
+    if (filters.page) params.set('page', filters.page.toString());
+    if (filters.size) params.set('size', filters.size.toString());
     const qs = params.toString();
     const path = qs ? `/sales?${qs}` : '/sales';
-    return request<Sale[]>(path, { token });
+    return request<{ sales: Sale[]; total: number }>(path, { token });
   },
   get: (token: string, id: string): Promise<Sale> =>
     request<Sale>(`/sales/${id}`, { token }),
@@ -295,11 +321,18 @@ export const salesApi = {
     soldBy: string;
     paymentType?: string;
     isPaid?: boolean;
+    tableId?: string;
   }): Promise<Sale> => request<Sale>('/sales', { method: 'POST', body: payload, token }),
   update: (token: string, id: string, payload: {
     paymentType?: string;
     isPaid?: boolean;
   }): Promise<Sale> => request<Sale>(`/sales/${id}`, { method: 'PATCH', body: payload, token }),
+  addItems: (token: string, id: string, items: { productId: string; quantity: number; sellingPrice: number }[]): Promise<Sale> =>
+    request<Sale>(`/sales/${id}/items`, {
+      method: 'PATCH',
+      body: { items },
+      token,
+    }),
   dailyTotals: (token: string, from?: string, to?: string): Promise<{ day: string; total: string }[]> => {
     const params = new URLSearchParams();
     if (from) params.set('from', from);
@@ -329,17 +362,21 @@ type ExpensesFilters = {
   from?: string;
   to?: string;
   category?: string;
+  page?: number;
+  size?: number;
 };
 
 export const expensesApi = {
-  list: (token: string, filters: ExpensesFilters = {}): Promise<Expense[]> => {
+  list: (token: string, filters: ExpensesFilters = {}): Promise<{ expenses: Expense[]; total: number }> => {
     const params = new URLSearchParams();
     if (filters.from) params.set('from', filters.from);
     if (filters.to) params.set('to', filters.to);
     if (filters.category) params.set('category', filters.category);
+    if (filters.page) params.set('page', filters.page.toString());
+    if (filters.size) params.set('size', filters.size.toString());
     const qs = params.toString();
     const path = qs ? `/expenses?${qs}` : '/expenses';
-    return request<Expense[]>(path, { token });
+    return request<{ expenses: Expense[]; total: number }>(path, { token });
   },
   monthlySummary: (token: string, from?: string, to?: string): Promise<{ month: string; total: string }[]> => {
     const params = new URLSearchParams();
@@ -416,6 +453,10 @@ export interface Settings {
   defaultLowStockThreshold: number;
   defaultUnit: string;
   stockWarningAlerts: boolean;
+  enableTables: boolean;
+  enableReservations: boolean;
+  allowTableMerge: boolean;
+  autoFreeTableOnPayment: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -480,6 +521,20 @@ export const settingsApi = {
     },
   ): Promise<Settings> =>
     request<Settings>('/settings/inventory', {
+      method: 'PATCH',
+      body: payload,
+      token,
+    }),
+  updateTable: (
+    token: string,
+    payload: {
+      enableTables?: boolean;
+      enableReservations?: boolean;
+      allowTableMerge?: boolean;
+      autoFreeTableOnPayment?: boolean;
+    },
+  ): Promise<Settings> =>
+    request<Settings>('/settings/tables', {
       method: 'PATCH',
       body: payload,
       token,
@@ -796,6 +851,72 @@ export const invitesApi = {
   resend: (token: string, inviteId: string): Promise<OrganizationInvite> =>
     request<OrganizationInvite>(`/invites/${inviteId}/resend`, {
       method: 'POST',
+      token,
+    }),
+};
+
+export const tablesApi = {
+  list: (token: string): Promise<DiningTable[]> =>
+    request<DiningTable[]>('/tables', { token }),
+
+  get: (token: string, id: string): Promise<DiningTableWithOrders> =>
+    request<DiningTableWithOrders>(`/tables/${id}`, { token }),
+
+  getActiveSale: (token: string, id: string): Promise<Sale | null> =>
+    request<Sale | null>(`/tables/${id}/active-sale`, { token }),
+
+  create: (
+    token: string,
+    payload: { name: string; capacity: number; area?: string },
+  ): Promise<DiningTable> =>
+    request<DiningTable>('/tables', {
+      method: 'POST',
+      body: payload,
+      token,
+    }),
+
+  update: (
+    token: string,
+    id: string,
+    payload: Partial<{ name: string; capacity: number; area?: string; isActive: boolean }>,
+  ): Promise<DiningTable> =>
+    request<DiningTable>(`/tables/${id}`, {
+      method: 'PATCH',
+      body: payload,
+      token,
+    }),
+
+  updateStatus: (token: string, id: string, status: TableStatus): Promise<DiningTable> =>
+    request<DiningTable>(`/tables/${id}/status`, {
+      method: 'PATCH',
+      body: { status },
+      token,
+    }),
+
+  remove: (token: string, id: string): Promise<void> =>
+    request<void>(`/tables/${id}`, { method: 'DELETE', token }),
+
+  assignTableToSale: (token: string, saleId: string, tableId: string): Promise<{ sale: Sale; table: DiningTable }> =>
+    request<{ sale: Sale; table: DiningTable }>(`/tables/sales/${saleId}/assign`, {
+      method: 'POST',
+      body: { tableId },
+      token,
+    }),
+
+  switchTable: (token: string, saleId: string, toTableId: string): Promise<{ sale: Sale; fromTable: DiningTable | null; toTable: DiningTable }> =>
+    request<{ sale: Sale; fromTable: DiningTable | null; toTable: DiningTable }>(`/tables/sales/${saleId}/switch`, {
+      method: 'POST',
+      body: { toTableId },
+      token,
+    }),
+
+  mergeTables: (
+    token: string,
+    payload: { sourceTableIds: string[]; targetTableId: string },
+  ): Promise<{ targetTable: DiningTable; sourceTables: DiningTable[] }> =>
+    request<{ targetTable: DiningTable; sourceTables: DiningTable[] }>('/tables/merge', {
+      method: 'POST',
+      body: payload,
       token,
     }),
 };

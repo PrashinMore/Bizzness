@@ -58,6 +58,19 @@ export class Settings {
   @Column({ type: 'boolean', default: true })
   stockWarningAlerts: boolean;
 
+  // Table Management Settings
+  @Column({ type: 'boolean', default: false })
+  enableTables: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  enableReservations: boolean;
+
+  @Column({ type: 'boolean', default: true })
+  allowTableMerge: boolean;
+
+  @Column({ type: 'boolean', default: true })
+  autoFreeTableOnPayment: boolean;
+
   @ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
   organization!: Organization;
 

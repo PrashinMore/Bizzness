@@ -11,10 +11,13 @@ export default function ExpensesListPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [total, setTotal] = useState(0);
 
   const [from, setFrom] = useState<string>('');
   const [to, setTo] = useState<string>('');
   const [category, setCategory] = useState<string>('');
+  const [page, setPage] = useState(1);
+  const [size] = useState(20);
   const [monthly, setMonthly] = useState<{ month: string; total: string }[]>([]);
 
   const load = useMemo(
@@ -23,15 +26,18 @@ export default function ExpensesListPage() {
       setLoading(true);
       setError(null);
       try {
-        const [list, summary] = await Promise.all([
+        const [listResult, summary] = await Promise.all([
           expensesApi.list(token, {
             from: from || undefined,
             to: to || undefined,
             category: category || undefined,
+            page,
+            size,
           }),
           expensesApi.monthlySummary(token, from || undefined, to || undefined),
         ]);
-        setExpenses(list);
+        setExpenses(listResult.expenses);
+        setTotal(listResult.total);
         setMonthly(summary);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load expenses');
@@ -39,7 +45,7 @@ export default function ExpensesListPage() {
         setLoading(false);
       }
     },
-    [token, from, to, category],
+    [token, from, to, category, page, size],
   );
 
   useEffect(() => {
@@ -65,7 +71,10 @@ export default function ExpensesListPage() {
             <input
               type="date"
               value={from}
-              onChange={(e) => setFrom(e.target.value)}
+              onChange={(e) => {
+                setFrom(e.target.value);
+                setPage(1);
+              }}
               className="rounded border border-zinc-300 px-3 py-2"
             />
           </div>
@@ -74,7 +83,10 @@ export default function ExpensesListPage() {
             <input
               type="date"
               value={to}
-              onChange={(e) => setTo(e.target.value)}
+              onChange={(e) => {
+                setTo(e.target.value);
+                setPage(1);
+              }}
               className="rounded border border-zinc-300 px-3 py-2"
             />
           </div>
@@ -83,7 +95,10 @@ export default function ExpensesListPage() {
             <input
               type="text"
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={(e) => {
+                setCategory(e.target.value);
+                setPage(1);
+              }}
               placeholder="rent, salary, utilities"
               className="rounded border border-zinc-300 px-3 py-2"
             />
@@ -101,6 +116,7 @@ export default function ExpensesListPage() {
               setFrom('');
               setTo('');
               setCategory('');
+              setPage(1);
             }}
             className="rounded border border-zinc-300 px-4 py-2 hover:bg-zinc-50"
           >
@@ -191,6 +207,28 @@ export default function ExpensesListPage() {
           </div>
         </article>
       </section>
+
+      {Math.ceil(total / size) > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="rounded border border-zinc-300 px-4 py-2 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-zinc-600">
+            Page {page} of {Math.ceil(total / size)}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(Math.ceil(total / size), p + 1))}
+            disabled={page >= Math.ceil(total / size)}
+            className="rounded border border-zinc-300 px-4 py-2 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </main>
   );
 }

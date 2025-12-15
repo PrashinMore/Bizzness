@@ -36,6 +36,8 @@ export class ExpensesController {
 			to: query.to,
 			category: query.category,
 			organizationIds,
+			page: query.page,
+			size: query.size,
 		});
 	}
 

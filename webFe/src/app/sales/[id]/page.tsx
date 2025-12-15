@@ -182,6 +182,14 @@ export default function SaleDetailPage() {
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Sale Details</h1>
         <div className="flex gap-2">
+          {sale && !sale.isPaid && (
+            <Link
+              href={sale.tableId ? `/menu?tableId=${sale.tableId}` : '/menu'}
+              className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            >
+              Add More Items
+            </Link>
+          )}
           {invoice ? (
             <button
               onClick={async () => {
@@ -281,6 +289,12 @@ export default function SaleDetailPage() {
                 {sale.isPaid ? 'Paid' : 'Pending'}
               </div>
             </div>
+            {sale.tableId && (
+              <div>
+                <div className="text-sm text-zinc-700">Table</div>
+                <div>Table ID: {sale.tableId.slice(0, 8)}...</div>
+              </div>
+            )}
           </div>
 
           {/* Invoice Generation Form */}

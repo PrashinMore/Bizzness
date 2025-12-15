@@ -6,7 +6,7 @@ import { useRequireAuth } from '@/hooks/use-require-auth';
 import { settingsApi, type Settings, invoicesApi } from '@/lib/api-client';
 import type { OrganizationInvoiceSettings } from '@/types/invoice';
 
-type Tab = 'business' | 'billing' | 'inventory' | 'invoices';
+type Tab = 'business' | 'billing' | 'inventory' | 'invoices' | 'tables';
 
 export default function SettingsPage() {
   const { user, loading } = useRequireAuth();
@@ -50,6 +50,12 @@ export default function SettingsPage() {
   const [invoiceDisplayFormat, setInvoiceDisplayFormat] = useState<'A4' | 'thermal'>('A4');
   const [includeLogo, setIncludeLogo] = useState(true);
 
+  // Table settings state
+  const [enableTables, setEnableTables] = useState(false);
+  const [enableReservations, setEnableReservations] = useState(false);
+  const [allowTableMerge, setAllowTableMerge] = useState(true);
+  const [autoFreeTableOnPayment, setAutoFreeTableOnPayment] = useState(true);
+
   const organizationId = useMemo(() => {
     return user?.organizations?.[0]?.id || '';
   }, [user]);
@@ -77,6 +83,10 @@ export default function SettingsPage() {
         setDefaultLowStockThreshold(data.defaultLowStockThreshold);
         setDefaultUnit(data.defaultUnit);
         setStockWarningAlerts(data.stockWarningAlerts);
+        setEnableTables(data.enableTables ?? false);
+        setEnableReservations(data.enableReservations ?? false);
+        setAllowTableMerge(data.allowTableMerge ?? true);
+        setAutoFreeTableOnPayment(data.autoFreeTableOnPayment ?? true);
 
         // Load invoice settings
         if (organizationId && token) {
@@ -238,6 +248,33 @@ export default function SettingsPage() {
     }
   };
 
+  const handleTableSettingsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const updated = await settingsApi.updateTable(token, {
+        enableTables,
+        enableReservations,
+        allowTableMerge,
+        autoFreeTableOnPayment,
+      });
+      setSettings(updated);
+      setSuccess('Table settings updated successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Unable to update table settings.');
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading || !user || !token) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-50">
@@ -317,6 +354,16 @@ export default function SettingsPage() {
             }`}
           >
             Invoices
+          </button>
+          <button
+            onClick={() => setActiveTab('tables')}
+            className={`px-4 py-2 text-sm font-medium transition ${
+              activeTab === 'tables'
+                ? 'border-b-2 border-zinc-900 text-zinc-900'
+                : 'text-zinc-700 hover:text-zinc-900'
+            }`}
+          >
+            Tables
           </button>
         </div>
 
@@ -689,6 +736,91 @@ export default function SettingsPage() {
                   className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Save Invoice Settings'}
+                </button>
+              </form>
+            )}
+
+            {/* Table Settings */}
+            {activeTab === 'tables' && (
+              <form onSubmit={handleTableSettingsSubmit} className="space-y-6">
+                <div>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={enableTables}
+                      onChange={(e) => setEnableTables(e.target.checked)}
+                      className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                    />
+                    <span className="text-sm font-medium text-zinc-900">
+                      Enable Table Management
+                    </span>
+                  </label>
+                  <p className="mt-1 text-xs text-zinc-700">
+                    Enable table tracking and assignment for your restaurant or café. When enabled, you can manage tables, assign orders to tables, and track table status.
+                  </p>
+                </div>
+
+                {enableTables && (
+                  <>
+                    <div>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={enableReservations}
+                          onChange={(e) => setEnableReservations(e.target.checked)}
+                          className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                        />
+                        <span className="text-sm font-medium text-zinc-900">
+                          Enable Reservations
+                        </span>
+                      </label>
+                      <p className="mt-1 text-xs text-zinc-700">
+                        Allow staff to reserve tables for future bookings (feature coming soon)
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={allowTableMerge}
+                          onChange={(e) => setAllowTableMerge(e.target.checked)}
+                          className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                        />
+                        <span className="text-sm font-medium text-zinc-900">
+                          Allow Table Merging
+                        </span>
+                      </label>
+                      <p className="mt-1 text-xs text-zinc-700">
+                        Allow staff to merge multiple tables together (e.g., when a large party needs adjacent tables)
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={autoFreeTableOnPayment}
+                          onChange={(e) => setAutoFreeTableOnPayment(e.target.checked)}
+                          className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                        />
+                        <span className="text-sm font-medium text-zinc-900">
+                          Auto-Free Table on Payment
+                        </span>
+                      </label>
+                      <p className="mt-1 text-xs text-zinc-700">
+                        Automatically set table status to "Cleaning" when the order is paid, so staff can prepare it for the next customer
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50"
+                >
+                  {saving ? 'Saving…' : 'Save Table Settings'}
                 </button>
               </form>
             )}

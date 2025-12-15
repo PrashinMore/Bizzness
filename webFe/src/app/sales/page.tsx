@@ -13,6 +13,7 @@ export default function SalesListPage() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [total, setTotal] = useState(0);
   const [paymentTotals, setPaymentTotals] = useState<{
     cash: number;
     UPI: number;
@@ -24,6 +25,8 @@ export default function SalesListPage() {
   const [productId, setProductId] = useState<string>('');
   const [staff, setStaff] = useState<string>('');
   const [paymentType, setPaymentType] = useState<string>('');
+  const [page, setPage] = useState(1);
+  const [size] = useState(20);
   const [products, setProducts] = useState<Product[]>([]);
   const [users, setUsers] = useState<User[]>([]);
 
@@ -54,13 +57,15 @@ export default function SalesListPage() {
       setLoading(true);
       setError(null);
       try {
-        const [list, totals] = await Promise.all([
+        const [listResult, totals] = await Promise.all([
           salesApi.list(token, {
             from: from || undefined,
             to: to || undefined,
             productId: productId || undefined,
             staff: staff || undefined,
             paymentType: paymentType || undefined,
+            page,
+            size,
           }),
           salesApi.getPaymentTypeTotals(token, {
             from: from || undefined,
@@ -70,7 +75,8 @@ export default function SalesListPage() {
             // paymentType is intentionally excluded to get totals for both
           }),
         ]);
-        setSales(list);
+        setSales(listResult.sales);
+        setTotal(listResult.total);
         setPaymentTotals(totals);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load sales');
@@ -78,7 +84,7 @@ export default function SalesListPage() {
         setLoading(false);
       }
     },
-    [token, from, to, productId, staff, paymentType],
+    [token, from, to, productId, staff, paymentType, page, size],
   );
 
   useEffect(() => {
@@ -112,7 +118,10 @@ export default function SalesListPage() {
             <input
               type="date"
               value={from}
-              onChange={(e) => setFrom(e.target.value)}
+              onChange={(e) => {
+                setFrom(e.target.value);
+                setPage(1);
+              }}
               className="rounded border border-zinc-300 px-3 py-2"
             />
           </div>
@@ -121,7 +130,10 @@ export default function SalesListPage() {
             <input
               type="date"
               value={to}
-              onChange={(e) => setTo(e.target.value)}
+              onChange={(e) => {
+                setTo(e.target.value);
+                setPage(1);
+              }}
               className="rounded border border-zinc-300 px-3 py-2"
             />
           </div>
@@ -129,7 +141,10 @@ export default function SalesListPage() {
             <label className="text-sm text-zinc-600">Product</label>
             <select
               value={productId}
-              onChange={(e) => setProductId(e.target.value)}
+              onChange={(e) => {
+                setProductId(e.target.value);
+                setPage(1);
+              }}
               className="rounded border border-zinc-300 px-3 py-2"
             >
               <option value="">All</option>
@@ -145,7 +160,10 @@ export default function SalesListPage() {
             <input
               type="text"
               value={staff}
-              onChange={(e) => setStaff(e.target.value)}
+              onChange={(e) => {
+                setStaff(e.target.value);
+                setPage(1);
+              }}
               placeholder="Name or ID"
               className="rounded border border-zinc-300 px-3 py-2"
             />
@@ -154,7 +172,10 @@ export default function SalesListPage() {
             <label className="text-sm text-zinc-600">Payment Type</label>
             <select
               value={paymentType}
-              onChange={(e) => setPaymentType(e.target.value)}
+              onChange={(e) => {
+                setPaymentType(e.target.value);
+                setPage(1);
+              }}
               className="rounded border border-zinc-300 px-3 py-2"
             >
               <option value="">All</option>
@@ -177,6 +198,7 @@ export default function SalesListPage() {
               setProductId('');
               setStaff('');
               setPaymentType('');
+              setPage(1);
             }}
             className="rounded border border-zinc-300 px-4 py-2 hover:bg-zinc-50"
           >
@@ -290,6 +312,28 @@ export default function SalesListPage() {
           </tbody>
         </table>
       </section>
+
+      {Math.ceil(total / size) > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="rounded border border-zinc-300 px-4 py-2 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-zinc-600">
+            Page {page} of {Math.ceil(total / size)}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(Math.ceil(total / size), p + 1))}
+            disabled={page >= Math.ceil(total / size)}
+            className="rounded border border-zinc-300 px-4 py-2 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </main>
   );
 }

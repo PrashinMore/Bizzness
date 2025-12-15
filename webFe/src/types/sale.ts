@@ -14,6 +14,9 @@ export interface Sale {
   soldBy: string;
   paymentType: string;
   isPaid: boolean;
+  tableId?: string | null;
+  openedAt?: string | null;
+  closedAt?: string | null;
   createdAt: string;
 }
 

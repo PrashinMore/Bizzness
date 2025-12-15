@@ -87,7 +87,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAuthState(response);
       return true;
     } catch (err) {
+      // Check if this is an expected error (invalid/expired refresh token)
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      const isExpectedError = 
+        errorMessage.includes('Invalid refresh token') ||
+        errorMessage.includes('Refresh token expired');
+      
+      // Only log unexpected errors
+      if (!isExpectedError) {
       console.error('Token refresh failed:', err);
+      }
+      
       setAuthState(null);
       return false;
     }

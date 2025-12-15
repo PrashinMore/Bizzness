@@ -4,6 +4,7 @@ import { SalesService } from './sales.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
 import { ListSalesDto } from './dto/list-sales.dto';
+import { AddItemsToSaleDto } from './dto/add-items-to-sale.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { SanitizedUser } from '../users/users.types';
 
@@ -38,6 +39,8 @@ export class SalesController {
 			staff: query.staff,
 			paymentType: query.paymentType,
 			organizationIds,
+			page: query.page,
+			size: query.size,
 		});
 	}
 
@@ -82,6 +85,16 @@ export class SalesController {
 	) {
 		const organizationIds = this.getOrganizationIds(req.user);
 		return this.salesService.update(id, dto, organizationIds);
+	}
+
+	@Patch(':id/items')
+	addItems(
+		@Req() req: RequestWithUser,
+		@Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+		@Body() dto: AddItemsToSaleDto,
+	) {
+		const organizationIds = this.getOrganizationIds(req.user);
+		return this.salesService.addItemsToSale(id, dto, organizationIds);
 	}
 }
 

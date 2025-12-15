@@ -15,6 +15,7 @@ import { SettingsService } from './settings.service';
 import { UpdateBusinessSettingsDto } from './dto/update-business-settings.dto';
 import { UpdateBillingSettingsDto } from './dto/update-billing-settings.dto';
 import { UpdateInventorySettingsDto } from './dto/update-inventory-settings.dto';
+import { UpdateTableSettingsDto } from './dto/update-table-settings.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -88,6 +89,12 @@ export class SettingsController {
   updateInventorySettings(@Req() req: RequestWithUser, @Body() dto: UpdateInventorySettingsDto) {
     const organizationId = this.getFirstOrganizationId(req.user);
     return this.settingsService.updateInventorySettings(dto, organizationId);
+  }
+
+  @Patch('tables')
+  updateTableSettings(@Req() req: RequestWithUser, @Body() dto: UpdateTableSettingsDto) {
+    const organizationId = this.getFirstOrganizationId(req.user);
+    return this.settingsService.updateTableSettings(dto, organizationId);
   }
 }
 

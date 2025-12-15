@@ -61,6 +61,10 @@ export class CreateSaleDto {
 	@IsBoolean()
 	@IsOptional()
 	isPaid?: boolean;
+
+	@IsUUID()
+	@IsOptional()
+	tableId?: string;
 }
 
 
