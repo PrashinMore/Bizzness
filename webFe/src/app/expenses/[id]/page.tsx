@@ -30,7 +30,7 @@ export default function EditExpensePage() {
       try {
         // No GET single endpoint in API client; reuse list and find in client
         const list = await expensesApi.list(token, {});
-        const found = list.find((e) => e.id === id) || null;
+        const found = list.expenses.find((e) => e.id === id) || null;
         if (!found) throw new Error('Expense not found');
         setExpense(found);
         setCategory(found.category);
