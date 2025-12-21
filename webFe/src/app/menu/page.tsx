@@ -5,7 +5,8 @@ import { useAuth } from '@/contexts/auth-context';
 import { useRequireAuth } from '@/hooks/use-require-auth';
 import { productsApi, salesApi, tablesApi, settingsApi } from '@/lib/api-client';
 import type { Product } from '@/types/product';
-import type { DiningTable, Sale } from '@/types/table';
+import type { DiningTable } from '@/types/table';
+import type { Sale } from '@/types/sale';
 import { useRouter } from 'next/navigation';
 
 type CartItem = {
