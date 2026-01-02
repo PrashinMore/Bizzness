@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/auth-context';
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signup, user, loading, error } = useAuth();
+  const { signup, user, loading, error, refreshProfile } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,7 +16,14 @@ export default function SignupPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace('/dashboard');
+      // Check if user has organizations
+      const hasOrganizations = user.organizations && user.organizations.length > 0;
+      if (hasOrganizations) {
+        router.replace('/dashboard');
+      } else {
+        // Redirect to organization creation page for first-time users
+        router.replace('/dashboard/organizations');
+      }
     }
   }, [user, loading, router]);
 
@@ -26,7 +33,9 @@ export default function SignupPage() {
     setLocalError(null);
     try {
       await signup(name.trim(), email.trim(), password);
-      router.push('/dashboard');
+      // Refresh profile to ensure we have the latest user data with organizations
+      await refreshProfile();
+      // The useEffect will handle the redirect based on organizations
     } catch (err) {
       if (err instanceof Error) {
         setLocalError(err.message);
