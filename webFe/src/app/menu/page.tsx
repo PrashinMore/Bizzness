@@ -424,7 +424,8 @@ export default function MenuPage() {
               {menuItems.map((product) => {
                 const inCart = cart.find((item) => item.productId === product.id);
                 const cartQuantity = inCart?.quantity || 0;
-                const isOutOfStock = product.stock <= 0;
+                const stock = product.stock ?? 0;
+                const isOutOfStock = stock <= 0;
 
                 return (
                   <div
@@ -462,9 +463,9 @@ export default function MenuPage() {
                         <p className="text-base sm:text-2xl font-bold text-zinc-900">
                           ₹{Number(product.sellingPrice).toFixed(2)}
                         </p>
-                        {product.stock > 0 && (
+                        {stock > 0 && (
                           <p className="text-xs text-zinc-700">
-                            {product.stock} in stock
+                            {stock} in stock
                           </p>
                         )}
                         {isOutOfStock && (
@@ -497,7 +498,7 @@ export default function MenuPage() {
                               onClick={() =>
                                 updateQuantity(product.id, cartQuantity + 1)
                               }
-                              disabled={cartQuantity >= product.stock}
+                              disabled={cartQuantity >= stock}
                               className="rounded-full border border-zinc-200 px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               +
@@ -627,7 +628,7 @@ export default function MenuPage() {
                             onClick={() =>
                               updateQuantity(item.productId, item.quantity + 1)
                             }
-                            disabled={item.quantity >= item.product.stock}
+                            disabled={item.quantity >= (item.product.stock ?? 0)}
                             className="rounded border border-zinc-200 px-2 py-0.5 text-xs hover:bg-zinc-50 disabled:opacity-50"
                           >
                             +
