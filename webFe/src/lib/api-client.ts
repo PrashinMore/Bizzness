@@ -196,7 +196,9 @@ export const productsApi = {
       formData.append('category', payload.category);
       formData.append('costPrice', payload.costPrice.toString());
       formData.append('sellingPrice', payload.sellingPrice.toString());
-      formData.append('stock', payload.stock.toString());
+      if (payload.stock !== undefined) {
+        formData.append('stock', payload.stock.toString());
+      }
       formData.append('unit', payload.unit);
       formData.append('lowStockThreshold', payload.lowStockThreshold.toString());
       if (payload.imageUrl) {
