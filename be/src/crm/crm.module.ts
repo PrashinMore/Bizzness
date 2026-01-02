@@ -7,6 +7,8 @@ import { CustomerVisit } from './entities/customer-visit.entity';
 import { CustomerNote } from './entities/customer-note.entity';
 import { CustomerFeedback } from './entities/customer-feedback.entity';
 import { LoyaltyAccount } from './entities/loyalty-account.entity';
+import { LoyaltyTransaction } from './entities/loyalty-transaction.entity';
+import { Reward } from './entities/reward.entity';
 import { SettingsModule } from '../settings/settings.module';
 
 @Module({
@@ -17,6 +19,8 @@ import { SettingsModule } from '../settings/settings.module';
       CustomerNote,
       CustomerFeedback,
       LoyaltyAccount,
+      LoyaltyTransaction,
+      Reward,
     ]),
     forwardRef(() => SettingsModule),
   ],

@@ -1116,5 +1116,207 @@ export const crmApi = {
       body: payload,
       token,
     }),
+
+  getRedemptionPreview: (
+    token: string,
+    customerId: string,
+    billAmount: number,
+  ): Promise<{
+    availablePoints: number;
+    maxRedeemablePoints: number;
+    maxDiscountAmount: number;
+    redemptionRate: number;
+    minRedemptionPoints: number;
+  }> =>
+    request(`/crm/loyalty/redeem-preview?customerId=${customerId}&billAmount=${billAmount}`, {
+      token,
+    }),
+
+  redeemPoints: (
+    token: string,
+    payload: {
+      customerId: string;
+      pointsToRedeem: number;
+      billAmount: number;
+    },
+  ): Promise<{
+    discountAmount: number;
+    pointsUsed: number;
+    remainingPoints: number;
+    loyaltyAccount: {
+      id: string;
+      points: number;
+      tier: 'SILVER' | 'GOLD' | 'PLATINUM';
+    };
+  }> =>
+    request('/crm/loyalty/redeem', {
+      method: 'POST',
+      body: payload,
+      token,
+    }),
+
+  getTransactionHistory: (
+    token: string,
+    customerId: string,
+    limit?: number,
+    offset?: number,
+  ): Promise<{
+    transactions: Array<{
+      id: string;
+      type: 'EARNED' | 'REDEEMED' | 'ADJUSTED';
+      points: number;
+      billAmount?: number;
+      discountAmount?: number;
+      pointsBefore: number;
+      pointsAfter: number;
+      createdAt: string;
+    }>;
+    total: number;
+  }> => {
+    const params = new URLSearchParams();
+    if (limit) params.set('limit', limit.toString());
+    if (offset) params.set('offset', offset.toString());
+    const query = params.toString();
+    return request(`/crm/loyalty/transactions/${customerId}${query ? `?${query}` : ''}`, {
+      token,
+    });
+  },
+
+  adjustPoints: (
+    token: string,
+    payload: {
+      customerId: string;
+      points: number;
+      description?: string;
+    },
+  ): Promise<{
+    loyaltyAccount: {
+      id: string;
+      points: number;
+      tier: 'SILVER' | 'GOLD' | 'PLATINUM';
+    };
+    pointsBefore: number;
+    pointsAfter: number;
+  }> =>
+    request('/crm/loyalty/adjust-points', {
+      method: 'POST',
+      body: payload,
+      token,
+    }),
+
+  getRewards: (
+    token: string,
+    activeOnly?: boolean,
+  ): Promise<Array<{
+    id: string;
+    name: string;
+    description?: string;
+    type: 'DISCOUNT_PERCENTAGE' | 'DISCOUNT_FIXED' | 'FREE_ITEM' | 'CASHBACK';
+    pointsRequired: number;
+    discountPercentage?: number;
+    discountAmount?: number;
+    freeItemName?: string;
+    cashbackAmount?: number;
+    isActive: boolean;
+    maxRedemptions?: number;
+    totalRedemptions: number;
+    createdAt: string;
+  }>> => {
+    const params = new URLSearchParams();
+    if (activeOnly) params.set('activeOnly', 'true');
+    const query = params.toString();
+    return request(`/crm/rewards${query ? `?${query}` : ''}`, { token });
+  },
+
+  getReward: (
+    token: string,
+    id: string,
+  ): Promise<{
+    id: string;
+    name: string;
+    description?: string;
+    type: 'DISCOUNT_PERCENTAGE' | 'DISCOUNT_FIXED' | 'FREE_ITEM' | 'CASHBACK';
+    pointsRequired: number;
+    discountPercentage?: number;
+    discountAmount?: number;
+    freeItemName?: string;
+    cashbackAmount?: number;
+    isActive: boolean;
+    maxRedemptions?: number;
+    totalRedemptions: number;
+    createdAt: string;
+  }> => request(`/crm/rewards/${id}`, { token }),
+
+  createReward: (
+    token: string,
+    payload: {
+      name: string;
+      description?: string;
+      type: 'DISCOUNT_PERCENTAGE' | 'DISCOUNT_FIXED' | 'FREE_ITEM' | 'CASHBACK';
+      pointsRequired: number;
+      discountPercentage?: number;
+      discountAmount?: number;
+      freeItemName?: string;
+      cashbackAmount?: number;
+      isActive?: boolean;
+      maxRedemptions?: number;
+    },
+  ): Promise<any> =>
+    request('/crm/rewards', {
+      method: 'POST',
+      body: payload,
+      token,
+    }),
+
+  updateReward: (
+    token: string,
+    id: string,
+    payload: {
+      name?: string;
+      description?: string;
+      type?: 'DISCOUNT_PERCENTAGE' | 'DISCOUNT_FIXED' | 'FREE_ITEM' | 'CASHBACK';
+      pointsRequired?: number;
+      discountPercentage?: number;
+      discountAmount?: number;
+      freeItemName?: string;
+      cashbackAmount?: number;
+      isActive?: boolean;
+      maxRedemptions?: number;
+    },
+  ): Promise<any> =>
+    request(`/crm/rewards/${id}`, {
+      method: 'PATCH',
+      body: payload,
+      token,
+    }),
+
+  deleteReward: (token: string, id: string): Promise<void> =>
+    request(`/crm/rewards/${id}`, {
+      method: 'DELETE',
+      token,
+    }),
+
+  redeemReward: (
+    token: string,
+    payload: {
+      customerId: string;
+      rewardId: string;
+      description?: string;
+    },
+  ): Promise<{
+    reward: any;
+    loyaltyAccount: {
+      id: string;
+      points: number;
+      tier: 'SILVER' | 'GOLD' | 'PLATINUM';
+    };
+    pointsUsed: number;
+    pointsAfter: number;
+  }> =>
+    request('/crm/rewards/redeem', {
+      method: 'POST',
+      body: payload,
+      token,
+    }),
 };
 

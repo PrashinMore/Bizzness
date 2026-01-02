@@ -276,19 +276,19 @@ export default function ReportsPage() {
                     <div className="rounded-lg border border-zinc-200 p-4">
                       <p className="text-xs text-zinc-700">Total Sales</p>
                       <p className="mt-1 text-2xl font-semibold text-zinc-900">
-                        ₹{salesReport.summary.totalSales.toFixed(2)}
+                        ₹{Number(salesReport.summary?.totalSales || 0).toFixed(2)}
                       </p>
                     </div>
                     <div className="rounded-lg border border-zinc-200 p-4">
                       <p className="text-xs text-zinc-700">Total Orders</p>
                       <p className="mt-1 text-2xl font-semibold text-zinc-900">
-                        {salesReport.summary.totalOrders}
+                        {salesReport.summary?.totalOrders || 0}
                       </p>
                     </div>
                     <div className="rounded-lg border border-zinc-200 p-4">
                       <p className="text-xs text-zinc-700">Average Order Value</p>
                       <p className="mt-1 text-2xl font-semibold text-zinc-900">
-                        ₹{salesReport.summary.averageOrderValue.toFixed(2)}
+                        ₹{Number(salesReport.summary?.averageOrderValue || 0).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -312,13 +312,13 @@ export default function ReportsPage() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-zinc-200">
-                            {salesReport.productBreakdown.map((product: any, idx: number) => (
+                            {salesReport.productBreakdown?.map((product: any, idx: number) => (
                               <tr key={idx}>
                                 <td className="px-3 py-2">{product.name}</td>
-                                <td className="px-3 py-2 text-right">{product.quantity}</td>
-                                <td className="px-3 py-2 text-right">₹{product.revenue.toFixed(2)}</td>
+                                <td className="px-3 py-2 text-right">{product.quantity || 0}</td>
+                                <td className="px-3 py-2 text-right">₹{Number(product.revenue || 0).toFixed(2)}</td>
                               </tr>
-                            ))}
+                            )) || []}
                           </tbody>
                         </table>
                       </div>
@@ -342,13 +342,13 @@ export default function ReportsPage() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-zinc-200">
-                            {salesReport.staffBreakdown.map((staff: any, idx: number) => (
+                            {salesReport.staffBreakdown?.map((staff: any, idx: number) => (
                               <tr key={idx}>
                                 <td className="px-3 py-2">{staff.name}</td>
-                                <td className="px-3 py-2 text-right">₹{staff.sales.toFixed(2)}</td>
-                                <td className="px-3 py-2 text-right">{staff.orders}</td>
+                                <td className="px-3 py-2 text-right">₹{Number(staff.sales || 0).toFixed(2)}</td>
+                                <td className="px-3 py-2 text-right">{staff.orders || 0}</td>
                               </tr>
-                            ))}
+                            )) || []}
                           </tbody>
                         </table>
                       </div>
@@ -371,39 +371,39 @@ export default function ReportsPage() {
                     <div className="flex justify-between border-b border-zinc-200 pb-2">
                       <span className="text-sm text-zinc-700">Revenue</span>
                       <span className="text-sm font-semibold text-zinc-900">
-                        ₹{profitLossReport.revenue.toFixed(2)}
+                        ₹{Number(profitLossReport.revenue || 0).toFixed(2)}
                       </span>
                     </div>
                     <div className="flex justify-between border-b border-zinc-200 pb-2">
                       <span className="text-sm text-zinc-700">Cost of Goods Sold</span>
                       <span className="text-sm font-semibold text-zinc-900">
-                        ₹{profitLossReport.costOfGoodsSold.toFixed(2)}
+                        ₹{Number(profitLossReport.costOfGoodsSold || 0).toFixed(2)}
                       </span>
                     </div>
                     <div className="flex justify-between border-b border-zinc-200 pb-2">
                       <span className="text-sm font-medium text-zinc-900">Gross Profit</span>
                       <span
                         className={`text-sm font-semibold ${
-                          profitLossReport.grossProfit >= 0 ? 'text-emerald-600' : 'text-red-600'
+                          (profitLossReport.grossProfit || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'
                         }`}
                       >
-                        ₹{profitLossReport.grossProfit.toFixed(2)} ({profitLossReport.grossMargin}%)
+                        ₹{Number(profitLossReport.grossProfit || 0).toFixed(2)} ({profitLossReport.grossMargin || 0}%)
                       </span>
                     </div>
                     <div className="flex justify-between border-b border-zinc-200 pb-2">
                       <span className="text-sm text-zinc-700">Operating Expenses</span>
                       <span className="text-sm font-semibold text-zinc-900">
-                        ₹{profitLossReport.operatingExpenses.toFixed(2)}
+                        ₹{Number(profitLossReport.operatingExpenses || 0).toFixed(2)}
                       </span>
                     </div>
                     <div className="flex justify-between pt-2">
                       <span className="text-sm font-medium text-zinc-900">Net Profit</span>
                       <span
                         className={`text-lg font-semibold ${
-                          profitLossReport.netProfit >= 0 ? 'text-emerald-600' : 'text-red-600'
+                          (profitLossReport.netProfit || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'
                         }`}
                       >
-                        ₹{profitLossReport.netProfit.toFixed(2)} ({profitLossReport.netMargin}%)
+                        ₹{Number(profitLossReport.netProfit || 0).toFixed(2)} ({profitLossReport.netMargin || 0}%)
                       </span>
                     </div>
                   </div>
@@ -427,7 +427,7 @@ export default function ReportsPage() {
                     <div className="rounded-lg border border-zinc-200 p-4">
                       <p className="text-xs text-zinc-700">Total Stock Value</p>
                       <p className="mt-1 text-2xl font-semibold text-zinc-900">
-                        ₹{inventoryReport.summary.totalStockValue.toFixed(2)}
+                        ₹{Number(inventoryReport.summary?.totalStockValue || 0).toFixed(2)}
                       </p>
                     </div>
                     <div className="rounded-lg border border-zinc-200 p-4">
@@ -472,7 +472,7 @@ export default function ReportsPage() {
                               <td className="px-3 py-2 text-right">
                                 {product.stock} {product.unit}
                               </td>
-                              <td className="px-3 py-2 text-right">₹{product.stockValue.toFixed(2)}</td>
+                              <td className="px-3 py-2 text-right">₹{Number(product.stockValue || 0).toFixed(2)}</td>
                               <td className="px-3 py-2 text-right">{product.salesLast30Days}</td>
                               <td className="px-3 py-2 text-center">
                                 <span
@@ -510,19 +510,19 @@ export default function ReportsPage() {
                     <div className="rounded-lg border border-zinc-200 p-4">
                       <p className="text-xs text-zinc-700">Total Expenses</p>
                       <p className="mt-1 text-2xl font-semibold text-zinc-900">
-                        ₹{expenseReport.summary.totalExpenses.toFixed(2)}
+                        ₹{Number(expenseReport.summary?.totalExpenses || 0).toFixed(2)}
                       </p>
                     </div>
                     <div className="rounded-lg border border-zinc-200 p-4">
                       <p className="text-xs text-zinc-700">Total Transactions</p>
                       <p className="mt-1 text-2xl font-semibold text-zinc-900">
-                        {expenseReport.summary.totalTransactions}
+                        {expenseReport.summary?.totalTransactions || 0}
                       </p>
                     </div>
                     <div className="rounded-lg border border-zinc-200 p-4">
                       <p className="text-xs text-zinc-700">Average Expense</p>
                       <p className="mt-1 text-2xl font-semibold text-zinc-900">
-                        ₹{expenseReport.summary.averageExpense.toFixed(2)}
+                        ₹{Number(expenseReport.summary?.averageExpense || 0).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -546,13 +546,13 @@ export default function ReportsPage() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-zinc-200">
-                            {expenseReport.categoryBreakdown.map((cat: any, idx: number) => (
+                            {expenseReport.categoryBreakdown?.map((cat: any, idx: number) => (
                               <tr key={idx}>
                                 <td className="px-3 py-2">{cat.category}</td>
-                                <td className="px-3 py-2 text-right">₹{cat.amount.toFixed(2)}</td>
-                                <td className="px-3 py-2 text-right">{cat.percentage}%</td>
+                                <td className="px-3 py-2 text-right">₹{Number(cat.amount || 0).toFixed(2)}</td>
+                                <td className="px-3 py-2 text-right">{cat.percentage || 0}%</td>
                               </tr>
-                            ))}
+                            )) || []}
                           </tbody>
                         </table>
                       </div>
@@ -573,12 +573,12 @@ export default function ReportsPage() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-zinc-200">
-                            {expenseReport.monthlyBreakdown.map((month: any, idx: number) => (
+                            {expenseReport.monthlyBreakdown?.map((month: any, idx: number) => (
                               <tr key={idx}>
                                 <td className="px-3 py-2">{month.month}</td>
-                                <td className="px-3 py-2 text-right">₹{month.amount.toFixed(2)}</td>
+                                <td className="px-3 py-2 text-right">₹{Number(month.amount || 0).toFixed(2)}</td>
                               </tr>
-                            ))}
+                            )) || []}
                           </tbody>
                         </table>
                       </div>

@@ -918,6 +918,35 @@ export default function SettingsPage() {
                   </div>
                 )}
 
+                {enableCRM && enableLoyalty && (
+                  <div className="mt-6 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+                    <h3 className="text-sm font-semibold text-zinc-900 mb-3">Loyalty Program Rules</h3>
+                    <div className="space-y-2 text-xs text-zinc-700">
+                      <div className="flex justify-between">
+                        <span className="font-medium">Points Earning Rate:</span>
+                        <span>1 point per ₹100 spent</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium">Redemption Rate:</span>
+                        <span>1 point = ₹1 discount</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium">Minimum Redemption:</span>
+                        <span>10 points</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium">Maximum Redemption:</span>
+                        <span>50% of bill amount</span>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-zinc-200">
+                        <p className="text-zinc-600">
+                          <strong>How it works:</strong> Customers automatically earn points when they make purchases. Points can be redeemed during checkout for discounts. Points are earned on the net bill amount (after any discounts).
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {!enableCRM && enableLoyalty && (
                   <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
                     <p className="text-sm text-amber-800">

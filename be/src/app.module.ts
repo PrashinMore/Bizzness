@@ -38,6 +38,8 @@ import { CustomerVisit } from './crm/entities/customer-visit.entity';
 import { CustomerNote } from './crm/entities/customer-note.entity';
 import { CustomerFeedback } from './crm/entities/customer-feedback.entity';
 import { LoyaltyAccount } from './crm/entities/loyalty-account.entity';
+import { LoyaltyTransaction } from './crm/entities/loyalty-transaction.entity';
+import { Reward } from './crm/entities/reward.entity';
 
 @Module({
   imports: [
@@ -91,7 +93,7 @@ import { LoyaltyAccount } from './crm/entities/loyalty-account.entity';
           username: configService.get<string>('DB_USER') ?? 'postgres',
           password: configService.get<string>('DB_PASSWORD') ?? 'postgres',
           database: configService.get<string>('DB_NAME') ?? 'biznes',
-          entities: [User, Product, Sale, SaleItem, Expense, Settings, Organization, Category, GlobalProduct, Invoice, InvoiceCounter, OrganizationInvoiceSettings, DiningTable, Outlet, Stock, Customer, CustomerVisit, CustomerNote, CustomerFeedback, LoyaltyAccount],
+          entities: [User, Product, Sale, SaleItem, Expense, Settings, Organization, Category, GlobalProduct, Invoice, InvoiceCounter, OrganizationInvoiceSettings, DiningTable, Outlet, Stock, Customer, CustomerVisit, CustomerNote, CustomerFeedback, LoyaltyAccount, LoyaltyTransaction, Reward],
           synchronize: true,
           // Disable retries completely in serverless to fail fast
           retryAttempts: isServerless ? 0 : 10,

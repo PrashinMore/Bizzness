@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useRequireAuth } from '@/hooks/use-require-auth';
-import { crmApi } from '@/lib/api-client';
+import { crmApi, settingsApi } from '@/lib/api-client';
 import type { CrmDashboardStats, Customer } from '@/types/crm';
+import type { Settings } from '@/lib/api-client';
 import Link from 'next/link';
 
 export default function CrmDashboardPage() {
@@ -12,6 +13,7 @@ export default function CrmDashboardPage() {
   const { token } = useAuth();
 
   const [stats, setStats] = useState<CrmDashboardStats | null>(null);
+  const [settings, setSettings] = useState<Settings | null>(null);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,8 +25,12 @@ export default function CrmDashboardPage() {
       setFetching(true);
       setError(null);
       try {
-        const data = await crmApi.getDashboard(token);
-        setStats(data);
+        const [statsData, settingsData] = await Promise.all([
+          crmApi.getDashboard(token),
+          settingsApi.get(token).catch(() => null),
+        ]);
+        setStats(statsData);
+        setSettings(settingsData);
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -91,13 +97,21 @@ export default function CrmDashboardPage() {
           </div>
         )}
 
-        <div className="mt-8">
+        <div className="mt-8 flex gap-4">
           <Link
             href="/crm/customers"
             className="inline-block rounded-lg bg-zinc-900 px-6 py-3 text-white hover:bg-zinc-800"
           >
             View All Customers
           </Link>
+          {settings?.enableLoyalty && (
+            <Link
+              href="/crm/rewards"
+              className="inline-block rounded-lg border border-zinc-300 bg-white px-6 py-3 text-zinc-700 hover:bg-zinc-50"
+            >
+              Manage Rewards
+            </Link>
+          )}
         </div>
       </div>
     </main>

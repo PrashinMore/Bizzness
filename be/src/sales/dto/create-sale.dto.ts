@@ -10,6 +10,7 @@ import {
 	IsPositive,
 	IsString,
 	IsUUID,
+	Min,
 	ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -82,6 +83,16 @@ export class CreateSaleDto {
 	@IsOptional()
 	@IsIn(['DINE_IN', 'TAKEAWAY', 'DELIVERY'])
 	visitType?: 'DINE_IN' | 'TAKEAWAY' | 'DELIVERY';
+
+	@IsNumber()
+	@IsOptional()
+	@Min(0)
+	loyaltyPointsRedeemed?: number;
+
+	@IsNumber()
+	@IsOptional()
+	@Min(0)
+	loyaltyDiscountAmount?: number;
 }
 
 

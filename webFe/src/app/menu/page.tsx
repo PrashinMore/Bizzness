@@ -41,6 +41,17 @@ export default function MenuPage() {
   const [customerName, setCustomerName] = useState<string>('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [crmEnabled, setCrmEnabled] = useState(false);
+  const [loyaltyEnabled, setLoyaltyEnabled] = useState(false);
+  const [pointsToRedeem, setPointsToRedeem] = useState<number>(0);
+  const [redemptionPreview, setRedemptionPreview] = useState<{
+    availablePoints: number;
+    maxRedeemablePoints: number;
+    maxDiscountAmount: number;
+    redemptionRate: number;
+    minRedemptionPoints: number;
+  } | null>(null);
+  const [redemptionDiscount, setRedemptionDiscount] = useState<number>(0);
+  const [loadingRedemptionPreview, setLoadingRedemptionPreview] = useState(false);
 
   // Get unique categories from all menu items for the filter dropdown
   const availableCategories = useMemo(() => {
@@ -61,6 +72,7 @@ export default function MenuPage() {
         const settings = await settingsApi.get(token);
         setTablesEnabled(settings.enableTables);
         setCrmEnabled(settings.enableCRM || false);
+        setLoyaltyEnabled(settings.enableLoyalty || false);
         
         if (settings.enableTables) {
           try {
@@ -300,7 +312,7 @@ export default function MenuPage() {
     setCart((prev) => prev.filter((item) => item.productId !== productId));
   };
 
-  const totalAmount = useMemo(() => {
+  const subtotalAmount = useMemo(() => {
     const total = cart.reduce(
       (sum, item) => {
         const price = Number(item.sellingPrice) || 0;
@@ -311,6 +323,64 @@ export default function MenuPage() {
     );
     return total;
   }, [cart]);
+
+  const totalAmount = useMemo(() => {
+    return Math.max(0, subtotalAmount - redemptionDiscount);
+  }, [subtotalAmount, redemptionDiscount]);
+
+  // Load redemption preview when customer and cart change
+  useEffect(() => {
+    async function loadRedemptionPreview() {
+      if (
+        !token ||
+        !loyaltyEnabled ||
+        !selectedCustomer?.loyaltyAccount ||
+        subtotalAmount <= 0
+      ) {
+        setRedemptionPreview(null);
+        setPointsToRedeem(0);
+        setRedemptionDiscount(0);
+        return;
+      }
+
+      setLoadingRedemptionPreview(true);
+      try {
+        const preview = await crmApi.getRedemptionPreview(
+          token,
+          selectedCustomer.id,
+          subtotalAmount,
+        );
+        setRedemptionPreview(preview);
+        // Reset redemption if customer changed
+        if (pointsToRedeem > preview.maxRedeemablePoints) {
+          setPointsToRedeem(0);
+          setRedemptionDiscount(0);
+        }
+      } catch (err) {
+        console.error('Failed to load redemption preview:', err);
+        setRedemptionPreview(null);
+      } finally {
+        setLoadingRedemptionPreview(false);
+      }
+    }
+
+    loadRedemptionPreview();
+  }, [token, loyaltyEnabled, selectedCustomer?.id, subtotalAmount, pointsToRedeem]);
+
+  // Calculate discount when points to redeem change
+  useEffect(() => {
+    if (!redemptionPreview || pointsToRedeem === 0) {
+      setRedemptionDiscount(0);
+      return;
+    }
+
+    const discount = Math.min(
+      pointsToRedeem * redemptionPreview.redemptionRate,
+      redemptionPreview.maxDiscountAmount,
+      subtotalAmount,
+    );
+    setRedemptionDiscount(discount);
+  }, [pointsToRedeem, redemptionPreview, subtotalAmount]);
 
   const handleCheckout = async () => {
     if (!token || !user || cart.length === 0) {
@@ -355,6 +425,36 @@ export default function MenuPage() {
         setCart([]);
         router.push(`/sales/${activeSale.id}`);
       } else {
+        // Handle redemption if applicable
+        let finalTotalAmount = Number(totalAmount.toFixed(2));
+        let loyaltyPointsRedeemed = 0;
+        let loyaltyDiscountAmount = 0;
+
+        if (
+          loyaltyEnabled &&
+          selectedCustomer?.loyaltyAccount &&
+          pointsToRedeem > 0 &&
+          redemptionDiscount > 0
+        ) {
+          try {
+            const redemption = await crmApi.redeemPoints(token, {
+              customerId: selectedCustomer.id,
+              pointsToRedeem,
+              billAmount: subtotalAmount,
+            });
+            loyaltyPointsRedeemed = redemption.pointsUsed;
+            loyaltyDiscountAmount = redemption.discountAmount;
+            finalTotalAmount = Number((subtotalAmount - redemption.discountAmount).toFixed(2));
+            // Update selected customer with new points
+            if (selectedCustomer.loyaltyAccount) {
+              selectedCustomer.loyaltyAccount.points = redemption.remainingPoints;
+            }
+          } catch (err) {
+            console.error('Redemption failed:', err);
+            // Continue with checkout without redemption
+          }
+        }
+
         // Create new sale
         const payload = {
           date: new Date().toISOString(),
@@ -363,7 +463,7 @@ export default function MenuPage() {
             quantity: Number(item.quantity) || 0,
             sellingPrice: Number(item.sellingPrice) || 0,
           })),
-          totalAmount: Number(totalAmount.toFixed(2)),
+          totalAmount: finalTotalAmount,
           soldBy: user.id,
           paymentType: paymentType,
           isPaid: isPaid,
@@ -377,6 +477,10 @@ export default function MenuPage() {
               }
             : {}),
           visitType: 'DINE_IN' as const,
+          ...(loyaltyPointsRedeemed > 0 && {
+            loyaltyPointsRedeemed,
+            loyaltyDiscountAmount,
+          }),
         };
 
         const created = await salesApi.create(token, payload);
@@ -386,6 +490,8 @@ export default function MenuPage() {
         setCustomerPhone('');
         setCustomerName('');
         setSelectedCustomer(null);
+        setPointsToRedeem(0);
+        setRedemptionDiscount(0);
         router.push(`/sales/${created.id}`);
       }
     } catch (err) {
@@ -606,6 +712,35 @@ export default function MenuPage() {
                           ⭐ {selectedCustomer.loyaltyAccount.points} points ({selectedCustomer.loyaltyAccount.tier})
                         </p>
                       )}
+                      {loyaltyEnabled && selectedCustomer.loyaltyAccount && redemptionPreview && (
+                        <div className="mt-2 pt-2 border-t border-blue-200">
+                          <p className="text-xs text-blue-700 mb-1">
+                            You can redeem up to {redemptionPreview.maxRedeemablePoints} points
+                          </p>
+                          {redemptionPreview.availablePoints >= redemptionPreview.minRedemptionPoints && (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                min="0"
+                                max={redemptionPreview.maxRedeemablePoints}
+                                value={pointsToRedeem}
+                                onChange={(e) => {
+                                  const value = Math.max(0, Math.min(parseInt(e.target.value) || 0, redemptionPreview.maxRedeemablePoints));
+                                  setPointsToRedeem(value);
+                                }}
+                                placeholder="Points to redeem"
+                                className="flex-1 rounded border border-blue-200 px-2 py-1 text-xs focus:border-blue-400 focus:outline-none"
+                                disabled={loadingRedemptionPreview}
+                              />
+                              {pointsToRedeem > 0 && redemptionDiscount > 0 && (
+                                <span className="text-xs font-semibold text-green-700">
+                                  -₹{redemptionDiscount.toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ) : customerPhone.trim() ? (
                     <p className="mt-1 text-xs text-blue-600">
@@ -765,6 +900,18 @@ export default function MenuPage() {
                       </span>
                     </label>
                   </div>
+                  {redemptionDiscount > 0 && (
+                    <div className="flex items-center justify-between text-sm text-green-700 mb-2">
+                      <span>Subtotal</span>
+                      <span>₹{Number(subtotalAmount || 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {redemptionDiscount > 0 && (
+                    <div className="flex items-center justify-between text-sm text-green-700 mb-2">
+                      <span>Loyalty Discount</span>
+                      <span>-₹{redemptionDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between text-lg font-semibold text-zinc-900">
                     <span>{activeSale ? 'New Items Total' : 'Total'}</span>
                     <span>₹{Number(totalAmount || 0).toFixed(2)}</span>

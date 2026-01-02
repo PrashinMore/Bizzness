@@ -18,12 +18,37 @@ export default function CustomerProfilePage() {
   const [visits, setVisits] = useState<CustomerVisit[]>([]);
   const [notes, setNotes] = useState<CustomerNote[]>([]);
   const [feedbacks, setFeedbacks] = useState<CustomerFeedback[]>([]);
-  const [activeTab, setActiveTab] = useState<'overview' | 'visits' | 'notes' | 'feedback'>('overview');
+  const [loyaltyTransactions, setLoyaltyTransactions] = useState<Array<{
+    id: string;
+    type: 'EARNED' | 'REDEEMED' | 'ADJUSTED';
+    points: number;
+    billAmount?: number;
+    discountAmount?: number;
+    pointsBefore: number;
+    pointsAfter: number;
+    createdAt: string;
+  }>>([]);
+  const [activeTab, setActiveTab] = useState<'overview' | 'visits' | 'notes' | 'feedback' | 'loyalty'>('overview');
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [newNote, setNewNote] = useState('');
   const [addingNote, setAddingNote] = useState(false);
+  const [showAdjustPointsModal, setShowAdjustPointsModal] = useState(false);
+  const [adjustPoints, setAdjustPoints] = useState({ points: 0, description: '' });
+  const [adjustingPoints, setAdjustingPoints] = useState(false);
+  const [showRedeemRewardModal, setShowRedeemRewardModal] = useState(false);
+  const [rewards, setRewards] = useState<Array<{
+    id: string;
+    name: string;
+    type: string;
+    pointsRequired: number;
+    discountPercentage?: number;
+    discountAmount?: number;
+    freeItemName?: string;
+    cashbackAmount?: number;
+  }>>([]);
+  const [redeemingReward, setRedeemingReward] = useState(false);
 
   useEffect(() => {
     async function loadCustomer() {
@@ -33,16 +58,20 @@ export default function CustomerProfilePage() {
       setFetching(true);
       setError(null);
       try {
-        const [customerData, visitsData, notesData, feedbacksData] = await Promise.all([
-          crmApi.getCustomer(token, customerId),
+        const customerData = await crmApi.getCustomer(token, customerId);
+        const [visitsData, notesData, feedbacksData, transactionsData, rewardsData] = await Promise.all([
           crmApi.getCustomerVisits(token, customerId),
           crmApi.getCustomerNotes(token, customerId),
           crmApi.getCustomerFeedbacks(token, customerId),
+          customerData?.loyaltyAccount ? crmApi.getTransactionHistory(token, customerId).catch(() => ({ transactions: [], total: 0 })) : Promise.resolve({ transactions: [], total: 0 }),
+          crmApi.getRewards(token, true).catch(() => []),
         ]);
         setCustomer(customerData);
         setVisits(visitsData);
         setNotes(notesData);
         setFeedbacks(feedbacksData);
+        setLoyaltyTransactions(transactionsData.transactions || []);
+        setRewards(rewardsData);
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -154,7 +183,7 @@ export default function CustomerProfilePage() {
         <div className="mb-6 rounded-lg bg-white shadow-sm">
           <div className="border-b border-zinc-200">
             <nav className="flex">
-              {(['overview', 'visits', 'notes', 'feedback'] as const).map((tab) => (
+              {(['overview', 'visits', 'notes', 'feedback', ...(customer.loyaltyAccount ? ['loyalty'] as const : [])] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -325,8 +354,271 @@ export default function CustomerProfilePage() {
                 )}
               </div>
             )}
+
+            {activeTab === 'loyalty' && (
+              <div>
+                {!customer.loyaltyAccount ? (
+                  <div className="text-center text-zinc-500">No loyalty account</div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="rounded-lg bg-zinc-50 p-4 mb-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-medium text-zinc-700">Current Balance</div>
+                          <div className="mt-1 text-2xl font-bold text-zinc-900">
+                            {customer.loyaltyAccount.points} points
+                          </div>
+                          <div className="mt-1 text-sm text-zinc-600">
+                            Tier: {customer.loyaltyAccount.tier}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setAdjustPoints({ points: 0, description: '' });
+                              setShowAdjustPointsModal(true);
+                            }}
+                            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                          >
+                            Adjust Points
+                          </button>
+                          <button
+                            onClick={() => setShowRedeemRewardModal(true)}
+                            className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+                          >
+                            Redeem Reward
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    {loyaltyTransactions.length === 0 ? (
+                      <div className="text-center text-zinc-500 py-8">No transactions yet</div>
+                    ) : (
+                      <>
+                        <div className="text-sm font-medium text-zinc-700 mb-2">Transaction History</div>
+                        {loyaltyTransactions.map((transaction) => (
+                          <div
+                            key={transaction.id}
+                            className="rounded-lg border border-zinc-200 p-4"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className={`rounded-full px-2 py-1 text-xs font-medium ${
+                                      transaction.type === 'EARNED'
+                                        ? 'bg-green-100 text-green-800'
+                                        : transaction.type === 'REDEEMED'
+                                        ? 'bg-blue-100 text-blue-800'
+                                        : 'bg-yellow-100 text-yellow-800'
+                                    }`}
+                                  >
+                                    {transaction.type}
+                                  </span>
+                                  <span className={`text-sm font-semibold ${
+                                    transaction.points > 0 ? 'text-green-700' : 'text-blue-700'
+                                  }`}>
+                                    {transaction.points > 0 ? '+' : ''}{transaction.points} points
+                                  </span>
+                                </div>
+                                {transaction.type === 'EARNED' && transaction.billAmount && (
+                                  <div className="mt-1 text-sm text-zinc-600">
+                                    From purchase of ₹{Number(transaction.billAmount).toFixed(2)}
+                                  </div>
+                                )}
+                                {transaction.type === 'REDEEMED' && transaction.discountAmount && (
+                                  <div className="mt-1 text-sm text-zinc-600">
+                                    Discount applied: ₹{Number(transaction.discountAmount).toFixed(2)}
+                                  </div>
+                                )}
+                                <div className="mt-2 text-xs text-zinc-500">
+                                  Balance: {transaction.pointsBefore} → {transaction.pointsAfter} points
+                                </div>
+                                <div className="mt-1 text-xs text-zinc-500">
+                                  {new Date(transaction.createdAt).toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Adjust Points Modal */}
+        {showAdjustPointsModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+              <h2 className="text-xl font-semibold text-zinc-900">Adjust Points</h2>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!token || adjustPoints.points === 0) return;
+                  setAdjustingPoints(true);
+                  try {
+                    await crmApi.adjustPoints(token, {
+                      customerId: customer.id,
+                      points: adjustPoints.points,
+                      description: adjustPoints.description || undefined,
+                    });
+                    setShowAdjustPointsModal(false);
+                    setAdjustPoints({ points: 0, description: '' });
+                    // Reload customer data
+                    const customerData = await crmApi.getCustomer(token, customerId);
+                    setCustomer(customerData);
+                    const transactionsData = await crmApi.getTransactionHistory(token, customerId);
+                    setLoyaltyTransactions(transactionsData.transactions || []);
+                  } catch (err) {
+                    if (err instanceof Error) {
+                      alert(err.message);
+                    }
+                  } finally {
+                    setAdjustingPoints(false);
+                  }
+                }}
+                className="mt-4 space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700">
+                    Points (positive to add, negative to deduct)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={adjustPoints.points || ''}
+                    onChange={(e) => setAdjustPoints({ ...adjustPoints, points: parseInt(e.target.value) || 0 })}
+                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700">Description (optional)</label>
+                  <textarea
+                    value={adjustPoints.description}
+                    onChange={(e) => setAdjustPoints({ ...adjustPoints, description: e.target.value })}
+                    rows={2}
+                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                  />
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="submit"
+                    disabled={adjustingPoints || adjustPoints.points === 0}
+                    className="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+                  >
+                    {adjustingPoints ? 'Adjusting...' : 'Adjust Points'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAdjustPointsModal(false)}
+                    className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Redeem Reward Modal */}
+        {showRedeemRewardModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+              <h2 className="text-xl font-semibold text-zinc-900">Redeem Reward</h2>
+              <p className="mt-2 text-sm text-zinc-600">
+                Available Points: {customer.loyaltyAccount?.points || 0}
+              </p>
+              {rewards.length === 0 ? (
+                <div className="mt-4 text-center text-zinc-500 py-8">
+                  <p>No active rewards available</p>
+                  <button
+                    onClick={() => router.push('/crm/rewards')}
+                    className="mt-4 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+                  >
+                    Create Rewards
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {rewards
+                    .filter((r) => r.pointsRequired <= (customer.loyaltyAccount?.points || 0))
+                    .map((reward) => {
+                      const getRewardDesc = () => {
+                        if (reward.type === 'DISCOUNT_PERCENTAGE') return `${reward.discountPercentage}% discount`;
+                        if (reward.type === 'DISCOUNT_FIXED') return `₹${reward.discountAmount} off`;
+                        if (reward.type === 'FREE_ITEM') return `Free ${reward.freeItemName}`;
+                        if (reward.type === 'CASHBACK') return `₹${reward.cashbackAmount} cashback`;
+                        return '';
+                      };
+                      return (
+                        <div
+                          key={reward.id}
+                          className="rounded-lg border border-zinc-200 p-4 hover:border-zinc-300"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-zinc-900">{reward.name}</h3>
+                              <p className="mt-1 text-sm text-zinc-600">{getRewardDesc()}</p>
+                              <p className="mt-1 text-xs text-zinc-500">
+                                {reward.pointsRequired} points required
+                              </p>
+                            </div>
+                            <button
+                              onClick={async () => {
+                                if (!token) return;
+                                setRedeemingReward(true);
+                                try {
+                                  await crmApi.redeemReward(token, {
+                                    customerId: customer.id,
+                                    rewardId: reward.id,
+                                  });
+                                  setShowRedeemRewardModal(false);
+                                  // Reload customer data
+                                  const customerData = await crmApi.getCustomer(token, customerId);
+                                  setCustomer(customerData);
+                                  const transactionsData = await crmApi.getTransactionHistory(token, customerId);
+                                  setLoyaltyTransactions(transactionsData.transactions || []);
+                                  alert('Reward redeemed successfully!');
+                                } catch (err) {
+                                  if (err instanceof Error) {
+                                    alert(err.message);
+                                  }
+                                } finally {
+                                  setRedeemingReward(false);
+                                }
+                              }}
+                              disabled={redeemingReward}
+                              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+                            >
+                              Redeem
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  {rewards.filter((r) => r.pointsRequired <= (customer.loyaltyAccount?.points || 0)).length === 0 && (
+                    <div className="text-center text-zinc-500 py-8">
+                      No rewards available with current points
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setShowRedeemRewardModal(false)}
+                  className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
