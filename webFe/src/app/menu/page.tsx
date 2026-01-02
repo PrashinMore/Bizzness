@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useRequireAuth } from '@/hooks/use-require-auth';
-import { productsApi, salesApi, tablesApi, settingsApi } from '@/lib/api-client';
+import { productsApi, salesApi, tablesApi, settingsApi, stockApi } from '@/lib/api-client';
 import type { Product } from '@/types/product';
 import type { DiningTable } from '@/types/table';
 import type { Sale } from '@/types/sale';
@@ -36,6 +36,8 @@ export default function MenuPage() {
   const [selectedTableId, setSelectedTableId] = useState<string>('');
   const [activeSale, setActiveSale] = useState<Sale | null>(null);
   const [loadingActiveSale, setLoadingActiveSale] = useState(false);
+  const [customerPhone, setCustomerPhone] = useState<string>('');
+  const [crmEnabled, setCrmEnabled] = useState(false);
 
   // Get unique categories from all menu items for the filter dropdown
   const availableCategories = useMemo(() => {
@@ -55,6 +57,7 @@ export default function MenuPage() {
       try {
         const settings = await settingsApi.get(token);
         setTablesEnabled(settings.enableTables);
+        setCrmEnabled(settings.enableCRM || false);
         
         if (settings.enableTables) {
           try {
@@ -162,7 +165,41 @@ export default function MenuPage() {
           filters.category = categoryFilter.trim();
         }
         const data = await productsApi.list(token, filters);
-        setMenuItems(data);
+        
+        // Get outlet ID from localStorage and fetch stock for all products
+        const outletId = typeof window !== 'undefined' ? localStorage.getItem('selected-outlet-id') : null;
+        if (outletId && data.length > 0) {
+          try {
+            const productIds = data.map(p => p.id);
+            const stockData = await stockApi.getForOutlet(token, outletId, productIds);
+            const stockMap = new Map<string, number>();
+            stockData.forEach(stock => {
+              stockMap.set(stock.productId, stock.quantity);
+            });
+            
+            // Attach stock to products
+            const productsWithStock = data.map(product => ({
+              ...product,
+              stock: stockMap.get(product.id) ?? 0,
+            }));
+            setMenuItems(productsWithStock);
+          } catch (stockErr) {
+            console.warn('Failed to load stock, showing products without stock:', stockErr);
+            // If stock fetch fails, show products with stock = 0
+            const productsWithStock = data.map(product => ({
+              ...product,
+              stock: 0,
+            }));
+            setMenuItems(productsWithStock);
+          }
+        } else {
+          // No outlet selected, show products with stock = 0
+          const productsWithStock = data.map(product => ({
+            ...product,
+            stock: 0,
+          }));
+          setMenuItems(productsWithStock);
+        }
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -286,12 +323,15 @@ export default function MenuPage() {
           paymentType: paymentType,
           isPaid: isPaid,
           tableId: selectedTableId || undefined,
+          customerPhone: customerPhone.trim() || undefined,
+          visitType: 'DINE_IN' as const,
         };
 
         const created = await salesApi.create(token, payload);
         setCart([]);
         setSelectedTableId('');
         setActiveSale(null);
+        setCustomerPhone('');
         router.push(`/sales/${created.id}`);
       }
     } catch (err) {
@@ -484,6 +524,24 @@ export default function MenuPage() {
         <aside className="w-full lg:w-80">
           <div className="sticky top-6 rounded-3xl bg-white p-6 shadow-sm">
             <h2 className="text-xl font-semibold text-zinc-900">Cart</h2>
+
+            {crmEnabled && (
+              <div className="mt-4">
+                <label className="mb-2 block text-sm font-medium text-zinc-700">
+                  Customer Phone (Optional)
+                </label>
+                <input
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="Enter customer phone number"
+                  className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                />
+                <p className="mt-1 text-xs text-zinc-500">
+                  Customer will be automatically created/linked if phone is provided
+                </p>
+              </div>
+            )}
 
             {tablesEnabled && (
               <div className="mt-4">

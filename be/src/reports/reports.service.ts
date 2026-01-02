@@ -6,6 +6,7 @@ import { SaleItem } from '../sales/entities/sale-item.entity';
 import { Product } from '../products/entities/product.entity';
 import { Expense } from '../expenses/entities/expense.entity';
 import { User } from '../users/entities/user.entity';
+import { StockService } from '../stock/stock.service';
 
 @Injectable()
 export class ReportsService {
@@ -20,6 +21,7 @@ export class ReportsService {
     private readonly expenseRepo: Repository<Expense>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private readonly stockService: StockService,
   ) {}
 
   async getSalesReport(from?: string, to?: string, organizationIds?: string[]) {
@@ -184,17 +186,31 @@ export class ReportsService {
     };
   }
 
-  async getInventoryReport(organizationIds?: string[]) {
+  async getInventoryReport(organizationIds?: string[], outletId?: string) {
+    if (!outletId) {
+      throw new Error('outletId is required for inventory report');
+    }
+
     const where: any = {};
     if (organizationIds && organizationIds.length > 0) {
       where.organizationId = In(organizationIds);
     }
     const products = await this.productRepo.find({ where });
 
-    const inventoryValue = products.reduce(
-      (sum, p) => sum + p.stock * Number(p.costPrice),
-      0,
-    );
+    if (products.length === 0) {
+      return {
+        summary: {
+          totalProducts: 0,
+          totalStockValue: 0,
+          lowStockItems: 0,
+        },
+        products: [],
+      };
+    }
+
+    const productIds = products.map((p) => p.id);
+    const stocks = await this.stockService.getStockForOutlet(outletId, productIds);
+    const stockMap = new Map(stocks.map((s) => [s.productId, s]));
 
     // Calculate sales for last 30 days to determine fast/slow moving
     const thirtyDaysAgo = new Date();
@@ -220,14 +236,25 @@ export class ReportsService {
       recentSales.map((s) => [s.productId, Number(s.totalQuantity || 0)]),
     );
 
+    let totalStockValue = 0;
+    let lowStockCount = 0;
+
     const productsWithSales = products.map((p) => {
+      const stock = stockMap.get(p.id);
+      const stockQuantity = stock?.quantity ?? 0;
       const salesQuantity = salesMap.get(p.id) || 0;
-      const stockValue = p.stock * Number(p.costPrice);
+      const stockValue = stockQuantity * Number(p.costPrice);
+      totalStockValue += stockValue;
+
+      if (stockQuantity < p.lowStockThreshold) {
+        lowStockCount++;
+      }
+
       return {
         id: p.id,
         name: p.name,
         category: p.category,
-        stock: p.stock,
+        stock: stockQuantity,
         unit: p.unit,
         costPrice: Number(p.costPrice),
         stockValue: Number(stockValue.toFixed(2)),
@@ -239,8 +266,8 @@ export class ReportsService {
     return {
       summary: {
         totalProducts: products.length,
-        totalStockValue: Number(inventoryValue.toFixed(2)),
-        lowStockItems: products.filter((p) => p.stock < p.lowStockThreshold).length,
+        totalStockValue: Number(totalStockValue.toFixed(2)),
+        lowStockItems: lowStockCount,
       },
       products: productsWithSales.sort((a, b) => b.stockValue - a.stockValue),
     };

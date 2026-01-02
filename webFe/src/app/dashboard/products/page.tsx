@@ -3,15 +3,15 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useRequireAuth } from '@/hooks/use-require-auth';
-import { productsApi } from '@/lib/api-client';
+import { productsApi, stockApi } from '@/lib/api-client';
 import { Product } from '@/types/product';
+import { Stock } from '@/types/stock';
 
 type CreateProductState = {
   name: string;
   category: string;
   costPrice: string;
   sellingPrice: string;
-  stock: string;
   unit: string;
   lowStockThreshold: string;
 };
@@ -21,7 +21,6 @@ const blankProduct: CreateProductState = {
   category: '',
   costPrice: '',
   sellingPrice: '',
-  stock: '',
   unit: '',
   lowStockThreshold: '10',
 };
@@ -43,6 +42,7 @@ export default function ProductsPage() {
   const { token } = useAuth();
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [stocks, setStocks] = useState<Map<string, Stock>>(new Map());
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -83,9 +83,28 @@ export default function ProductsPage() {
       const data = await productsApi.list(token, {
         search: activeFilters.search.trim() || undefined,
         category: activeFilters.category || undefined,
-        lowStockOnly: activeFilters.lowStockOnly,
       });
       setProducts(data);
+
+      // Get outlet ID from localStorage
+      const outletId = typeof window !== 'undefined' ? localStorage.getItem('selected-outlet-id') : null;
+      
+      // Load stock for all products if outlet is selected
+      if (outletId && data.length > 0) {
+        try {
+          const productIds = data.map(p => p.id);
+          const stockData = await stockApi.getForOutlet(token, outletId, productIds);
+          const stockMap = new Map<string, Stock>();
+          stockData.forEach(stock => {
+            stockMap.set(stock.productId, stock);
+          });
+          setStocks(stockMap);
+        } catch (stockErr) {
+          console.warn('Failed to load stock:', stockErr);
+          // Continue without stock data
+        }
+      }
+
       const mapped = Object.fromEntries(
         data.map((product) => [
           product.id,
@@ -94,7 +113,6 @@ export default function ProductsPage() {
             category: product.category,
             costPrice: product.costPrice.toString(),
             sellingPrice: product.sellingPrice.toString(),
-            stock: product.stock.toString(),
             unit: product.unit,
             lowStockThreshold: product.lowStockThreshold.toString(),
           },
@@ -139,7 +157,6 @@ export default function ProductsPage() {
         category: createState.category.trim(),
         costPrice: Number(createState.costPrice),
         sellingPrice: Number(createState.sellingPrice),
-        stock: Number(createState.stock),
         unit: createState.unit.trim(),
         lowStockThreshold: Number(createState.lowStockThreshold || '0'),
         imageUrl: null,
@@ -192,7 +209,6 @@ export default function ProductsPage() {
         category: form.category.trim(),
         costPrice: Number(form.costPrice),
         sellingPrice: Number(form.sellingPrice),
-        stock: Number(form.stock),
         unit: form.unit.trim(),
         lowStockThreshold: Number(form.lowStockThreshold),
       };
@@ -207,7 +223,6 @@ export default function ProductsPage() {
           category: updated.category,
           costPrice: updated.costPrice.toString(),
           sellingPrice: updated.sellingPrice.toString(),
-          stock: updated.stock.toString(),
           unit: updated.unit,
           lowStockThreshold: updated.lowStockThreshold.toString(),
         },
@@ -268,6 +283,11 @@ export default function ProductsPage() {
     if (!token) {
       return;
     }
+    const outletId = typeof window !== 'undefined' ? localStorage.getItem('selected-outlet-id') : null;
+    if (!outletId) {
+      setError('Please select an outlet to adjust stock.');
+      return;
+    }
     const deltaValue = adjustInputs[id];
     if (!deltaValue) {
       return;
@@ -280,13 +300,16 @@ export default function ProductsPage() {
     setStatusMessage(null);
     setError(null);
     try {
-      const updated = await productsApi.adjustStock(token, id, delta);
-      setProducts((prev) =>
-        prev.map((product) => (product.id === id ? updated : product)),
-      );
+      const updatedStock = await stockApi.adjustStock(token, id, delta);
+      const product = products.find(p => p.id === id);
+      setStocks((prev) => {
+        const next = new Map(prev);
+        next.set(id, updatedStock);
+        return next;
+      });
       setAdjustInputs((prev) => ({ ...prev, [id]: '' }));
       setStatusMessage(
-        `Stock for “${updated.name}” ${delta > 0 ? 'increased' : 'decreased'} by ${Math.abs(delta)}.`,
+        `Stock for "${product?.name || 'product'}" ${delta > 0 ? 'increased' : 'decreased'} by ${Math.abs(delta)}.`,
       );
     } catch (err) {
       if (err instanceof Error) {
@@ -305,17 +328,25 @@ export default function ProductsPage() {
   );
 
   const lowStockCount = useMemo(
-    () => products.filter((product) => product.stock < product.lowStockThreshold).length,
-    [products],
+    () => products.filter((product) => {
+      const stock = stocks.get(product.id);
+      const stockQuantity = stock?.quantity ?? 0;
+      return stockQuantity < product.lowStockThreshold;
+    }).length,
+    [products, stocks],
   );
 
   const inventoryValue = useMemo(
     () =>
       products.reduce(
-        (sum, product) => sum + Number(product.stock) * Number(product.costPrice),
+        (sum, product) => {
+          const stock = stocks.get(product.id);
+          const stockQuantity = stock?.quantity ?? 0;
+          return sum + stockQuantity * Number(product.costPrice);
+        },
         0,
       ),
-    [products],
+    [products, stocks],
   );
 
   const handleDownloadTemplate = async () => {
@@ -527,28 +558,15 @@ export default function ProductsPage() {
                   className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
                 />
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <input
-                  required
-                  type="number"
-                  min="0"
-                  placeholder="Starting stock"
-                  value={createState.stock}
-                  onChange={(event) =>
-                    setCreateState((prev) => ({ ...prev, stock: event.target.value }))
-                  }
-                  className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
-                />
-                <input
-                  required
-                  placeholder="Unit (e.g. pcs, kg)"
-                  value={createState.unit}
-                  onChange={(event) =>
-                    setCreateState((prev) => ({ ...prev, unit: event.target.value }))
-                  }
-                  className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
-                />
-              </div>
+              <input
+                required
+                placeholder="Unit (e.g. pcs, kg)"
+                value={createState.unit}
+                onChange={(event) =>
+                  setCreateState((prev) => ({ ...prev, unit: event.target.value }))
+                }
+                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+              />
               <input
                 type="number"
                 min="0"
@@ -698,19 +716,27 @@ export default function ProductsPage() {
                 No products found. Create one using the form above.
               </p>
             ) : (
-              products.map((product) => {
+              products
+                .filter((product) => {
+                  if (!appliedFilters.lowStockOnly) return true;
+                  const stock = stocks.get(product.id);
+                  const stockQuantity = stock?.quantity ?? 0;
+                  return stockQuantity < product.lowStockThreshold;
+                })
+                .map((product) => {
+                const stock = stocks.get(product.id);
+                const stockQuantity = stock?.quantity ?? 0;
                 const form = editForms[product.id] ?? {
                   name: product.name,
                   category: product.category,
                   costPrice: product.costPrice.toString(),
                   sellingPrice: product.sellingPrice.toString(),
-                  stock: product.stock.toString(),
                   unit: product.unit,
                   lowStockThreshold: product.lowStockThreshold.toString(),
                 };
                 const isEditing = editingProductId === product.id;
                 const deltaValue = adjustInputs[product.id] ?? '';
-                const lowStock = product.stock < product.lowStockThreshold;
+                const lowStock = stockQuantity < product.lowStockThreshold;
                 const profitPerUnit = Number(product.sellingPrice) - Number(product.costPrice);
                 return (
                   <div
@@ -754,7 +780,7 @@ export default function ProductsPage() {
                             In stock
                           </p>
                           <p className="font-semibold text-zinc-900">
-                            {product.stock} {product.unit}
+                            {stockQuantity} {product.unit}
                           </p>
                         </div>
                         <div>
@@ -870,15 +896,6 @@ export default function ProductsPage() {
                           className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
                         />
                         <input
-                          type="number"
-                          min="0"
-                          value={form.stock}
-                          onChange={(event) =>
-                            handleEditChange(product.id, 'stock', event.target.value)
-                          }
-                          className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
-                        />
-                        <input
                           value={form.unit}
                           onChange={(event) =>
                             handleEditChange(product.id, 'unit', event.target.value)
@@ -964,7 +981,6 @@ export default function ProductsPage() {
                                   category: product.category,
                                   costPrice: product.costPrice.toString(),
                                   sellingPrice: product.sellingPrice.toString(),
-                                  stock: product.stock.toString(),
                                   unit: product.unit,
                                   lowStockThreshold: product.lowStockThreshold.toString(),
                                 },

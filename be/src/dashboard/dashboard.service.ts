@@ -5,6 +5,7 @@ import { Sale } from '../sales/entities/sale.entity';
 import { SaleItem } from '../sales/entities/sale-item.entity';
 import { Product } from '../products/entities/product.entity';
 import { Expense } from '../expenses/entities/expense.entity';
+import { StockService } from '../stock/stock.service';
 
 @Injectable()
 export class DashboardService {
@@ -17,6 +18,7 @@ export class DashboardService {
     private readonly productRepo: Repository<Product>,
     @InjectRepository(Expense)
     private readonly expenseRepo: Repository<Expense>,
+    private readonly stockService: StockService,
   ) {}
 
   async getTodaySummary(organizationIds: string[]) {
@@ -144,22 +146,18 @@ export class DashboardService {
     });
   }
 
-  async getLowStockAlerts(organizationIds: string[]) {
-    const products = await this.productRepo.find({
-      where: { organizationId: In(organizationIds) },
-    });
-    return products
-      .filter((p) => p.stock < p.lowStockThreshold)
-      .map((p) => ({
-        id: p.id,
-        name: p.name,
-        category: p.category,
-        stock: p.stock,
-        lowStockThreshold: p.lowStockThreshold,
-        unit: p.unit,
-        imageUrl: p.imageUrl,
-      }))
-      .sort((a, b) => a.stock - b.stock); // Sort by stock (lowest first)
+  async getLowStockAlerts(organizationIds: string[], outletId: string) {
+    const lowStockItems = await this.stockService.getLowStockItems(outletId, organizationIds[0]);
+    return lowStockItems.map((stock) => ({
+      id: stock.productId,
+      name: stock.product?.name || 'Unknown Product',
+      category: stock.product?.category || '',
+      stock: stock.quantity,
+      lowStockThreshold: stock.product?.lowStockThreshold || 0,
+      unit: stock.product?.unit || '',
+      imageUrl: stock.product?.imageUrl || null,
+    }))
+    .sort((a, b) => a.stock - b.stock); // Sort by stock (lowest first)
   }
 
   async getExpensesSummary(organizationIds: string[]) {

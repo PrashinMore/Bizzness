@@ -6,6 +6,15 @@ import { Organization } from '@/types/organization';
 import { OrganizationInvite } from '@/types/invite';
 import { DiningTable, DiningTableWithOrders, TableStatus } from '@/types/table';
 import { Outlet } from '@/types/outlet';
+import { Stock } from '@/types/stock';
+import {
+  Customer,
+  CustomerVisit,
+  CustomerNote,
+  CustomerFeedback,
+  CrmDashboardStats,
+  ListCustomersResponse,
+} from '@/types/crm';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000';
@@ -200,7 +209,7 @@ export const productsApi = {
   update: (
     token: string,
     id: string,
-    payload: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'isLowStock'>>,
+    payload: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>,
     imageFile?: File,
   ): Promise<Product> => {
     if (imageFile) {
@@ -216,8 +225,6 @@ export const productsApi = {
     }
     return request<Product>(`/products/${id}`, { method: 'PATCH', body: payload, token });
   },
-  adjustStock: (token: string, id: string, delta: number): Promise<Product> =>
-    request<Product>(`/products/${id}/stock`, { method: 'PATCH', body: { delta }, token }),
   remove: (token: string, id: string): Promise<void> =>
     request<void>(`/products/${id}`, { method: 'DELETE', token }),
   getSuggestions: (
@@ -295,6 +302,33 @@ export const productsApi = {
 
     return response.json();
   },
+};
+
+export const stockApi = {
+  getForOutlet: (token: string, outletId: string, productIds?: string[]): Promise<Stock[]> => {
+    const params = new URLSearchParams();
+    if (productIds && productIds.length > 0) {
+      params.set('productIds', productIds.join(','));
+    }
+    const qs = params.toString();
+    const path = qs ? `/stock/outlet/${outletId}?${qs}` : `/stock/outlet/${outletId}`;
+    return request<Stock[]>(path, { token });
+  },
+  getForProduct: (token: string, productId: string): Promise<Stock | null> =>
+    request<Stock | null>(`/stock/product/${productId}`, { token }),
+  getLowStock: (token: string, outletId?: string): Promise<Stock[]> => {
+    const params = new URLSearchParams();
+    if (outletId) {
+      params.set('outletId', outletId);
+    }
+    const qs = params.toString();
+    const path = qs ? `/stock/low-stock?${qs}` : '/stock/low-stock';
+    return request<Stock[]>(path, { token });
+  },
+  adjustStock: (token: string, productId: string, delta: number): Promise<Stock> =>
+    request<Stock>(`/stock/product/${productId}/adjust`, { method: 'PATCH', body: { delta }, token }),
+  setStock: (token: string, productId: string, quantity: number): Promise<Stock> =>
+    request<Stock>(`/stock/product/${productId}/set`, { method: 'PATCH', body: { quantity }, token }),
 };
 
 type SalesFilters = {
@@ -466,6 +500,9 @@ export interface Settings {
   enableReservations: boolean;
   allowTableMerge: boolean;
   autoFreeTableOnPayment: boolean;
+  enableCRM: boolean;
+  enableLoyalty: boolean;
+  organizationId: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -544,6 +581,18 @@ export const settingsApi = {
     },
   ): Promise<Settings> =>
     request<Settings>('/settings/tables', {
+      method: 'PATCH',
+      body: payload,
+      token,
+    }),
+  updateOrganization: (
+    token: string,
+    payload: {
+      enableCRM?: boolean;
+      enableLoyalty?: boolean;
+    },
+  ): Promise<Settings> =>
+    request<Settings>('/settings/organization', {
       method: 'PATCH',
       body: payload,
       token,
@@ -953,6 +1002,115 @@ export const tablesApi = {
   ): Promise<{ targetTable: DiningTable; sourceTables: DiningTable[] }> =>
     request<{ targetTable: DiningTable; sourceTables: DiningTable[] }>('/tables/merge', {
       method: 'POST',
+      body: payload,
+      token,
+    }),
+};
+
+export const crmApi = {
+  getDashboard: (token: string): Promise<CrmDashboardStats> =>
+    request<CrmDashboardStats>('/crm/dashboard', { token }),
+
+  listCustomers: (
+    token: string,
+    params?: {
+      search?: string;
+      segment?: string;
+      tag?: string;
+      page?: number;
+      size?: number;
+    },
+  ): Promise<ListCustomersResponse> => {
+    const queryParams = new URLSearchParams();
+    if (params?.search) queryParams.set('search', params.search);
+    if (params?.segment) queryParams.set('segment', params.segment);
+    if (params?.tag) queryParams.set('tag', params.tag);
+    if (params?.page) queryParams.set('page', params.page.toString());
+    if (params?.size) queryParams.set('size', params.size.toString());
+
+    const query = queryParams.toString();
+    return request<ListCustomersResponse>(`/crm/customers${query ? `?${query}` : ''}`, { token });
+  },
+
+  getCustomer: (token: string, id: string): Promise<Customer> =>
+    request<Customer>(`/crm/customers/${id}`, { token }),
+
+  createCustomer: (
+    token: string,
+    payload: {
+      name: string;
+      phone: string;
+      email?: string;
+      birthday?: string;
+      gender?: 'MALE' | 'FEMALE' | 'OTHER';
+      tags?: string[];
+    },
+  ): Promise<Customer> =>
+    request<Customer>('/crm/customers', {
+      method: 'POST',
+      body: payload,
+      token,
+    }),
+
+  updateCustomer: (
+    token: string,
+    id: string,
+    payload: {
+      name?: string;
+      email?: string;
+      birthday?: string;
+      gender?: 'MALE' | 'FEMALE' | 'OTHER';
+      tags?: string[];
+    },
+  ): Promise<Customer> =>
+    request<Customer>(`/crm/customers/${id}`, {
+      method: 'PATCH',
+      body: payload,
+      token,
+    }),
+
+  getCustomerVisits: (token: string, customerId: string): Promise<CustomerVisit[]> =>
+    request<CustomerVisit[]>(`/crm/customers/${customerId}/visits`, { token }),
+
+  createCustomerNote: (
+    token: string,
+    customerId: string,
+    payload: { note: string },
+  ): Promise<CustomerNote> =>
+    request<CustomerNote>(`/crm/customers/${customerId}/notes`, {
+      method: 'POST',
+      body: payload,
+      token,
+    }),
+
+  getCustomerNotes: (token: string, customerId: string): Promise<CustomerNote[]> =>
+    request<CustomerNote[]>(`/crm/customers/${customerId}/notes`, { token }),
+
+  createCustomerFeedback: (
+    token: string,
+    customerId: string,
+    payload: {
+      rating: number;
+      comment?: string;
+      orderId?: string;
+    },
+  ): Promise<CustomerFeedback> =>
+    request<CustomerFeedback>(`/crm/customers/${customerId}/feedback`, {
+      method: 'POST',
+      body: payload,
+      token,
+    }),
+
+  getCustomerFeedbacks: (token: string, customerId: string): Promise<CustomerFeedback[]> =>
+    request<CustomerFeedback[]>(`/crm/customers/${customerId}/feedback`, { token }),
+
+  updateFeedback: (
+    token: string,
+    feedbackId: string,
+    payload: { status?: 'OPEN' | 'RESOLVED' },
+  ): Promise<CustomerFeedback> =>
+    request<CustomerFeedback>(`/crm/feedback/${feedbackId}`, {
+      method: 'PATCH',
       body: payload,
       token,
     }),

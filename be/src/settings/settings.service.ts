@@ -6,6 +6,7 @@ import { UpdateBusinessSettingsDto } from './dto/update-business-settings.dto';
 import { UpdateBillingSettingsDto } from './dto/update-billing-settings.dto';
 import { UpdateInventorySettingsDto } from './dto/update-inventory-settings.dto';
 import { UpdateTableSettingsDto } from './dto/update-table-settings.dto';
+import { UpdateOrganizationSettingsDto } from './dto/update-organization-settings.dto';
 
 @Injectable()
 export class SettingsService {
@@ -57,6 +58,15 @@ export class SettingsService {
 
   async updateTableSettings(
     dto: UpdateTableSettingsDto,
+    organizationId: string,
+  ): Promise<Settings> {
+    const settings = await this.getSettings(organizationId);
+    Object.assign(settings, dto);
+    return this.settingsRepository.save(settings);
+  }
+
+  async updateOrganizationSettings(
+    dto: UpdateOrganizationSettingsDto,
     organizationId: string,
   ): Promise<Settings> {
     const settings = await this.getSettings(organizationId);

@@ -65,6 +65,19 @@ export class CreateSaleDto {
 	@IsUUID()
 	@IsOptional()
 	tableId?: string;
+
+	@IsUUID()
+	@IsOptional()
+	customerId?: string;
+
+	@IsString()
+	@IsOptional()
+	customerPhone?: string;
+
+	@IsString()
+	@IsOptional()
+	@IsIn(['DINE_IN', 'TAKEAWAY', 'DELIVERY'])
+	visitType?: 'DINE_IN' | 'TAKEAWAY' | 'DELIVERY';
 }
 
 

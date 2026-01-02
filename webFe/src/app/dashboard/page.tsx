@@ -477,6 +477,14 @@ export default function DashboardPage() {
                   </li>
                 </>
               )}
+              <li>
+                <Link
+                  href="/crm"
+                  className="font-medium text-zinc-900 underline-offset-4 hover:underline"
+                >
+                  CRM & Customers
+                </Link>
+              </li>
             </ul>
           </article>
 

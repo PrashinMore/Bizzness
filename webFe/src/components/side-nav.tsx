@@ -82,7 +82,7 @@ export function SideNav() {
       )}
 
       <aside
-        className={`fixed left-0 top-0 z-40 h-full w-56 border-r border-zinc-200 bg-white shadow-sm transition-transform duration-200 ${
+        className={`fixed left-0 top-0 z-40 h-full w-56 border-r border-zinc-200 bg-white shadow-sm transition-transform duration-200 flex flex-col ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -138,53 +138,58 @@ export function SideNav() {
             </select>
           </div>
         )}
-        <nav className="flex h-[calc(100vh-3.5rem)] flex-col">
-          <div className="flex-1 space-y-1 overflow-y-auto px-2 py-2">
-            <Link href="/dashboard" className={linkClasses('/dashboard')} prefetch={false}>
-              Dashboard
-            </Link>
-            <Link href="/menu" className={linkClasses('/menu')} prefetch={false}>
-              Menu & Checkout
-            </Link>
-            <Link href="/expenses" className={linkClasses('/expenses')} prefetch={false}>
-              Expenses
-            </Link>
-            <Link href="/sales" className={linkClasses('/sales')} prefetch={false}>
-              Sales
-            </Link>
-            <Link href="/users" className={linkClasses('/users')} prefetch={false}>
-              Users
-            </Link>
-            <Link href="/products" className={linkClasses('/products')} prefetch={false}>
-              Inventory & Stock
-            </Link>
-            {settings?.enableTables && (
-              <Link href="/dashboard/tables" className={linkClasses('/dashboard/tables')} prefetch={false}>
-                Tables
-              </Link>
-            )}
-            <Link href="/dashboard/outlets" className={linkClasses('/dashboard/outlets')} prefetch={false}>
-              Outlets
-            </Link>
-          <Link href="/settings" className={linkClasses('/settings')} prefetch={false}>
-            Settings
-          </Link>
-          <Link href="/reports" className={linkClasses('/reports')} prefetch={false}>
-            Reports
-          </Link>
-          <Link href="/profile" className={linkClasses('/profile')} prefetch={false}>
-            Manage
-          </Link>
-          </div>
-          <div className="border-t border-zinc-200 p-2">
-            <button
-              onClick={handleLogout}
-              className="w-full rounded px-3 py-2 text-left text-sm text-zinc-700 transition hover:bg-zinc-100"
-            >
-              Logout
-            </button>
-          </div>
-        </nav>
+         <nav className="flex flex-1 flex-col min-h-0 overflow-hidden">
+          <div className="flex-1 space-y-1 overflow-y-auto px-2 py-2 min-h-0">
+             <Link href="/dashboard" className={linkClasses('/dashboard')} prefetch={false}>
+               Dashboard
+             </Link>
+             <Link href="/menu" className={linkClasses('/menu')} prefetch={false}>
+               Menu & Checkout
+             </Link>
+             <Link href="/expenses" className={linkClasses('/expenses')} prefetch={false}>
+               Expenses
+             </Link>
+             <Link href="/sales" className={linkClasses('/sales')} prefetch={false}>
+               Sales
+             </Link>
+             <Link href="/users" className={linkClasses('/users')} prefetch={false}>
+               Users
+             </Link>
+             <Link href="/products" className={linkClasses('/products')} prefetch={false}>
+               Inventory & Stock
+             </Link>
+             {settings?.enableTables && (
+               <Link href="/dashboard/tables" className={linkClasses('/dashboard/tables')} prefetch={false}>
+                 Tables
+               </Link>
+             )}
+             {settings?.enableCRM && (
+               <Link href="/crm" className={linkClasses('/crm')} prefetch={false}>
+                 CRM
+               </Link>
+             )}
+             <Link href="/dashboard/outlets" className={linkClasses('/dashboard/outlets')} prefetch={false}>
+               Outlets
+             </Link>
+             <Link href="/settings" className={linkClasses('/settings')} prefetch={false}>
+               Settings
+             </Link>
+             <Link href="/reports" className={linkClasses('/reports')} prefetch={false}>
+               Reports
+             </Link>
+             <Link href="/profile" className={linkClasses('/profile')} prefetch={false}>
+               Manage
+             </Link>
+           </div>
+           <div className="border-t border-zinc-200 p-2 flex-shrink-0">
+             <button
+               onClick={handleLogout}
+               className="w-full rounded px-3 py-2 text-left text-sm text-zinc-700 transition hover:bg-zinc-100"
+             >
+               Logout
+             </button>
+           </div>
+         </nav>
       </aside>
     </>
   );

@@ -57,7 +57,11 @@ export class ReportsController {
   @Get('inventory')
   getInventoryReport(@Req() req: RequestWithUser) {
     const organizationIds = this.getOrganizationIds(req.user);
-    return this.reportsService.getInventoryReport(organizationIds);
+    const outletId = (req.headers['x-outlet-id'] as string);
+    if (!outletId) {
+      throw new ForbiddenException('Outlet ID is required. Please select an outlet.');
+    }
+    return this.reportsService.getInventoryReport(organizationIds, outletId);
   }
 
   @Get('expenses')

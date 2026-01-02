@@ -18,11 +18,6 @@ export class CreateProductDto {
   @Min(0)
   sellingPrice: number;
 
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  stock: number;
-
   @IsString()
   unit: string;
 

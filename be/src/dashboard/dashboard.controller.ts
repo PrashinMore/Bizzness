@@ -42,7 +42,11 @@ export class DashboardController {
   @Get('low-stock')
   getLowStockAlerts(@Req() req: RequestWithUser) {
     const organizationIds = this.getOrganizationIds(req.user);
-    return this.dashboardService.getLowStockAlerts(organizationIds);
+    const outletId = (req.headers['x-outlet-id'] as string);
+    if (!outletId) {
+      throw new ForbiddenException('Outlet ID is required. Please select an outlet.');
+    }
+    return this.dashboardService.getLowStockAlerts(organizationIds, outletId);
   }
 
   @Get('expenses-summary')

@@ -6,7 +6,7 @@ import { useRequireAuth } from '@/hooks/use-require-auth';
 import { settingsApi, type Settings, invoicesApi } from '@/lib/api-client';
 import type { OrganizationInvoiceSettings } from '@/types/invoice';
 
-type Tab = 'business' | 'billing' | 'inventory' | 'invoices' | 'tables' | 'support';
+type Tab = 'business' | 'billing' | 'inventory' | 'invoices' | 'tables' | 'organization' | 'support';
 
 export default function SettingsPage() {
   const { user, loading } = useRequireAuth();
@@ -56,6 +56,10 @@ export default function SettingsPage() {
   const [allowTableMerge, setAllowTableMerge] = useState(true);
   const [autoFreeTableOnPayment, setAutoFreeTableOnPayment] = useState(true);
 
+  // Organization settings state
+  const [enableCRM, setEnableCRM] = useState(false);
+  const [enableLoyalty, setEnableLoyalty] = useState(false);
+
   const organizationId = useMemo(() => {
     return user?.organizations?.[0]?.id || '';
   }, [user]);
@@ -87,6 +91,8 @@ export default function SettingsPage() {
         setEnableReservations(data.enableReservations ?? false);
         setAllowTableMerge(data.allowTableMerge ?? true);
         setAutoFreeTableOnPayment(data.autoFreeTableOnPayment ?? true);
+        setEnableCRM(data.enableCRM ?? false);
+        setEnableLoyalty(data.enableLoyalty ?? false);
 
         // Load invoice settings
         if (organizationId && token) {
@@ -275,6 +281,31 @@ export default function SettingsPage() {
     }
   };
 
+  const handleOrganizationSettingsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const updated = await settingsApi.updateOrganization(token, {
+        enableCRM,
+        enableLoyalty,
+      });
+      setSettings(updated);
+      setSuccess('Organization settings updated successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Unable to update organization settings.');
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading || !user || !token) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-50">
@@ -364,6 +395,16 @@ export default function SettingsPage() {
             }`}
           >
             Tables
+          </button>
+          <button
+            onClick={() => setActiveTab('organization')}
+            className={`px-4 py-2 text-sm font-medium transition ${
+              activeTab === 'organization'
+                ? 'border-b-2 border-zinc-900 text-zinc-900'
+                : 'text-zinc-700 hover:text-zinc-900'
+            }`}
+          >
+            Features
           </button>
           <button
             onClick={() => setActiveTab('support')}
@@ -831,6 +872,66 @@ export default function SettingsPage() {
                   className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Save Table Settings'}
+                </button>
+              </form>
+            )}
+
+            {/* Organization Settings */}
+            {activeTab === 'organization' && (
+              <form onSubmit={handleOrganizationSettingsSubmit} className="space-y-6">
+                <div>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={enableCRM}
+                      onChange={(e) => setEnableCRM(e.target.checked)}
+                      className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                    />
+                    <span className="text-sm font-medium text-zinc-900">
+                      Enable CRM (Customer Relationship Management)
+                    </span>
+                  </label>
+                  <p className="mt-1 text-xs text-zinc-700">
+                    Enable customer tracking, visit history, notes, and feedback. When enabled, you can capture customer information during checkout and manage customer relationships.
+                  </p>
+                </div>
+
+                {enableCRM && (
+                  <div>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={enableLoyalty}
+                        onChange={(e) => setEnableLoyalty(e.target.checked)}
+                        className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                      />
+                      <span className="text-sm font-medium text-zinc-900">
+                        Enable Loyalty Program
+                      </span>
+                    </label>
+                    <p className="mt-1 text-xs text-zinc-700">
+                      Award loyalty points to customers based on their spending. Customers earn 1 point per ₹100 spent. Points can be used for future discounts and rewards.
+                    </p>
+                    <p className="mt-2 text-xs text-zinc-600">
+                      <strong>Tiers:</strong> Silver (0-499 points), Gold (500-999 points), Platinum (1000+ points)
+                    </p>
+                  </div>
+                )}
+
+                {!enableCRM && enableLoyalty && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                    <p className="text-sm text-amber-800">
+                      <strong>Note:</strong> Loyalty program requires CRM to be enabled. Please enable CRM first.
+                    </p>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={saving || (!enableCRM && enableLoyalty)}
+                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? 'Saving…' : 'Save Organization Settings'}
                 </button>
               </form>
             )}

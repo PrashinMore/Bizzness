@@ -28,15 +28,6 @@ export class TransformMultipartPipe implements PipeTransform {
       }
       transformed.sellingPrice = numValue;
     }
-    if (transformed.stock !== undefined && transformed.stock !== null && transformed.stock !== '') {
-      const numValue = typeof transformed.stock === 'string' 
-        ? parseInt(transformed.stock, 10) 
-        : Number(transformed.stock);
-      if (isNaN(numValue) || !Number.isInteger(numValue)) {
-        throw new BadRequestException('stock must be a valid integer');
-      }
-      transformed.stock = numValue;
-    }
     if (transformed.lowStockThreshold !== undefined && transformed.lowStockThreshold !== null && transformed.lowStockThreshold !== '') {
       const numValue = typeof transformed.lowStockThreshold === 'string' 
         ? parseInt(transformed.lowStockThreshold, 10) 

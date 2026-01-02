@@ -71,6 +71,13 @@ export class Settings {
   @Column({ type: 'boolean', default: true })
   autoFreeTableOnPayment: boolean;
 
+  // CRM Settings
+  @Column({ type: 'boolean', default: false })
+  enableCRM: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  enableLoyalty: boolean;
+
   @ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
   organization!: Organization;
 

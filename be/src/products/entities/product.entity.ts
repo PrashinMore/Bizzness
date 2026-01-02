@@ -32,9 +32,6 @@ export class Product {
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   sellingPrice: number;
 
-  @Column({ type: 'int', default: 0 })
-  stock: number;
-
   @Column({ length: 32 })
   unit: string;
 
@@ -55,9 +52,5 @@ export class Product {
 
   @UpdateDateColumn()
   updatedAt: Date;
-
-  get isLowStock(): boolean {
-    return this.stock < this.lowStockThreshold;
-  }
 }
 

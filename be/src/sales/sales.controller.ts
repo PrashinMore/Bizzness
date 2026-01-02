@@ -79,7 +79,10 @@ export class SalesController {
 	create(@Req() req: RequestWithUser, @Body() dto: CreateSaleDto) {
 		const organizationId = this.getFirstOrganizationId(req.user);
 		const organizationIds = this.getOrganizationIds(req.user);
-		const outletId = (req.headers['x-outlet-id'] as string) || null;
+		const outletId = (req.headers['x-outlet-id'] as string);
+		if (!outletId) {
+			throw new ForbiddenException('Outlet ID is required. Please select an outlet.');
+		}
 		return this.salesService.create({ ...dto, organizationId, outletId }, organizationIds);
 	}
 

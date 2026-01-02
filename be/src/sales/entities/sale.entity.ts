@@ -9,6 +9,7 @@ import {
 import { SaleItem } from './sale-item.entity';
 import { Organization } from '../../organizations/entities/organization.entity';
 import { DiningTable } from '../../tables/entities/dining-table.entity';
+import { Outlet } from '../../outlets/entities/outlet.entity';
 
 @Entity()
 export class Sale {
@@ -54,6 +55,9 @@ export class Sale {
 	@Column({ type: 'uuid' })
 	organizationId!: string;
 
+	@ManyToOne(() => Outlet, { nullable: true, onDelete: 'CASCADE' })
+	outlet?: Outlet | null;
+
 	@Column({ type: 'uuid', nullable: true })
 	outletId?: string | null;
 
@@ -62,6 +66,9 @@ export class Sale {
 
 	@Column({ type: 'timestamptz', nullable: true })
 	closedAt?: Date | null;
+
+	@Column({ type: 'uuid', nullable: true })
+	customerId?: string | null;
 
 	@CreateDateColumn()
 	createdAt: Date;

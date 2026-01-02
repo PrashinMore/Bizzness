@@ -9,6 +9,8 @@ import { Product } from '../products/entities/product.entity';
 import { DiningTable, TableStatus } from '../tables/entities/dining-table.entity';
 import { SettingsService } from '../settings/settings.service';
 import { AddItemsToSaleDto } from './dto/add-items-to-sale.dto';
+import { CrmService } from '../crm/crm.service';
+import { StockService } from '../stock/stock.service';
 
 @Injectable()
 export class SalesService {
@@ -22,9 +24,21 @@ export class SalesService {
 		private readonly dataSource: DataSource,
 		@Inject(forwardRef(() => SettingsService))
 		private readonly settingsService: SettingsService,
+		@Inject(forwardRef(() => CrmService))
+		private readonly crmService: CrmService,
+		@Inject(forwardRef(() => StockService))
+		private readonly stockService: StockService,
 	) {}
 
 	async create(dto: CreateSaleDto & { organizationId: string; outletId?: string | null }, organizationIds: string[]) {
+		// Validate outletId is provided
+		if (!dto.outletId) {
+			throw new BadRequestException('outletId is required');
+		}
+
+		// At this point, outletId is guaranteed to be a string
+		const outletId = dto.outletId;
+
 		// Basic consistency checks
 		const computedTotal = dto.items.reduce(
 			(sum, i) => sum + i.sellingPrice * i.quantity,
@@ -82,24 +96,27 @@ export class SalesService {
 			});
 			const productMap = new Map(products.map((p) => [p.id, p]));
 
+			// Get stock for all products in this outlet
+			const stockMap = await this.stockService.getStockForProducts(productIds, outletId);
+
 			// Validate availability
 			for (const item of dto.items) {
 				const product = productMap.get(item.productId);
 				if (!product) {
 					throw new BadRequestException(`Product ${item.productId} not found`);
 				}
-				if (product.stock < item.quantity) {
+				const stock = stockMap.get(item.productId);
+				const availableStock = stock?.quantity ?? 0;
+				if (availableStock < item.quantity) {
 					throw new BadRequestException(
-						`Insufficient stock for product ${product.name} (${product.id})`,
+						`Insufficient stock for product ${product.name} (${product.id}). Available: ${availableStock}, Requested: ${item.quantity}`,
 					);
 				}
 			}
 
 			// Decrement stock
 			for (const item of dto.items) {
-				const product = productMap.get(item.productId)!;
-				product.stock = Math.max(product.stock - item.quantity, 0);
-				await manager.getRepository(Product).save(product);
+				await this.stockService.adjustStock(item.productId, outletId, -item.quantity);
 			}
 
 			// Handle table assignment
@@ -116,6 +133,23 @@ export class SalesService {
 				}
 			}
 
+			// Handle customer creation/linking
+			let customerId: string | null = null;
+			if (dto.customerId) {
+				customerId = dto.customerId;
+			} else if (dto.customerPhone) {
+				try {
+					const customer = await this.crmService.findOrCreateCustomer(
+						dto.customerPhone,
+						dto.organizationId,
+					);
+					customerId = customer.id;
+				} catch (error) {
+					// If CRM is not enabled or error, continue without customer
+					console.warn('Failed to create/link customer:', error);
+				}
+			}
+
 			// Create sale + items
 			const sale = manager.getRepository(Sale).create({
 				date: new Date(dto.date),
@@ -126,11 +160,12 @@ export class SalesService {
 				upiAmount: round2(upiAmount),
 				isPaid: dto.isPaid ?? isPaid,
 				organizationId: dto.organizationId,
-				outletId: dto.outletId || null,
+				outletId: outletId,
 				tableId: dto.tableId || null,
+				customerId: customerId || null,
 				openedAt: dto.tableId ? new Date() : null,
 			});
-			await manager.getRepository(Sale).save(sale);
+			const savedSale = await manager.getRepository(Sale).save(sale);
 
 			// Update table status if table was assigned
 			if (table && !(dto.isPaid ?? isPaid)) {
@@ -149,14 +184,30 @@ export class SalesService {
 			);
 			await manager.getRepository(SaleItem).save(items);
 
+			// Create customer visit if customer is linked and sale is paid
+			if (customerId && (dto.isPaid ?? isPaid)) {
+				try {
+					await this.crmService.createVisit(
+						customerId,
+						savedSale.id,
+						round2(dto.totalAmount),
+						dto.visitType || 'DINE_IN',
+						outletId,
+					);
+				} catch (error) {
+					// Log but don't fail the sale creation
+					console.warn('Failed to create customer visit:', error);
+				}
+			}
+
 			// Fetch using the same transaction manager to avoid visibility issues
 			const createdSale = await manager.getRepository(Sale).findOne({
-				where: { id: sale.id },
+				where: { id: savedSale.id },
 				relations: ['items'],
 			});
 			if (!createdSale) {
 				// This should not realistically happen right after insert in the same tx
-				throw new NotFoundException(`Sale ${sale.id} not found`);
+				throw new NotFoundException(`Sale ${savedSale.id} not found`);
 			}
 			return createdSale;
 		});
@@ -411,6 +462,22 @@ export class SalesService {
 
 		const savedSale = await this.saleRepo.save(sale);
 
+		// Create customer visit if payment was just completed and customer is linked
+		if (savedSale.isPaid && savedSale.customerId && !wasPaidBefore) {
+			try {
+				await this.crmService.createVisit(
+					savedSale.customerId,
+					savedSale.id,
+					Number(savedSale.totalAmount),
+					'DINE_IN', // Default, can be enhanced later
+					savedSale.outletId || null,
+				);
+			} catch (error) {
+				// Log but don't fail the sale update
+				console.warn('Failed to create customer visit:', error);
+			}
+		}
+
 		// Handle table auto-free logic if payment was completed
 		if (savedSale.isPaid && savedSale.tableId && !wasPaidBefore) {
 			try {
@@ -465,6 +532,11 @@ export class SalesService {
 				throw new BadRequestException('Cannot add items to a paid sale');
 			}
 
+			// Validate outletId is present
+			if (!sale.outletId) {
+				throw new BadRequestException('Sale must have an outletId to add items. Please run the migration script: npm run migrate:backfill-outlet-id');
+			}
+
 			// Validate products and stock
 			const productIds = dto.items.map((i) => i.productId);
 			const products = await manager.getRepository(Product).find({
@@ -475,14 +547,19 @@ export class SalesService {
 			});
 			const productMap = new Map(products.map((p) => [p.id, p]));
 
+			// Get stock for all products in this outlet
+			const stockMap = await this.stockService.getStockForProducts(productIds, sale.outletId);
+
 			for (const item of dto.items) {
 				const product = productMap.get(item.productId);
 				if (!product) {
 					throw new BadRequestException(`Product ${item.productId} not found`);
 				}
-				if (product.stock < item.quantity) {
+				const stock = stockMap.get(item.productId);
+				const availableStock = stock?.quantity ?? 0;
+				if (availableStock < item.quantity) {
 					throw new BadRequestException(
-						`Insufficient stock for product ${product.name} (${product.id})`,
+						`Insufficient stock for product ${product.name} (${product.id}). Available: ${availableStock}, Requested: ${item.quantity}`,
 					);
 				}
 			}
@@ -490,9 +567,7 @@ export class SalesService {
 			// Decrement stock
 			const round2 = (n: number) => Math.round(n * 100) / 100;
 			for (const item of dto.items) {
-				const product = productMap.get(item.productId)!;
-				product.stock = Math.max(product.stock - item.quantity, 0);
-				await manager.getRepository(Product).save(product);
+				await this.stockService.adjustStock(item.productId, sale.outletId, -item.quantity);
 			}
 
 			// Add new items

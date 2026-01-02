@@ -30,6 +30,14 @@ import { TablesModule } from './tables/tables.module';
 import { DiningTable } from './tables/entities/dining-table.entity';
 import { OutletsModule } from './outlets/outlets.module';
 import { Outlet } from './outlets/entities/outlet.entity';
+import { StockModule } from './stock/stock.module';
+import { Stock } from './stock/entities/stock.entity';
+import { CrmModule } from './crm/crm.module';
+import { Customer } from './crm/entities/customer.entity';
+import { CustomerVisit } from './crm/entities/customer-visit.entity';
+import { CustomerNote } from './crm/entities/customer-note.entity';
+import { CustomerFeedback } from './crm/entities/customer-feedback.entity';
+import { LoyaltyAccount } from './crm/entities/loyalty-account.entity';
 
 @Module({
   imports: [
@@ -83,7 +91,7 @@ import { Outlet } from './outlets/entities/outlet.entity';
           username: configService.get<string>('DB_USER') ?? 'postgres',
           password: configService.get<string>('DB_PASSWORD') ?? 'postgres',
           database: configService.get<string>('DB_NAME') ?? 'biznes',
-          entities: [User, Product, Sale, SaleItem, Expense, Settings, Organization, Category, GlobalProduct, Invoice, InvoiceCounter, OrganizationInvoiceSettings, DiningTable, Outlet],
+          entities: [User, Product, Sale, SaleItem, Expense, Settings, Organization, Category, GlobalProduct, Invoice, InvoiceCounter, OrganizationInvoiceSettings, DiningTable, Outlet, Stock, Customer, CustomerVisit, CustomerNote, CustomerFeedback, LoyaltyAccount],
           synchronize: true,
           // Disable retries completely in serverless to fail fast
           retryAttempts: isServerless ? 0 : 10,
@@ -133,6 +141,8 @@ import { Outlet } from './outlets/entities/outlet.entity';
     InvoicesModule,
     TablesModule,
     OutletsModule,
+    StockModule,
+    CrmModule,
   ],
   controllers: [AppController],
   providers: [AppService],

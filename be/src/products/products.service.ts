@@ -70,7 +70,6 @@ function calculateSimilarity(str1: string, str2: string): number {
 interface ListOptions {
   search?: string;
   category?: string;
-  lowStockOnly?: boolean;
   organizationIds?: string[];
   excludeRawMaterials?: boolean;
 }
@@ -116,10 +115,6 @@ export class ProductsService {
       });
     }
 
-    if (options.lowStockOnly) {
-      qb.andWhere('product.stock < product.lowStockThreshold');
-    }
-
     // Exclude raw material categories if requested (for menu/checkout)
     if (options.excludeRawMaterials) {
       // Use a subquery to exclude products where category matches any raw material category name
@@ -156,13 +151,6 @@ export class ProductsService {
   async update(id: string, dto: UpdateProductDto, organizationIds?: string[]) {
     const product = await this.findOne(id, organizationIds);
     Object.assign(product, dto);
-    return this.productRepo.save(product);
-  }
-
-  async adjustStock(id: string, delta: number, organizationIds?: string[]) {
-    const product = await this.findOne(id, organizationIds);
-    const newStock = product.stock + delta;
-    product.stock = Math.max(newStock, 0);
     return this.productRepo.save(product);
   }
 
@@ -376,8 +364,8 @@ export class ProductsService {
 
   async generateCsvTemplate(): Promise<string> {
     const rows = [
-      { name: 'Example Product', category: 'Beverages', costPrice: '10.50', sellingPrice: '15.99', stock: '100', unit: 'pieces', lowStockThreshold: '10' },
-      { name: 'Another Product', category: 'Snacks', costPrice: '5.00', sellingPrice: '8.50', stock: '50', unit: 'pieces', lowStockThreshold: '5' },
+      { name: 'Example Product', category: 'Beverages', costPrice: '10.50', sellingPrice: '15.99', unit: 'pieces', lowStockThreshold: '10' },
+      { name: 'Another Product', category: 'Snacks', costPrice: '5.00', sellingPrice: '8.50', unit: 'pieces', lowStockThreshold: '5' },
     ];
 
     return stringify(rows, { header: true });
@@ -444,10 +432,6 @@ export class ProductsService {
                     results.errors.push({ row: rowNum, error: 'Selling price must be a valid number' });
                     continue;
                   }
-                  if (row.stock === undefined || row.stock === '' || isNaN(parseInt(row.stock))) {
-                    results.errors.push({ row: rowNum, error: 'Stock must be a valid integer' });
-                    continue;
-                  }
                   if (!row.unit || !row.unit.trim()) {
                     results.errors.push({ row: rowNum, error: 'Unit is required' });
                     continue;
@@ -462,7 +446,6 @@ export class ProductsService {
                     category: row.category.trim(),
                     costPrice: parseFloat(row.costPrice),
                     sellingPrice: parseFloat(row.sellingPrice),
-                    stock: parseInt(row.stock),
                     unit: row.unit.trim(),
                     lowStockThreshold: row.lowStockThreshold
                       ? parseInt(row.lowStockThreshold)
@@ -476,7 +459,6 @@ export class ProductsService {
                       category: productData.category,
                       costPrice: productData.costPrice,
                       sellingPrice: productData.sellingPrice,
-                      stock: productData.stock,
                       unit: productData.unit,
                       lowStockThreshold: productData.lowStockThreshold,
                     });

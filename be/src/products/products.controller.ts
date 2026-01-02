@@ -21,7 +21,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { AdjustStockDto } from './dto/adjust-stock.dto';
 import { StorageService } from './storage.service';
 import { TransformMultipartPipe } from './pipes/transform-multipart.pipe';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -58,14 +57,12 @@ export class ProductsController {
     @Req() req: RequestWithUser,
     @Query('search') search?: string,
     @Query('category') category?: string,
-    @Query('lowStock') lowStock?: string,
     @Query('forMenu') forMenu?: string,
   ) {
     const organizationIds = this.getOrganizationIds(req.user);
     return this.productsService.findAll({
       search,
       category,
-      lowStockOnly: lowStock === 'true',
       organizationIds,
       excludeRawMaterials: forMenu === 'true',
     });
@@ -184,16 +181,6 @@ export class ProductsController {
       updateData.imageUrl = this.storageService.getImageUrl(file.filename);
     }
     return this.productsService.update(id, updateData, organizationIds);
-  }
-
-  @Patch(':id/stock')
-  adjustStock(
-    @Req() req: RequestWithUser,
-    @Param('id') id: string,
-    @Body() dto: AdjustStockDto,
-  ) {
-    const organizationIds = this.getOrganizationIds(req.user);
-    return this.productsService.adjustStock(id, dto.delta, organizationIds);
   }
 
   @Delete(':id')

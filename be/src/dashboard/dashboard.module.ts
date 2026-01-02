@@ -9,6 +9,7 @@ import { Expense } from '../expenses/entities/expense.entity';
 import { SalesModule } from '../sales/sales.module';
 import { ProductsModule } from '../products/products.module';
 import { ExpensesModule } from '../expenses/expenses.module';
+import { StockModule } from '../stock/stock.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ExpensesModule } from '../expenses/expenses.module';
     SalesModule,
     ProductsModule,
     ExpensesModule,
+    StockModule,
   ],
   controllers: [DashboardController],
   providers: [DashboardService],
