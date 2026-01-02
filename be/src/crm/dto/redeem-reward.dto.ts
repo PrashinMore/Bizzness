@@ -1,4 +1,4 @@
-import { IsUUID, IsString, IsOptional } from 'class-validator';
+import { IsUUID, IsString, IsOptional, IsNumber, Min } from 'class-validator';
 
 export class RedeemRewardDto {
   @IsUUID()
@@ -6,6 +6,10 @@ export class RedeemRewardDto {
 
   @IsUUID()
   rewardId!: string;
+
+  @IsNumber()
+  @Min(0)
+  billAmount!: number;
 
   @IsString()
   @IsOptional()

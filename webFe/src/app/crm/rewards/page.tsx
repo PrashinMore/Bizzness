@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { useRequireAuth } from '@/hooks/use-require-auth';
@@ -34,6 +34,7 @@ export default function RewardsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingReward, setEditingReward] = useState<Reward | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -44,6 +45,8 @@ export default function RewardsPage() {
     discountAmount: undefined as number | undefined,
     freeItemName: '',
     cashbackAmount: undefined as number | undefined,
+    minOrderValue: undefined as number | undefined,
+    maxDiscountAmount: undefined as number | undefined,
     isActive: true,
     maxRedemptions: undefined as number | undefined,
   });
@@ -83,6 +86,8 @@ export default function RewardsPage() {
       discountAmount: undefined,
       freeItemName: '',
       cashbackAmount: undefined,
+      minOrderValue: undefined,
+      maxDiscountAmount: undefined,
       isActive: true,
       maxRedemptions: undefined,
     });
@@ -100,6 +105,8 @@ export default function RewardsPage() {
       discountAmount: reward.discountAmount || undefined,
       freeItemName: reward.freeItemName || '',
       cashbackAmount: reward.cashbackAmount || undefined,
+      minOrderValue: (reward as any).minOrderValue || undefined,
+      maxDiscountAmount: (reward as any).maxDiscountAmount || undefined,
       isActive: reward.isActive,
       maxRedemptions: reward.maxRedemptions || undefined,
     });
@@ -122,8 +129,16 @@ export default function RewardsPage() {
 
       if (formData.type === 'DISCOUNT_PERCENTAGE') {
         payload.discountPercentage = formData.discountPercentage;
+        payload.maxDiscountAmount = formData.maxDiscountAmount;
+        if (formData.minOrderValue) {
+          payload.minOrderValue = formData.minOrderValue;
+        }
       } else if (formData.type === 'DISCOUNT_FIXED') {
         payload.discountAmount = formData.discountAmount;
+        payload.maxDiscountAmount = formData.maxDiscountAmount;
+        if (formData.minOrderValue) {
+          payload.minOrderValue = formData.minOrderValue;
+        }
       } else if (formData.type === 'FREE_ITEM') {
         payload.freeItemName = formData.freeItemName;
       } else if (formData.type === 'CASHBACK') {
@@ -291,12 +306,14 @@ export default function RewardsPage() {
 
         {/* Create/Edit Modal */}
         {showCreateModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl">
-              <h2 className="text-xl font-semibold text-zinc-900">
-                {editingReward ? 'Edit Reward' : 'Create Reward'}
-              </h2>
-              <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+            <div className="w-full max-w-2xl max-h-[90vh] rounded-lg bg-white shadow-xl flex flex-col">
+              <div className="px-6 pt-6 pb-4 border-b border-zinc-200">
+                <h2 className="text-xl font-semibold text-zinc-900">
+                  {editingReward ? 'Edit Reward' : 'Create Reward'}
+                </h2>
+              </div>
+              <form ref={formRef} onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-zinc-700">Name *</label>
                   <input
@@ -345,32 +362,82 @@ export default function RewardsPage() {
                 </div>
 
                 {formData.type === 'DISCOUNT_PERCENTAGE' && (
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700">Discount Percentage *</label>
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      max="100"
-                      value={formData.discountPercentage || ''}
-                      onChange={(e) => setFormData({ ...formData, discountPercentage: parseFloat(e.target.value) || undefined })}
-                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
-                    />
-                  </div>
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-700">Discount Percentage *</label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        max="100"
+                        value={formData.discountPercentage || ''}
+                        onChange={(e) => setFormData({ ...formData, discountPercentage: parseFloat(e.target.value) || undefined })}
+                        className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-700">Maximum Discount Amount (₹) *</label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        value={formData.maxDiscountAmount || ''}
+                        onChange={(e) => setFormData({ ...formData, maxDiscountAmount: parseFloat(e.target.value) || undefined })}
+                        className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      />
+                      <p className="mt-1 text-xs text-zinc-500">Maximum discount that can be applied regardless of percentage</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-700">Minimum Order Value (₹) (Optional)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.minOrderValue || ''}
+                        onChange={(e) => setFormData({ ...formData, minOrderValue: parseFloat(e.target.value) || undefined })}
+                        placeholder="Leave empty for no minimum"
+                        className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      />
+                    </div>
+                  </>
                 )}
 
                 {formData.type === 'DISCOUNT_FIXED' && (
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700">Discount Amount (₹) *</label>
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      value={formData.discountAmount || ''}
-                      onChange={(e) => setFormData({ ...formData, discountAmount: parseFloat(e.target.value) || undefined })}
-                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
-                    />
-                  </div>
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-700">Discount Amount (₹) *</label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        value={formData.discountAmount || ''}
+                        onChange={(e) => setFormData({ ...formData, discountAmount: parseFloat(e.target.value) || undefined })}
+                        className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-700">Maximum Discount Amount (₹) *</label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        value={formData.maxDiscountAmount || ''}
+                        onChange={(e) => setFormData({ ...formData, maxDiscountAmount: parseFloat(e.target.value) || undefined })}
+                        className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      />
+                      <p className="mt-1 text-xs text-zinc-500">Maximum discount that can be applied</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-700">Minimum Order Value (₹) (Optional)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.minOrderValue || ''}
+                        onChange={(e) => setFormData({ ...formData, minOrderValue: parseFloat(e.target.value) || undefined })}
+                        placeholder="Leave empty for no minimum"
+                        className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      />
+                    </div>
+                  </>
                 )}
 
                 {formData.type === 'FREE_ITEM' && (
@@ -422,22 +489,27 @@ export default function RewardsPage() {
                   <label className="text-sm font-medium text-zinc-700">Active</label>
                 </div>
 
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="submit"
-                    className="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
-                  >
-                    {editingReward ? 'Update' : 'Create'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateModal(false)}
-                    className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
-                  >
-                    Cancel
-                  </button>
-                </div>
               </form>
+              <div className="px-6 py-4 border-t border-zinc-200 flex gap-3 bg-white">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (formRef.current) {
+                      formRef.current.requestSubmit();
+                    }
+                  }}
+                  className="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+                >
+                  {editingReward ? 'Update' : 'Create'}
+                </button>
+              </div>
             </div>
           </div>
         )}

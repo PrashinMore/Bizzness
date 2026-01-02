@@ -45,8 +45,15 @@ export class SalesService {
 			0,
 		);
 		const round2 = (n: number) => Math.round(n * 100) / 100;
-		if (round2(computedTotal) !== round2(dto.totalAmount)) {
-			throw new BadRequestException('totalAmount does not match items sum');
+		
+		// Account for loyalty discount if applied
+		const loyaltyDiscountAmount = dto.loyaltyDiscountAmount ?? 0;
+		const expectedTotal = round2(computedTotal - loyaltyDiscountAmount);
+		
+		if (round2(dto.totalAmount) !== expectedTotal) {
+			throw new BadRequestException(
+				`totalAmount does not match items sum${loyaltyDiscountAmount > 0 ? ` minus discount (${loyaltyDiscountAmount})` : ''}. Expected: ${expectedTotal}, Got: ${round2(dto.totalAmount)}`
+			);
 		}
 
 		// Handle partial payments
@@ -164,6 +171,8 @@ export class SalesService {
 				outletId: outletId,
 				tableId: dto.tableId || null,
 				customerId: customerId || null,
+				loyaltyPointsRedeemed: dto.loyaltyPointsRedeemed || null,
+				loyaltyDiscountAmount: dto.loyaltyDiscountAmount ? round2(dto.loyaltyDiscountAmount) : null,
 				openedAt: dto.tableId ? new Date() : null,
 			});
 			const savedSale = await manager.getRepository(Sale).save(sale);

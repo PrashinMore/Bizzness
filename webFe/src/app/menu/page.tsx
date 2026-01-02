@@ -42,16 +42,22 @@ export default function MenuPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [crmEnabled, setCrmEnabled] = useState(false);
   const [loyaltyEnabled, setLoyaltyEnabled] = useState(false);
-  const [pointsToRedeem, setPointsToRedeem] = useState<number>(0);
-  const [redemptionPreview, setRedemptionPreview] = useState<{
-    availablePoints: number;
-    maxRedeemablePoints: number;
-    maxDiscountAmount: number;
-    redemptionRate: number;
-    minRedemptionPoints: number;
-  } | null>(null);
+  const [selectedRewardId, setSelectedRewardId] = useState<string | null>(null);
+  const [eligibleRewards, setEligibleRewards] = useState<Array<{
+    id: string;
+    name: string;
+    description?: string;
+    type: 'DISCOUNT_PERCENTAGE' | 'DISCOUNT_FIXED' | 'FREE_ITEM' | 'CASHBACK';
+    pointsRequired: number;
+    discountPercentage?: number;
+    discountAmount?: number;
+    freeItemName?: string;
+    cashbackAmount?: number;
+    minOrderValue?: number;
+    maxDiscountAmount?: number;
+  }>>([]);
   const [redemptionDiscount, setRedemptionDiscount] = useState<number>(0);
-  const [loadingRedemptionPreview, setLoadingRedemptionPreview] = useState(false);
+  const [loadingEligibleRewards, setLoadingEligibleRewards] = useState(false);
 
   // Get unique categories from all menu items for the filter dropdown
   const availableCategories = useMemo(() => {
@@ -328,59 +334,74 @@ export default function MenuPage() {
     return Math.max(0, subtotalAmount - redemptionDiscount);
   }, [subtotalAmount, redemptionDiscount]);
 
-  // Load redemption preview when customer and cart change
+  // Load eligible rewards when customer and cart change
   useEffect(() => {
-    async function loadRedemptionPreview() {
+    async function loadEligibleRewards() {
       if (
         !token ||
         !loyaltyEnabled ||
         !selectedCustomer?.loyaltyAccount ||
         subtotalAmount <= 0
       ) {
-        setRedemptionPreview(null);
-        setPointsToRedeem(0);
+        setEligibleRewards([]);
+        setSelectedRewardId(null);
         setRedemptionDiscount(0);
         return;
       }
 
-      setLoadingRedemptionPreview(true);
+      setLoadingEligibleRewards(true);
       try {
-        const preview = await crmApi.getRedemptionPreview(
+        const rewards = await crmApi.getEligibleRewards(
           token,
           selectedCustomer.id,
           subtotalAmount,
         );
-        setRedemptionPreview(preview);
-        // Reset redemption if customer changed
-        if (pointsToRedeem > preview.maxRedeemablePoints) {
-          setPointsToRedeem(0);
+        setEligibleRewards(rewards);
+        // Reset selection if current reward is no longer eligible
+        if (selectedRewardId && !rewards.find(r => r.id === selectedRewardId)) {
+          setSelectedRewardId(null);
           setRedemptionDiscount(0);
         }
       } catch (err) {
-        console.error('Failed to load redemption preview:', err);
-        setRedemptionPreview(null);
+        console.error('Failed to load eligible rewards:', err);
+        setEligibleRewards([]);
       } finally {
-        setLoadingRedemptionPreview(false);
+        setLoadingEligibleRewards(false);
       }
     }
 
-    loadRedemptionPreview();
-  }, [token, loyaltyEnabled, selectedCustomer?.id, subtotalAmount, pointsToRedeem]);
+    loadEligibleRewards();
+  }, [token, loyaltyEnabled, selectedCustomer?.id, subtotalAmount, selectedRewardId]);
 
-  // Calculate discount when points to redeem change
+  // Calculate discount when selected reward changes
   useEffect(() => {
-    if (!redemptionPreview || pointsToRedeem === 0) {
+    if (!selectedRewardId || eligibleRewards.length === 0) {
       setRedemptionDiscount(0);
       return;
     }
 
-    const discount = Math.min(
-      pointsToRedeem * redemptionPreview.redemptionRate,
-      redemptionPreview.maxDiscountAmount,
-      subtotalAmount,
-    );
+    const selectedReward = eligibleRewards.find(r => r.id === selectedRewardId);
+    if (!selectedReward) {
+      setRedemptionDiscount(0);
+      return;
+    }
+
+    let discount = 0;
+    if (selectedReward.type === 'DISCOUNT_PERCENTAGE' && selectedReward.discountPercentage) {
+      discount = (subtotalAmount * selectedReward.discountPercentage) / 100;
+    } else if (selectedReward.type === 'DISCOUNT_FIXED' && selectedReward.discountAmount) {
+      discount = selectedReward.discountAmount;
+    }
+
+    // Apply maximum discount limit
+    if (selectedReward.maxDiscountAmount && discount > selectedReward.maxDiscountAmount) {
+      discount = selectedReward.maxDiscountAmount;
+    }
+
+    // Don't exceed bill amount
+    discount = Math.min(discount, subtotalAmount);
     setRedemptionDiscount(discount);
-  }, [pointsToRedeem, redemptionPreview, subtotalAmount]);
+  }, [selectedRewardId, eligibleRewards, subtotalAmount]);
 
   const handleCheckout = async () => {
     if (!token || !user || cart.length === 0) {
@@ -425,7 +446,7 @@ export default function MenuPage() {
         setCart([]);
         router.push(`/sales/${activeSale.id}`);
       } else {
-        // Handle redemption if applicable
+        // Handle reward redemption if applicable
         let finalTotalAmount = Number(totalAmount.toFixed(2));
         let loyaltyPointsRedeemed = 0;
         let loyaltyDiscountAmount = 0;
@@ -433,25 +454,30 @@ export default function MenuPage() {
         if (
           loyaltyEnabled &&
           selectedCustomer?.loyaltyAccount &&
-          pointsToRedeem > 0 &&
+          selectedRewardId &&
           redemptionDiscount > 0
         ) {
           try {
-            const redemption = await crmApi.redeemPoints(token, {
-              customerId: selectedCustomer.id,
-              pointsToRedeem,
-              billAmount: subtotalAmount,
-            });
+            const redemption = await crmApi.redeemReward(
+              token,
+              {
+                customerId: selectedCustomer.id,
+                rewardId: selectedRewardId,
+                billAmount: subtotalAmount,
+              },
+            );
             loyaltyPointsRedeemed = redemption.pointsUsed;
             loyaltyDiscountAmount = redemption.discountAmount;
             finalTotalAmount = Number((subtotalAmount - redemption.discountAmount).toFixed(2));
             // Update selected customer with new points
             if (selectedCustomer.loyaltyAccount) {
-              selectedCustomer.loyaltyAccount.points = redemption.remainingPoints;
+              selectedCustomer.loyaltyAccount.points = redemption.pointsAfter;
             }
           } catch (err) {
-            console.error('Redemption failed:', err);
-            // Continue with checkout without redemption
+            console.error('Reward redemption failed:', err);
+            setError(err instanceof Error ? err.message : 'Failed to redeem reward. Please try again.');
+            setCheckingOut(false);
+            return;
           }
         }
 
@@ -712,32 +738,80 @@ export default function MenuPage() {
                           ⭐ {selectedCustomer.loyaltyAccount.points} points ({selectedCustomer.loyaltyAccount.tier})
                         </p>
                       )}
-                      {loyaltyEnabled && selectedCustomer.loyaltyAccount && redemptionPreview && (
+                      {loyaltyEnabled && selectedCustomer.loyaltyAccount && (
                         <div className="mt-2 pt-2 border-t border-blue-200">
-                          <p className="text-xs text-blue-700 mb-1">
-                            You can redeem up to {redemptionPreview.maxRedeemablePoints} points
-                          </p>
-                          {redemptionPreview.availablePoints >= redemptionPreview.minRedemptionPoints && (
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="number"
-                                min="0"
-                                max={redemptionPreview.maxRedeemablePoints}
-                                value={pointsToRedeem}
-                                onChange={(e) => {
-                                  const value = Math.max(0, Math.min(parseInt(e.target.value) || 0, redemptionPreview.maxRedeemablePoints));
-                                  setPointsToRedeem(value);
-                                }}
-                                placeholder="Points to redeem"
-                                className="flex-1 rounded border border-blue-200 px-2 py-1 text-xs focus:border-blue-400 focus:outline-none"
-                                disabled={loadingRedemptionPreview}
-                              />
-                              {pointsToRedeem > 0 && redemptionDiscount > 0 && (
-                                <span className="text-xs font-semibold text-green-700">
-                                  -₹{redemptionDiscount.toFixed(2)}
-                                </span>
+                          {loadingEligibleRewards ? (
+                            <p className="text-xs text-blue-600">Loading rewards...</p>
+                          ) : eligibleRewards.length === 0 ? (
+                            <p className="text-xs text-zinc-500">No eligible rewards available</p>
+                          ) : (
+                            <>
+                              <p className="text-xs text-blue-700 mb-2 font-medium">
+                                Available Rewards:
+                              </p>
+                              <div className="space-y-2">
+                                {eligibleRewards.map((reward) => {
+                                  const getRewardDesc = () => {
+                                    if (reward.type === 'DISCOUNT_PERCENTAGE') {
+                                      return `${reward.discountPercentage}% discount${reward.maxDiscountAmount ? ` (max ₹${reward.maxDiscountAmount})` : ''}`;
+                                    }
+                                    if (reward.type === 'DISCOUNT_FIXED') {
+                                      return `₹${reward.discountAmount} off${reward.maxDiscountAmount ? ` (max ₹${reward.maxDiscountAmount})` : ''}`;
+                                    }
+                                    if (reward.type === 'FREE_ITEM') {
+                                      return `Free ${reward.freeItemName}`;
+                                    }
+                                    if (reward.type === 'CASHBACK') {
+                                      return `₹${reward.cashbackAmount} cashback`;
+                                    }
+                                    return '';
+                                  };
+                                  const isSelected = selectedRewardId === reward.id;
+                                  return (
+                                    <button
+                                      key={reward.id}
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedRewardId(isSelected ? null : reward.id);
+                                      }}
+                                      className={`w-full text-left rounded border p-2 text-xs transition ${
+                                        isSelected
+                                          ? 'border-green-500 bg-green-50'
+                                          : 'border-blue-200 bg-white hover:bg-blue-50'
+                                      }`}
+                                    >
+                                      <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                          <p className={`font-medium ${isSelected ? 'text-green-900' : 'text-blue-900'}`}>
+                                            {reward.name}
+                                          </p>
+                                          <p className={`mt-0.5 ${isSelected ? 'text-green-700' : 'text-blue-700'}`}>
+                                            {getRewardDesc()}
+                                          </p>
+                                          {reward.minOrderValue && (
+                                            <p className="mt-0.5 text-zinc-500 text-[10px]">
+                                              Min order: ₹{reward.minOrderValue}
+                                            </p>
+                                          )}
+                                        </div>
+                                        <div className="ml-2 text-right">
+                                          <p className={`text-xs font-semibold ${isSelected ? 'text-green-700' : 'text-amber-700'}`}>
+                                            {reward.pointsRequired} pts
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              {selectedRewardId && redemptionDiscount > 0 && (
+                                <div className="mt-2 pt-2 border-t border-green-200">
+                                  <p className="text-xs font-semibold text-green-700">
+                                    Discount: -₹{redemptionDiscount.toFixed(2)}
+                                  </p>
+                                </div>
                               )}
-                            </div>
+                            </>
                           )}
                         </div>
                       )}

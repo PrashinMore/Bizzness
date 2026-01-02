@@ -1217,6 +1217,8 @@ export const crmApi = {
     discountAmount?: number;
     freeItemName?: string;
     cashbackAmount?: number;
+    minOrderValue?: number;
+    maxDiscountAmount?: number;
     isActive: boolean;
     maxRedemptions?: number;
     totalRedemptions: number;
@@ -1227,6 +1229,27 @@ export const crmApi = {
     const query = params.toString();
     return request(`/crm/rewards${query ? `?${query}` : ''}`, { token });
   },
+
+  getEligibleRewards: (
+    token: string,
+    customerId: string,
+    billAmount: number,
+  ): Promise<Array<{
+    id: string;
+    name: string;
+    description?: string;
+    type: 'DISCOUNT_PERCENTAGE' | 'DISCOUNT_FIXED' | 'FREE_ITEM' | 'CASHBACK';
+    pointsRequired: number;
+    discountPercentage?: number;
+    discountAmount?: number;
+    freeItemName?: string;
+    cashbackAmount?: number;
+    minOrderValue?: number;
+    maxDiscountAmount?: number;
+  }>> =>
+    request(`/crm/rewards/eligible?customerId=${customerId}&billAmount=${billAmount}`, {
+      token,
+    }),
 
   getReward: (
     token: string,
@@ -1301,6 +1324,7 @@ export const crmApi = {
     payload: {
       customerId: string;
       rewardId: string;
+      billAmount: number;
       description?: string;
     },
   ): Promise<{
@@ -1311,6 +1335,7 @@ export const crmApi = {
       tier: 'SILVER' | 'GOLD' | 'PLATINUM';
     };
     pointsUsed: number;
+    discountAmount: number;
     pointsAfter: number;
   }> =>
     request('/crm/rewards/redeem', {

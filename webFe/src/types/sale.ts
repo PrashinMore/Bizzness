@@ -18,6 +18,8 @@ export interface Sale {
   tableId?: string | null;
   openedAt?: string | null;
   closedAt?: string | null;
+  loyaltyPointsRedeemed?: number | null;
+  loyaltyDiscountAmount?: number | null;
   createdAt: string;
 }
 

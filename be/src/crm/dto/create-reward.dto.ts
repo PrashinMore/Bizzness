@@ -45,6 +45,17 @@ export class CreateRewardDto {
   @IsOptional()
   discountAmount?: number;
 
+  @ValidateIf((o) => o.type === RewardType.DISCOUNT_PERCENTAGE || o.type === RewardType.DISCOUNT_FIXED)
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  minOrderValue?: number;
+
+  @ValidateIf((o) => o.type === RewardType.DISCOUNT_PERCENTAGE || o.type === RewardType.DISCOUNT_FIXED)
+  @IsNumber()
+  @Min(0)
+  maxDiscountAmount?: number;
+
   @ValidateIf((o) => o.type === RewardType.FREE_ITEM)
   @IsString()
   @IsOptional()

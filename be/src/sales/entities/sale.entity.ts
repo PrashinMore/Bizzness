@@ -70,6 +70,12 @@ export class Sale {
 	@Column({ type: 'uuid', nullable: true })
 	customerId?: string | null;
 
+	@Column({ type: 'int', nullable: true })
+	loyaltyPointsRedeemed?: number | null;
+
+	@Column({ type: 'decimal', precision: 14, scale: 2, nullable: true })
+	loyaltyDiscountAmount?: number | null;
+
 	@CreateDateColumn()
 	createdAt: Date;
 }

@@ -11,6 +11,7 @@ import {
   UseGuards,
   ParseUUIDPipe,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { type Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -204,6 +205,24 @@ export class CrmController {
     return this.crmService.findAllRewards(organizationIds, activeOnly === 'true');
   }
 
+  @Get('rewards/eligible')
+  async getEligibleRewards(
+    @Req() req: RequestWithUser,
+    @Query('customerId', new ParseUUIDPipe({ version: '4' })) customerId: string,
+    @Query('billAmount') billAmount: string,
+  ) {
+    const organizationId = this.getFirstOrganizationId(req.user);
+    const billAmountNum = parseFloat(billAmount);
+    if (isNaN(billAmountNum) || billAmountNum < 0) {
+      throw new BadRequestException('billAmount must be a valid positive number');
+    }
+    return this.crmService.getEligibleRewards(
+      customerId,
+      billAmountNum,
+      organizationId,
+    );
+  }
+
   @Get('rewards/:id')
   async getReward(
     @Req() req: RequestWithUser,
@@ -239,11 +258,15 @@ export class CrmController {
   }
 
   @Post('rewards/redeem')
-  async redeemReward(@Req() req: RequestWithUser, @Body() dto: RedeemRewardDto) {
+  async redeemReward(
+    @Req() req: RequestWithUser,
+    @Body() dto: RedeemRewardDto & { billAmount: number },
+  ) {
     const organizationId = this.getFirstOrganizationId(req.user);
     return this.crmService.redeemReward(
       dto.customerId,
       dto.rewardId,
+      dto.billAmount,
       dto.description,
       organizationId,
     );

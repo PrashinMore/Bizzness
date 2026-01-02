@@ -295,7 +295,25 @@ export default function SaleDetailPage() {
                 <div>Table ID: {sale.tableId.slice(0, 8)}...</div>
               </div>
             )}
+            {sale.loyaltyDiscountAmount && sale.loyaltyDiscountAmount > 0 && (
+              <div className="col-span-1 sm:col-span-2">
+                <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium text-green-900">Loyalty Reward Applied</div>
+                      <div className="mt-1 text-sm text-green-700">
+                        {sale.loyaltyPointsRedeemed ? `${sale.loyaltyPointsRedeemed} points redeemed` : 'Reward discount applied'}
+                      </div>
+                    </div>
+                    <div className="text-lg font-semibold text-green-900">
+                      -₹{Number(sale.loyaltyDiscountAmount).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
+          
 
           {/* Invoice Generation Form */}
           {showInvoiceForm && !invoice && (
@@ -436,6 +454,31 @@ export default function SaleDetailPage() {
                 })}
               </tbody>
             </table>
+            {sale.loyaltyDiscountAmount && sale.loyaltyDiscountAmount > 0 && (
+              <div className="border-t border-zinc-200 bg-zinc-50 px-4 py-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-zinc-700">Subtotal</span>
+                  <span className="font-medium text-zinc-900">
+                    ₹{sale.items.reduce((sum, item) => sum + Number(item.subtotal), 0).toFixed(2)}
+                  </span>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-sm text-green-700">
+                  <span className="flex items-center gap-2">
+                    <span>Loyalty Discount</span>
+                    {sale.loyaltyPointsRedeemed && (
+                      <span className="text-xs text-green-600">
+                        ({sale.loyaltyPointsRedeemed} points)
+                      </span>
+                    )}
+                  </span>
+                  <span className="font-medium">-₹{Number(sale.loyaltyDiscountAmount).toFixed(2)}</span>
+                </div>
+                <div className="mt-2 flex items-center justify-between border-t border-zinc-200 pt-2 text-base font-semibold">
+                  <span className="text-zinc-900">Total</span>
+                  <span className="text-zinc-900">₹{Number(sale.totalAmount).toFixed(2)}</span>
+                </div>
+              </div>
+            )}
           </div>
         </section>
       )}

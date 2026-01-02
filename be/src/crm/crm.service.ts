@@ -700,6 +700,14 @@ export class CrmService {
       throw new ForbiddenException('Loyalty program is not enabled');
     }
 
+    // Validate discount rewards have maxDiscountAmount
+    if (
+      (dto.type === 'DISCOUNT_PERCENTAGE' || dto.type === 'DISCOUNT_FIXED') &&
+      !dto.maxDiscountAmount
+    ) {
+      throw new BadRequestException('maxDiscountAmount is required for discount rewards');
+    }
+
     const reward = this.rewardRepo.create({
       ...dto,
       organizationId,
@@ -725,6 +733,65 @@ export class CrmService {
     });
   }
 
+  async getEligibleRewards(
+    customerId: string,
+    billAmount: number,
+    organizationId: string,
+  ): Promise<Reward[]> {
+    await this.ensureCrmEnabled(organizationId);
+
+    const settings = await this.settingsService.getSettings(organizationId);
+    if (!settings.enableLoyalty) {
+      return [];
+    }
+
+    const customer = await this.customerRepo.findOne({
+      where: { id: customerId, organizationId },
+      relations: ['loyaltyAccount'],
+    });
+
+    if (!customer || !customer.loyaltyAccount) {
+      return [];
+    }
+
+    const availablePoints = customer.loyaltyAccount.points;
+
+    // Get all active rewards
+    const allRewards = await this.rewardRepo.find({
+      where: {
+        organizationId,
+        isActive: true,
+      },
+      order: { pointsRequired: 'ASC' },
+    });
+
+    // Filter eligible rewards
+    const eligibleRewards = allRewards.filter((reward) => {
+      // Check if customer has enough points
+      if (reward.pointsRequired > availablePoints) {
+        return false;
+      }
+
+      // Check max redemptions
+      if (reward.maxRedemptions && reward.totalRedemptions >= reward.maxRedemptions) {
+        return false;
+      }
+
+      // For discount rewards, check minimum order value
+      if (
+        (reward.type === 'DISCOUNT_PERCENTAGE' || reward.type === 'DISCOUNT_FIXED') &&
+        reward.minOrderValue &&
+        billAmount < reward.minOrderValue
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+
+    return eligibleRewards;
+  }
+
   async findOneReward(id: string, organizationIds: string[]): Promise<Reward> {
     const reward = await this.rewardRepo.findOne({
       where: { id, organizationId: In(organizationIds) },
@@ -735,6 +802,27 @@ export class CrmService {
     }
 
     return reward;
+  }
+
+  async calculateRewardDiscount(
+    reward: Reward,
+    billAmount: number,
+  ): Promise<number> {
+    let discount = 0;
+
+    if (reward.type === 'DISCOUNT_PERCENTAGE' && reward.discountPercentage) {
+      discount = (billAmount * reward.discountPercentage) / 100;
+    } else if (reward.type === 'DISCOUNT_FIXED' && reward.discountAmount) {
+      discount = reward.discountAmount;
+    }
+
+    // Apply maximum discount limit
+    if (reward.maxDiscountAmount && discount > reward.maxDiscountAmount) {
+      discount = reward.maxDiscountAmount;
+    }
+
+    // Don't exceed bill amount
+    return Math.min(discount, billAmount);
   }
 
   async updateReward(
@@ -757,12 +845,14 @@ export class CrmService {
   async redeemReward(
     customerId: string,
     rewardId: string,
+    billAmount: number,
     description: string | undefined,
     organizationId: string,
   ): Promise<{
     reward: Reward;
     loyaltyAccount: LoyaltyAccount;
     pointsUsed: number;
+    discountAmount: number;
     pointsAfter: number;
   }> {
     await this.ensureCrmEnabled(organizationId);
@@ -809,6 +899,23 @@ export class CrmService {
       );
     }
 
+    // For discount rewards, check minimum order value
+    if (
+      (reward.type === 'DISCOUNT_PERCENTAGE' || reward.type === 'DISCOUNT_FIXED') &&
+      reward.minOrderValue &&
+      billAmount < reward.minOrderValue
+    ) {
+      throw new BadRequestException(
+        `Minimum order value of ₹${reward.minOrderValue} required for this reward`,
+      );
+    }
+
+    // Calculate discount amount
+    let discountAmount = 0;
+    if (reward.type === 'DISCOUNT_PERCENTAGE' || reward.type === 'DISCOUNT_FIXED') {
+      discountAmount = await this.calculateRewardDiscount(reward, billAmount);
+    }
+
     const pointsBefore = loyaltyAccount.points;
     loyaltyAccount.points -= reward.pointsRequired;
     const pointsAfter = loyaltyAccount.points;
@@ -835,9 +942,10 @@ export class CrmService {
       organizationId,
       type: 'REDEEMED',
       points: -reward.pointsRequired,
+      discountAmount: discountAmount > 0 ? discountAmount : undefined,
       pointsBefore,
       pointsAfter: savedAccount.points,
-      description: description || `Redeemed reward: ${reward.name}`,
+      description: description || `Redeemed reward: ${reward.name}${discountAmount > 0 ? ` (₹${discountAmount} discount)` : ''}`,
     });
     await this.loyaltyTransactionRepo.save(transaction);
 
@@ -845,6 +953,7 @@ export class CrmService {
       reward,
       loyaltyAccount: savedAccount,
       pointsUsed: reward.pointsRequired,
+      discountAmount,
       pointsAfter: savedAccount.points,
     };
   }

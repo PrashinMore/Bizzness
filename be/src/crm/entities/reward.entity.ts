@@ -39,6 +39,12 @@ export class Reward {
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   discountAmount?: number | null; // For DISCOUNT_FIXED type
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  minOrderValue?: number | null; // Minimum order value required (optional, for discount types)
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  maxDiscountAmount?: number | null; // Maximum discount amount (mandatory for discount types)
+
   @Column({ type: 'varchar', length: 200, nullable: true })
   freeItemName?: string | null; // For FREE_ITEM type
 
