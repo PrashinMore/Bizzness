@@ -576,6 +576,7 @@ export default function CustomerProfilePage() {
                                   await crmApi.redeemReward(token, {
                                     customerId: customer.id,
                                     rewardId: reward.id,
+                                    billAmount: 0, // Standalone redemption - no bill amount
                                   });
                                   setShowRedeemRewardModal(false);
                                   // Reload customer data
