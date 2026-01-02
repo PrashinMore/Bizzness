@@ -41,6 +41,20 @@ Technical implementation guide for the Invoice Module, including:
 - Frontend implementation
 - Storage and security considerations
 
+### 4. Outlet Management API (Mobile)
+**File:** `outlet-management-mobile-api.md`
+
+Complete API documentation for outlet management functionality for mobile app integration, including:
+- Outlet CRUD operations
+- Outlet selection and context management
+- X-Outlet-Id header usage
+- Outlet-scoped data operations
+- Mobile app integration examples
+- React Native component examples
+- Error handling and best practices
+
+**Quick Reference:** `outlet-integration-quick-reference.md` - Quick checklist and common issues
+
 ## Adding New Documentation
 
 When creating new API integration documentation:

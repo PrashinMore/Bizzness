@@ -10,6 +10,7 @@ import { Organization } from './entities/organization.entity';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { User } from '../users/entities/user.entity';
+import { Outlet } from '../outlets/entities/outlet.entity';
 
 @Injectable()
 export class OrganizationsService {
@@ -18,6 +19,8 @@ export class OrganizationsService {
     private readonly organizationsRepository: Repository<Organization>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    @InjectRepository(Outlet)
+    private readonly outletsRepository: Repository<Outlet>,
   ) {}
 
   async create(createDto: CreateOrganizationDto, creatorId: string): Promise<Organization> {
@@ -46,6 +49,15 @@ export class OrganizationsService {
     });
 
     const saved = await this.organizationsRepository.save(organization);
+    
+    // Create default outlet for the organization
+    const defaultOutlet = this.outletsRepository.create({
+      organizationId: saved.id,
+      name: 'Main Outlet',
+      isPrimary: true,
+      isActive: true,
+    });
+    await this.outletsRepository.save(defaultOutlet);
     
     // Reload with users relation to return complete data
     return await this.organizationsRepository.findOne({

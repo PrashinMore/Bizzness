@@ -5,6 +5,7 @@ import { Expense } from '@/types/expense';
 import { Organization } from '@/types/organization';
 import { OrganizationInvite } from '@/types/invite';
 import { DiningTable, DiningTableWithOrders, TableStatus } from '@/types/table';
+import { Outlet } from '@/types/outlet';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000';
@@ -27,6 +28,14 @@ async function request<T>(
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
+  }
+
+  // Add X-Outlet-Id header if outlet is selected
+  if (typeof window !== 'undefined') {
+    const selectedOutletId = localStorage.getItem('selected-outlet-id');
+    if (selectedOutletId) {
+      headers['X-Outlet-Id'] = selectedOutletId;
+    }
   }
 
   const response = await fetch(`${API_BASE_URL}/api${path}`, {
@@ -684,6 +693,34 @@ export const organizationsApi = {
         token,
       },
     ),
+};
+
+export const outletsApi = {
+  list: (token: string): Promise<Outlet[]> =>
+    request<Outlet[]>('/outlets', { token }),
+  get: (token: string, id: string): Promise<Outlet> =>
+    request<Outlet>(`/outlets/${id}`, { token }),
+  create: (
+    token: string,
+    payload: { name: string; address?: string; contactNumber?: string; isPrimary?: boolean },
+  ): Promise<Outlet> =>
+    request<Outlet>('/outlets', {
+      method: 'POST',
+      body: payload,
+      token,
+    }),
+  update: (
+    token: string,
+    id: string,
+    payload: Partial<{ name: string; address?: string; contactNumber?: string; isPrimary?: boolean; isActive?: boolean }>,
+  ): Promise<Outlet> =>
+    request<Outlet>(`/outlets/${id}`, {
+      method: 'PATCH',
+      body: payload,
+      token,
+    }),
+  remove: (token: string, id: string): Promise<void> =>
+    request<void>(`/outlets/${id}`, { method: 'DELETE', token }),
 };
 
 export const invoicesApi = {

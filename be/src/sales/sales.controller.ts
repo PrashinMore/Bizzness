@@ -32,6 +32,7 @@ export class SalesController {
 	@Get()
 	findAll(@Req() req: RequestWithUser, @Query() query: ListSalesDto) {
 		const organizationIds = this.getOrganizationIds(req.user);
+		const outletId = (req.headers['x-outlet-id'] as string) || null;
 		return this.salesService.findAll({
 			from: query.from,
 			to: query.to,
@@ -39,6 +40,7 @@ export class SalesController {
 			staff: query.staff,
 			paymentType: query.paymentType,
 			organizationIds,
+			outletId,
 			page: query.page,
 			size: query.size,
 		});
@@ -47,18 +49,21 @@ export class SalesController {
 	@Get('totals/daily')
 	dailyTotals(@Req() req: RequestWithUser, @Query('from') from?: string, @Query('to') to?: string) {
 		const organizationIds = this.getOrganizationIds(req.user);
-		return this.salesService.dailyTotals(from, to, organizationIds);
+		const outletId = (req.headers['x-outlet-id'] as string) || null;
+		return this.salesService.dailyTotals(from, to, organizationIds, outletId);
 	}
 
 	@Get('totals/payment-type')
 	getPaymentTypeTotals(@Req() req: RequestWithUser, @Query() query: ListSalesDto) {
 		const organizationIds = this.getOrganizationIds(req.user);
+		const outletId = (req.headers['x-outlet-id'] as string) || null;
 		return this.salesService.getPaymentTypeTotals({
 			from: query.from,
 			to: query.to,
 			productId: query.productId,
 			staff: query.staff,
 			organizationIds,
+			outletId,
 			// Note: paymentType filter is intentionally excluded
 			// so we get totals for both cash and UPI
 		});
@@ -74,7 +79,8 @@ export class SalesController {
 	create(@Req() req: RequestWithUser, @Body() dto: CreateSaleDto) {
 		const organizationId = this.getFirstOrganizationId(req.user);
 		const organizationIds = this.getOrganizationIds(req.user);
-		return this.salesService.create({ ...dto, organizationId }, organizationIds);
+		const outletId = (req.headers['x-outlet-id'] as string) || null;
+		return this.salesService.create({ ...dto, organizationId, outletId }, organizationIds);
 	}
 
 	@Patch(':id')

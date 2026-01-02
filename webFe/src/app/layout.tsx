@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/contexts/auth-context';
+import { OutletProviderWrapper } from '@/components/outlet-provider-wrapper';
 import { ConditionalSideNav } from '@/components/conditional-side-nav';
 import { ConditionalContentWrapper } from '@/components/conditional-content-wrapper';
 
@@ -30,8 +31,10 @@ export default function RootLayout({
     <html lang="en">
       <body suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
-          <ConditionalSideNav />
-          <ConditionalContentWrapper>{children}</ConditionalContentWrapper>
+          <OutletProviderWrapper>
+            <ConditionalSideNav />
+            <ConditionalContentWrapper>{children}</ConditionalContentWrapper>
+          </OutletProviderWrapper>
         </AuthProvider>
       </body>
     </html>

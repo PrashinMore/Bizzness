@@ -24,7 +24,7 @@ export class SalesService {
 		private readonly settingsService: SettingsService,
 	) {}
 
-	async create(dto: CreateSaleDto & { organizationId: string }, organizationIds: string[]) {
+	async create(dto: CreateSaleDto & { organizationId: string; outletId?: string | null }, organizationIds: string[]) {
 		// Basic consistency checks
 		const computedTotal = dto.items.reduce(
 			(sum, i) => sum + i.sellingPrice * i.quantity,
@@ -126,6 +126,7 @@ export class SalesService {
 				upiAmount: round2(upiAmount),
 				isPaid: dto.isPaid ?? isPaid,
 				organizationId: dto.organizationId,
+				outletId: dto.outletId || null,
 				tableId: dto.tableId || null,
 				openedAt: dto.tableId ? new Date() : null,
 			});
@@ -168,6 +169,7 @@ export class SalesService {
 		staff?: string;
 		paymentType?: string;
 		organizationIds?: string[];
+		outletId?: string | null;
 		page?: number;
 		size?: number;
 	}): Promise<{ sales: Sale[]; total: number }> {
@@ -182,6 +184,10 @@ export class SalesService {
 			});
 		} else if (filters.organizationIds && filters.organizationIds.length === 0) {
 			qb.andWhere('1 = 0');
+		}
+
+		if (filters.outletId) {
+			qb.andWhere('sale.outletId = :outletId', { outletId: filters.outletId });
 		}
 
 		if (filters.from) {
@@ -211,7 +217,7 @@ export class SalesService {
 		return { sales, total };
 	}
 
-	async dailyTotals(from?: string, to?: string, organizationIds?: string[]) {
+	async dailyTotals(from?: string, to?: string, organizationIds?: string[], outletId?: string | null) {
 		const qb = this.saleRepo
 			.createQueryBuilder('sale')
 			.select("DATE_TRUNC('day', sale.date)", 'day')
@@ -225,6 +231,10 @@ export class SalesService {
 			});
 		} else if (organizationIds && organizationIds.length === 0) {
 			qb.andWhere('1 = 0');
+		}
+
+		if (outletId) {
+			qb.andWhere('sale.outletId = :outletId', { outletId });
 		}
 
 		if (from) qb.andWhere('sale.date >= :from', { from });
@@ -258,6 +268,7 @@ export class SalesService {
 		productId?: string;
 		staff?: string;
 		organizationIds?: string[];
+		outletId?: string | null;
 	}) {
 		const qb = this.saleRepo
 			.createQueryBuilder('sale')
@@ -271,6 +282,10 @@ export class SalesService {
 			});
 		} else if (filters.organizationIds && filters.organizationIds.length === 0) {
 			qb.andWhere('1 = 0');
+		}
+
+		if (filters.outletId) {
+			qb.andWhere('sale.outletId = :outletId', { outletId: filters.outletId });
 		}
 
 		if (filters.from) {

@@ -31,11 +31,13 @@ export class ExpensesController {
 	@Get()
 	findAll(@Req() req: RequestWithUser, @Query() query: ListExpensesDto) {
 		const organizationIds = this.getOrganizationIds(req.user);
+		const outletId = (req.headers['x-outlet-id'] as string) || null;
 		return this.expensesService.findAll({
 			from: query.from,
 			to: query.to,
 			category: query.category,
 			organizationIds,
+			outletId,
 			page: query.page,
 			size: query.size,
 		});
@@ -44,13 +46,15 @@ export class ExpensesController {
 	@Get('summary/monthly')
 	monthly(@Req() req: RequestWithUser, @Query('from') from?: string, @Query('to') to?: string) {
 		const organizationIds = this.getOrganizationIds(req.user);
-		return this.expensesService.monthlySummary(from, to, organizationIds);
+		const outletId = (req.headers['x-outlet-id'] as string) || null;
+		return this.expensesService.monthlySummary(from, to, organizationIds, outletId);
 	}
 
 	@Post()
 	create(@Req() req: RequestWithUser, @Body() dto: CreateExpenseDto) {
 		const organizationId = this.getFirstOrganizationId(req.user);
-		return this.expensesService.create({ ...dto, organizationId });
+		const outletId = (req.headers['x-outlet-id'] as string) || null;
+		return this.expensesService.create({ ...dto, organizationId, outletId });
 	}
 
 	@Patch(':id')

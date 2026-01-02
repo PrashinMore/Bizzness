@@ -34,6 +34,9 @@ export class Expense {
 	@Column({ type: 'uuid' })
 	organizationId!: string;
 
+	@Column({ type: 'uuid', nullable: true })
+	outletId?: string | null;
+
 	@CreateDateColumn()
 	createdAt: Date;
 }

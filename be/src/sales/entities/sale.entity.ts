@@ -54,6 +54,9 @@ export class Sale {
 	@Column({ type: 'uuid' })
 	organizationId!: string;
 
+	@Column({ type: 'uuid', nullable: true })
+	outletId?: string | null;
+
 	@Column({ type: 'timestamptz', nullable: true })
 	openedAt?: Date | null;
 

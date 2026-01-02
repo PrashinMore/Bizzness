@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
+import { useOutlet } from '@/contexts/outlet-context';
 import { settingsApi, type Settings } from '@/lib/api-client';
 
 export function SideNav() {
@@ -11,6 +12,7 @@ export function SideNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { token, logout } = useAuth();
+  const { selectedOutlet, outlets, setSelectedOutlet, loading: outletsLoading } = useOutlet();
   const [settings, setSettings] = useState<Settings | null>(null);
 
   useEffect(() => {
@@ -84,7 +86,7 @@ export function SideNav() {
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex h-14 items-center justify-between gap-3 px-4">
+        <div className="flex h-14 items-center justify-between gap-3 px-4 border-b border-zinc-200">
           <div className="flex items-center gap-3">
             {businessLogo && (
               <img
@@ -115,6 +117,27 @@ export function SideNav() {
             )}
           </button>
         </div>
+        {!outletsLoading && outlets.length > 1 && (
+          <div className="border-b border-zinc-200 px-4 py-2">
+            <label className="block text-xs font-medium text-zinc-700 mb-1">
+              Outlet
+            </label>
+            <select
+              value={selectedOutlet?.id || ''}
+              onChange={(e) => {
+                const outlet = outlets.find((o) => o.id === e.target.value);
+                if (outlet) setSelectedOutlet(outlet);
+              }}
+              className="w-full rounded border border-zinc-300 bg-white px-2 py-1.5 text-xs text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            >
+              {outlets.map((outlet) => (
+                <option key={outlet.id} value={outlet.id}>
+                  {outlet.name} {outlet.isPrimary && '(Primary)'}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <nav className="flex h-[calc(100vh-3.5rem)] flex-col">
           <div className="flex-1 space-y-1 overflow-y-auto px-2 py-2">
             <Link href="/dashboard" className={linkClasses('/dashboard')} prefetch={false}>
@@ -140,6 +163,9 @@ export function SideNav() {
                 Tables
               </Link>
             )}
+            <Link href="/dashboard/outlets" className={linkClasses('/dashboard/outlets')} prefetch={false}>
+              Outlets
+            </Link>
           <Link href="/settings" className={linkClasses('/settings')} prefetch={false}>
             Settings
           </Link>

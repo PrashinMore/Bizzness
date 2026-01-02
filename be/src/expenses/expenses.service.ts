@@ -12,7 +12,7 @@ export class ExpensesService {
 		private readonly expenseRepo: Repository<Expense>,
 	) {}
 
-	async create(dto: CreateExpenseDto & { organizationId: string }): Promise<Expense> {
+	async create(dto: CreateExpenseDto & { organizationId: string; outletId?: string | null }): Promise<Expense> {
 		const entity = this.expenseRepo.create({
 			category: dto.category,
 			amount: Math.round(dto.amount * 100) / 100,
@@ -20,17 +20,21 @@ export class ExpensesService {
 			date: new Date(dto.date),
 			addedBy: dto.addedBy,
 			organizationId: dto.organizationId,
+			outletId: dto.outletId ?? null,
 		});
 		return this.expenseRepo.save(entity);
 	}
 
-	private applyFilters(qb: SelectQueryBuilder<Expense>, filters: { from?: string; to?: string; category?: string; organizationIds?: string[] }) {
+	private applyFilters(qb: SelectQueryBuilder<Expense>, filters: { from?: string; to?: string; category?: string; organizationIds?: string[]; outletId?: string | null }) {
 		if (filters.organizationIds && filters.organizationIds.length > 0) {
 			qb.andWhere('expense.organizationId IN (:...organizationIds)', {
 				organizationIds: filters.organizationIds,
 			});
 		} else if (filters.organizationIds && filters.organizationIds.length === 0) {
 			qb.andWhere('1 = 0');
+		}
+		if (filters.outletId) {
+			qb.andWhere('expense.outletId = :outletId', { outletId: filters.outletId });
 		}
 		if (filters.from) qb.andWhere('expense.date >= :from', { from: filters.from });
 		if (filters.to) qb.andWhere('expense.date <= :to', { to: filters.to });
@@ -42,6 +46,7 @@ export class ExpensesService {
 		to?: string; 
 		category?: string; 
 		organizationIds?: string[];
+		outletId?: string | null;
 		page?: number;
 		size?: number;
 	}): Promise<{ expenses: Expense[]; total: number }> {
@@ -61,7 +66,7 @@ export class ExpensesService {
 		return { expenses, total };
 	}
 
-	async monthlySummary(from?: string, to?: string, organizationIds?: string[]): Promise<{ month: string; total: string }[]> {
+	async monthlySummary(from?: string, to?: string, organizationIds?: string[], outletId?: string | null): Promise<{ month: string; total: string }[]> {
 		const qb = this.expenseRepo
 			.createQueryBuilder('expense')
 			.select("TO_CHAR(DATE_TRUNC('month', expense.date), 'YYYY-MM')", 'month')
@@ -74,6 +79,9 @@ export class ExpensesService {
 			});
 		} else if (organizationIds && organizationIds.length === 0) {
 			qb.andWhere('1 = 0');
+		}
+		if (outletId) {
+			qb.andWhere('expense.outletId = :outletId', { outletId });
 		}
 		if (from) qb.andWhere('expense.date >= :from', { from });
 		if (to) qb.andWhere('expense.date <= :to', { to });
