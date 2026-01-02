@@ -76,6 +76,10 @@ export class CreateSaleDto {
 
 	@IsString()
 	@IsOptional()
+	customerName?: string;
+
+	@IsString()
+	@IsOptional()
 	@IsIn(['DINE_IN', 'TAKEAWAY', 'DELIVERY'])
 	visitType?: 'DINE_IN' | 'TAKEAWAY' | 'DELIVERY';
 }

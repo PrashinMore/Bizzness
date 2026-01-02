@@ -52,6 +52,7 @@ export class CrmService {
 
     let customer = await this.customerRepo.findOne({
       where: { phone: normalizedPhone, organizationId },
+      relations: ['loyaltyAccount'],
     });
 
     if (!customer) {
@@ -79,9 +80,15 @@ export class CrmService {
         });
         await this.loyaltyRepo.save(loyaltyAccount);
       }
+
+      // Reload with loyalty account relation
+      customer = await this.customerRepo.findOne({
+        where: { id: customer.id },
+        relations: ['loyaltyAccount'],
+      });
     }
 
-    return customer;
+    return customer!;
   }
 
   async createCustomer(

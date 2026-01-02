@@ -142,6 +142,7 @@ export class SalesService {
 					const customer = await this.crmService.findOrCreateCustomer(
 						dto.customerPhone,
 						dto.organizationId,
+						dto.customerName ? { name: dto.customerName } : undefined,
 					);
 					customerId = customer.id;
 				} catch (error) {

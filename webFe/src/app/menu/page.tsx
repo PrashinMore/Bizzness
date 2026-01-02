@@ -3,10 +3,11 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useRequireAuth } from '@/hooks/use-require-auth';
-import { productsApi, salesApi, tablesApi, settingsApi, stockApi } from '@/lib/api-client';
+import { productsApi, salesApi, tablesApi, settingsApi, stockApi, crmApi } from '@/lib/api-client';
 import type { Product } from '@/types/product';
 import type { DiningTable } from '@/types/table';
 import type { Sale } from '@/types/sale';
+import type { Customer } from '@/types/crm';
 import { useRouter } from 'next/navigation';
 
 type CartItem = {
@@ -37,6 +38,8 @@ export default function MenuPage() {
   const [activeSale, setActiveSale] = useState<Sale | null>(null);
   const [loadingActiveSale, setLoadingActiveSale] = useState(false);
   const [customerPhone, setCustomerPhone] = useState<string>('');
+  const [customerName, setCustomerName] = useState<string>('');
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [crmEnabled, setCrmEnabled] = useState(false);
 
   // Get unique categories from all menu items for the filter dropdown
@@ -76,6 +79,48 @@ export default function MenuPage() {
       loadSettingsAndTables();
     }
   }, [loading, user, token]);
+
+  // Search for customer when phone number changes
+  useEffect(() => {
+    async function searchCustomer() {
+      if (!token || !crmEnabled || !customerPhone.trim()) {
+        setSelectedCustomer(null);
+        return;
+      }
+
+      const normalizedPhone = customerPhone.replace(/\D/g, '');
+      if (normalizedPhone.length < 10) {
+        setSelectedCustomer(null);
+        return;
+      }
+
+      try {
+        const response = await crmApi.listCustomers(token, {
+          search: normalizedPhone,
+          size: 10,
+        });
+        
+        // Find exact phone match
+        const exactMatch = response.customers.find(
+          (c) => c.phone.replace(/\D/g, '') === normalizedPhone
+        );
+        
+        if (exactMatch) {
+          setSelectedCustomer(exactMatch);
+          setCustomerName(''); // Clear name input if customer found
+        } else {
+          setSelectedCustomer(null);
+        }
+      } catch (err) {
+        console.error('Failed to search customer:', err);
+        setSelectedCustomer(null);
+      }
+    }
+
+    // Debounce search
+    const timeoutId = setTimeout(searchCustomer, 500);
+    return () => clearTimeout(timeoutId);
+  }, [token, crmEnabled, customerPhone]);
 
   // Load all menu items initially to populate category dropdown
   useEffect(() => {
@@ -323,7 +368,14 @@ export default function MenuPage() {
           paymentType: paymentType,
           isPaid: isPaid,
           tableId: selectedTableId || undefined,
-          customerPhone: customerPhone.trim() || undefined,
+          ...(selectedCustomer
+            ? { customerId: selectedCustomer.id }
+            : customerPhone.trim()
+            ? {
+                customerPhone: customerPhone.trim(),
+                ...(customerName.trim() && { customerName: customerName.trim() }),
+              }
+            : {}),
           visitType: 'DINE_IN' as const,
         };
 
@@ -332,6 +384,8 @@ export default function MenuPage() {
         setSelectedTableId('');
         setActiveSale(null);
         setCustomerPhone('');
+        setCustomerName('');
+        setSelectedCustomer(null);
         router.push(`/sales/${created.id}`);
       }
     } catch (err) {
@@ -527,21 +581,60 @@ export default function MenuPage() {
             <h2 className="text-xl font-semibold text-zinc-900">Cart</h2>
 
             {crmEnabled && (
-              <div className="mt-4">
-                <label className="mb-2 block text-sm font-medium text-zinc-700">
-                  Customer Phone (Optional)
-                </label>
-                <input
-                  type="tel"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  placeholder="Enter customer phone number"
-                  className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
-                />
-                <p className="mt-1 text-xs text-zinc-500">
-                  Customer will be automatically created/linked if phone is provided
-                </p>
-              </div>
+              <>
+                <div className="mt-4">
+                  <label className="mb-2 block text-sm font-medium text-zinc-700">
+                    Customer Phone (Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    placeholder="Enter customer phone number"
+                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  />
+                  {selectedCustomer ? (
+                    <div className="mt-2 rounded-lg bg-blue-50 border border-blue-200 p-3">
+                      <p className="text-sm font-medium text-blue-900">
+                        {selectedCustomer.name}
+                      </p>
+                      <p className="text-xs text-blue-700 mt-1">
+                        {selectedCustomer.phone}
+                      </p>
+                      {selectedCustomer.loyaltyAccount && (
+                        <p className="text-xs text-amber-700 mt-1 font-semibold">
+                          ⭐ {selectedCustomer.loyaltyAccount.points} points ({selectedCustomer.loyaltyAccount.tier})
+                        </p>
+                      )}
+                    </div>
+                  ) : customerPhone.trim() ? (
+                    <p className="mt-1 text-xs text-blue-600">
+                      New customer will be created
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-xs text-zinc-500">
+                      Customer will be automatically created/linked if phone is provided
+                    </p>
+                  )}
+                </div>
+                {customerPhone.trim() && !selectedCustomer && (
+                  <div className="mt-4">
+                    <label className="mb-2 block text-sm font-medium text-zinc-700">
+                      Customer Name (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder="Enter customer name"
+                      className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                    />
+                    <p className="mt-1 text-xs text-zinc-500">
+                      Leave empty to create customer as "Guest"
+                    </p>
+                  </div>
+                )}
+              </>
             )}
 
             {tablesEnabled && (
