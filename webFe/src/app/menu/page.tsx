@@ -516,7 +516,7 @@ export default function MenuPage() {
         setCustomerPhone('');
         setCustomerName('');
         setSelectedCustomer(null);
-        setPointsToRedeem(0);
+        setSelectedRewardId(null);
         setRedemptionDiscount(0);
         router.push(`/sales/${created.id}`);
       }
