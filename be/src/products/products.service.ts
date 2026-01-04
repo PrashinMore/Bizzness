@@ -6,6 +6,7 @@ import { GlobalProduct } from './entities/global-product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Category } from '../categories/entities/category.entity';
+import { StockService } from '../stock/stock.service';
 import csv from 'csv-parser';
 import { stringify } from 'csv-stringify/sync';
 import { Readable } from 'stream';
@@ -84,11 +85,20 @@ export class ProductsService {
     @InjectRepository(GlobalProduct)
     private readonly globalProductRepo: Repository<GlobalProduct>,
     private readonly dataSource: DataSource,
+    private readonly stockService: StockService,
   ) {}
 
-  create(dto: CreateProductDto & { organizationId: string }) {
-    const product = this.productRepo.create(dto);
-    return this.productRepo.save(product);
+  async create(dto: CreateProductDto & { organizationId: string; outletId?: string }) {
+    const { stock, outletId, ...productData } = dto;
+    const product = this.productRepo.create(productData);
+    const savedProduct = await this.productRepo.save(product);
+
+    // If stock is provided and outletId is available, create stock entry
+    if (stock !== undefined && stock !== null && outletId) {
+      await this.stockService.setStock(savedProduct.id, outletId, stock);
+    }
+
+    return savedProduct;
   }
 
   async findAll(options: ListOptions = {}) {

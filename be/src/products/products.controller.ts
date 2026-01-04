@@ -27,6 +27,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { SanitizedUser } from '../users/users.types';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { OutletsService } from '../outlets/outlets.service';
 
 type RequestWithUser = Request & { user: SanitizedUser };
 
@@ -36,6 +37,7 @@ export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
     private readonly storageService: StorageService,
+    private readonly outletsService: OutletsService,
   ) {}
 
   private getOrganizationIds(user: SanitizedUser): string[] {
@@ -140,10 +142,21 @@ export class ProductsController {
     @UploadedFile() file?: Express.Multer.File,
   ) {
     const organizationId = this.getFirstOrganizationId(req.user);
+    // Use outletId from header, or fall back to body
+    let outletId = (req.headers['x-outlet-id'] as string) || dto.outletId || undefined;
+    
+    // If no outletId provided and stock is being set, try to use the only outlet
+    if (!outletId && dto.stock !== undefined && dto.stock !== null) {
+      const outlets = await this.outletsService.getOrganizationOutlets(organizationId);
+      if (outlets.length === 1) {
+        outletId = outlets[0].id;
+      }
+    }
+    
     const imageUrl = file
       ? this.storageService.getImageUrl(file.filename)
       : null;
-    return this.productsService.create({ ...dto, imageUrl, organizationId });
+    return this.productsService.create({ ...dto, imageUrl, organizationId, outletId });
   }
 
   @Patch(':id')

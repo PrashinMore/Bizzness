@@ -1,4 +1,4 @@
-import { IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsInt, IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateProductDto {
@@ -30,5 +30,15 @@ export class CreateProductDto {
   @IsString()
   @IsOptional()
   imageUrl?: string | null;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  stock?: number;
+
+  @IsUUID()
+  @IsOptional()
+  outletId?: string;
 }
 
