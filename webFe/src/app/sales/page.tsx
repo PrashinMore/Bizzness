@@ -7,6 +7,12 @@ import { productsApi, salesApi, usersApi } from '@/lib/api-client';
 import type { Sale } from '@/types/sale';
 import type { Product } from '@/types/product';
 import type { User } from '@/types/user';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { TextInput, SelectInput } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { DataTable, DataTableBody, DataTableCell, DataTableHead, DataTableHeaderCell } from '@/components/ui/table';
+import { PageHeader, PageShell } from '@/components/ui/shell';
 
 export default function SalesListPage() {
   const { token } = useAuth();
@@ -92,60 +98,61 @@ export default function SalesListPage() {
   }, [load]);
 
   return (
-    <main className="mx-auto max-w-6xl p-6 space-y-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Sales</h1>
+    <PageShell className="py-8">
+      <div className="mx-auto max-w-6xl space-y-6">
+      <PageHeader>
+        <div>
+          <h1 className="text-2xl font-semibold text-zinc-900">Sales</h1>
+          <p className="mt-1 text-sm text-zinc-600">Track transactions, payment mix, and staff performance.</p>
+        </div>
         <div className="flex gap-2">
         <Link
           href="/invoices"
-          className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700"
+          className="inline-flex"
         >
-          Invoices
+          <Button variant="secondary">Invoices</Button>
         </Link>
         <Link
           href="/sales/new"
-          className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700"
+          className="inline-flex"
         >
-          New Sale
+          <Button>New Sale</Button>
         </Link>
           </div>
-      </header>
+      </PageHeader>
 
-      <section className="rounded border border-zinc-200 p-4">
+      <Card>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-5">
           <div className="flex flex-col gap-1">
             <label className="text-sm text-zinc-600">From</label>
-            <input
+            <TextInput
               type="date"
               value={from}
               onChange={(e) => {
                 setFrom(e.target.value);
                 setPage(1);
               }}
-              className="rounded border border-zinc-300 px-3 py-2"
             />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm text-zinc-600">To</label>
-            <input
+            <TextInput
               type="date"
               value={to}
               onChange={(e) => {
                 setTo(e.target.value);
                 setPage(1);
               }}
-              className="rounded border border-zinc-300 px-3 py-2"
             />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm text-zinc-600">Product</label>
-            <select
+            <SelectInput
               value={productId}
               onChange={(e) => {
                 setProductId(e.target.value);
                 setPage(1);
               }}
-              className="rounded border border-zinc-300 px-3 py-2"
             >
               <option value="">All</option>
               {products.map((p) => (
@@ -153,11 +160,11 @@ export default function SalesListPage() {
                   {p.name}
                 </option>
               ))}
-            </select>
+            </SelectInput>
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm text-zinc-600">Staff</label>
-            <input
+            <TextInput
               type="text"
               value={staff}
               onChange={(e) => {
@@ -165,33 +172,28 @@ export default function SalesListPage() {
                 setPage(1);
               }}
               placeholder="Name or ID"
-              className="rounded border border-zinc-300 px-3 py-2"
             />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm text-zinc-600">Payment Type</label>
-            <select
+            <SelectInput
               value={paymentType}
               onChange={(e) => {
                 setPaymentType(e.target.value);
                 setPage(1);
               }}
-              className="rounded border border-zinc-300 px-3 py-2"
             >
               <option value="">All</option>
               <option value="cash">Cash</option>
               <option value="UPI">UPI</option>
-            </select>
+            </SelectInput>
           </div>
         </div>
         <div className="mt-3 flex gap-2">
-          <button
-            onClick={load}
-            className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700"
-          >
+          <Button onClick={load}>
             Apply
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => {
               setFrom('');
               setTo('');
@@ -200,12 +202,12 @@ export default function SalesListPage() {
               setPaymentType('');
               setPage(1);
             }}
-            className="rounded border border-zinc-300 px-4 py-2 hover:bg-zinc-50"
+            variant="secondary"
           >
             Reset
-          </button>
+          </Button>
         </div>
-      </section>
+      </Card>
 
       {error && (
         <div className="rounded border border-red-300 bg-red-50 p-3 text-red-700">
@@ -216,75 +218,65 @@ export default function SalesListPage() {
       {/* Payment Type Totals */}
       {paymentTotals && (
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+          <Card>
             <div className="text-sm uppercase tracking-widest text-zinc-700">
               Cash Payments
             </div>
             <div className="mt-2 text-2xl font-semibold text-zinc-900">
               ₹{paymentTotals.cash.toFixed(2)}
             </div>
-          </div>
-          <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+          </Card>
+          <Card>
             <div className="text-sm uppercase tracking-widest text-zinc-700">
               UPI Payments
             </div>
             <div className="mt-2 text-2xl font-semibold text-zinc-900">
               ₹{paymentTotals.UPI.toFixed(2)}
             </div>
-          </div>
-          <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+          </Card>
+          <Card>
             <div className="text-sm uppercase tracking-widest text-zinc-700">
               Total
             </div>
             <div className="mt-2 text-2xl font-semibold text-zinc-900">
               ₹{paymentTotals.total.toFixed(2)}
             </div>
-          </div>
+          </Card>
         </section>
       )}
 
-      <section className="overflow-x-auto rounded border border-zinc-200">
-        <table className="min-w-full divide-y divide-zinc-200">
-          <thead className="bg-zinc-50">
+      <Card className="hidden p-0 md:block overflow-x-auto">
+        <DataTable className="divide-y divide-zinc-200">
+          <DataTableHead>
             <tr>
-              <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
-                Date
-              </th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
-                Items
-              </th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
-                Total
-              </th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
-                Payment Type
-              </th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
-                Sold By
-              </th>
-              <th className="px-4 py-2"></th>
+              <DataTableHeaderCell>Date</DataTableHeaderCell>
+              <DataTableHeaderCell>Items</DataTableHeaderCell>
+              <DataTableHeaderCell>Total</DataTableHeaderCell>
+              <DataTableHeaderCell>Payment Type</DataTableHeaderCell>
+              <DataTableHeaderCell>Sold By</DataTableHeaderCell>
+              <DataTableHeaderCell />
             </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-200 bg-white">
+          </DataTableHead>
+          <DataTableBody>
             {(loading ? [] : sales).map((s) => (
               <tr key={s.id || Math.random().toString(36)}>
-                <td className="px-4 py-2 text-sm">
+                <DataTableCell>
                   {new Date(s.date).toLocaleString()}
-                </td>
-                <td className="px-4 py-2 text-sm">
+                </DataTableCell>
+                <DataTableCell>
                   {s.items.reduce((sum, it) => sum + it.quantity, 0)} items
-                </td>
-                <td className="px-4 py-2 text-sm">₹ {Number(s.totalAmount).toFixed(2)}</td>
-                <td className="px-4 py-2 text-sm">
-                  <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-zinc-100 text-zinc-800">
+                </DataTableCell>
+                <DataTableCell>₹ {Number(s.totalAmount).toFixed(2)}</DataTableCell>
+                <DataTableCell>
+                  <Badge>
                     {s.paymentType || 'cash'}
-                  </span>
-                </td>
-                <td className="px-4 py-2 text-sm">{userMap.get(s.soldBy)?.name || s.soldBy}</td>
-                <td className="px-4 py-2 text-sm">
+                  </Badge>
+                </DataTableCell>
+                <DataTableCell>{userMap.get(s.soldBy)?.name || s.soldBy}</DataTableCell>
+                <DataTableCell>
                   {s.id ? (
                     <Link
-                      className="text-zinc-900 underline"
+                      className="text-brand-700 underline"
                       href={`/sales/${s.id}`}
                     >
                       View
@@ -292,49 +284,69 @@ export default function SalesListPage() {
                   ) : (
                     <span className="text-zinc-700">No ID</span>
                   )}
-                </td>
+                </DataTableCell>
               </tr>
             ))}
             {loading && (
               <tr>
-                <td className="px-4 py-6 text-center text-sm text-zinc-700" colSpan={6}>
+                <DataTableCell className="py-6 text-center text-sm text-zinc-700" colSpan={6}>
                   Loading...
-                </td>
+                </DataTableCell>
               </tr>
             )}
             {!loading && sales.length === 0 && (
               <tr>
-                <td className="px-4 py-6 text-center text-sm text-zinc-700" colSpan={6}>
+                <DataTableCell className="py-6 text-center text-sm text-zinc-700" colSpan={6}>
                   No sales found
-                </td>
+                </DataTableCell>
               </tr>
             )}
-          </tbody>
-        </table>
-      </section>
+          </DataTableBody>
+        </DataTable>
+      </Card>
+
+      <div className="grid gap-3 md:hidden">
+        {(loading ? [] : sales).map((s) => (
+          <Card key={s.id || Math.random().toString(36)}>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="text-sm font-semibold text-zinc-900">₹{Number(s.totalAmount).toFixed(2)}</p>
+                <p className="text-xs text-zinc-600">{new Date(s.date).toLocaleString()}</p>
+              </div>
+              <Badge>{s.paymentType || 'cash'}</Badge>
+            </div>
+            <p className="mt-3 text-sm text-zinc-700">{s.items.reduce((sum, it) => sum + it.quantity, 0)} items</p>
+            <p className="text-sm text-zinc-700">Sold by {userMap.get(s.soldBy)?.name || s.soldBy}</p>
+            {s.id && <Link className="mt-2 inline-block text-sm font-medium text-brand-700 underline" href={`/sales/${s.id}`}>View details</Link>}
+          </Card>
+        ))}
+        {loading && <Card><p className="text-center text-sm text-zinc-700">Loading...</p></Card>}
+        {!loading && sales.length === 0 && <Card><p className="text-center text-sm text-zinc-700">No sales found</p></Card>}
+      </div>
 
       {Math.ceil(total / size) > 1 && (
         <div className="flex items-center justify-center gap-2">
-          <button
+          <Button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="rounded border border-zinc-300 px-4 py-2 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="secondary"
           >
             Previous
-          </button>
+          </Button>
           <span className="text-sm text-zinc-600">
             Page {page} of {Math.ceil(total / size)}
           </span>
-          <button
+          <Button
             onClick={() => setPage((p) => Math.min(Math.ceil(total / size), p + 1))}
             disabled={page >= Math.ceil(total / size)}
-            className="rounded border border-zinc-300 px-4 py-2 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="secondary"
           >
             Next
-          </button>
+          </Button>
         </div>
       )}
-    </main>
+      </div>
+    </PageShell>
   );
 }
 

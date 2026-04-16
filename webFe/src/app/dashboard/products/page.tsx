@@ -6,6 +6,10 @@ import { useRequireAuth } from '@/hooks/use-require-auth';
 import { productsApi, stockApi } from '@/lib/api-client';
 import { Product } from '@/types/product';
 import { Stock } from '@/types/stock';
+import { PageHeader, PageShell } from '@/components/ui/shell';
+import { Card, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { InlineAlert, LoadingState, EmptyState } from '@/components/ui/states';
 
 type CreateProductState = {
   name: string;
@@ -403,23 +407,23 @@ export default function ProductsPage() {
 
   if (loading || !user || !token) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-zinc-50">
+      <main className="flex min-h-screen items-center justify-center bg-app">
         <p className="text-sm text-zinc-700">Loading product dashboard…</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-6 py-12">
+    <PageShell className="py-8 md:py-10">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
-        <header className="rounded-3xl bg-white p-6 shadow-sm">
+        <PageHeader>
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-widest text-zinc-700">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">
                 Inventory
               </p>
               <h1 className="text-3xl font-semibold text-zinc-900">
-                Product & stock managementsss
+                Product & stock management
               </h1>
               <p className="mt-2 text-sm text-zinc-700">
                 Track costs, selling prices, and ensure you never run out of stock.
@@ -444,22 +448,22 @@ export default function ProductsPage() {
               </p>
             </div>
           </div>
-        </header>
+        </PageHeader>
 
         {/* CSV Bulk Import Section */}
-        <section className="rounded-3xl bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-900">Bulk Import Products</h2>
+        <Card>
+          <CardTitle>Bulk Import Products</CardTitle>
           <p className="mt-1 text-sm text-zinc-700">
             Import multiple products at once using a CSV file. Existing products with the same name will be updated.
           </p>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-            <button
+            <Button
               type="button"
               onClick={handleDownloadTemplate}
-              className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+              variant="secondary"
             >
               📥 Download Template
-            </button>
+            </Button>
             <label className="flex cursor-pointer items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
               <input
                 type="file"
@@ -502,11 +506,11 @@ export default function ProductsPage() {
               )}
             </div>
           )}
-        </section>
+        </Card>
 
         <section className="grid gap-6 md:grid-cols-2">
-          <article className="rounded-3xl bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-zinc-900">Add a product</h2>
+          <Card>
+            <CardTitle>Add a product</CardTitle>
             <p className="mt-1 text-sm text-zinc-700">
               Create new SKUs with costs, selling price, and stock thresholds.
             </p>
@@ -613,20 +617,19 @@ export default function ProductsPage() {
                   </div>
                 )}
               </div>
-              <button
+              <Button
                 type="submit"
                 disabled={creating}
-                className="rounded-full bg-zinc-900 px-6 py-2 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {creating ? 'Saving…' : 'Add product'}
-              </button>
+              </Button>
             </form>
-          </article>
+          </Card>
 
-          <article className="rounded-3xl bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-zinc-900">
+          <Card>
+            <CardTitle>
               Search & filters
-            </h2>
+            </CardTitle>
             <form className="mt-4 space-y-4" onSubmit={handleFiltersSubmit}>
               <input
                 placeholder="Search by name"
@@ -665,56 +668,53 @@ export default function ProductsPage() {
                 Show only low-stock items
               </label>
               <div className="flex gap-3">
-                <button
+                <Button
                   type="submit"
-                  className="flex-1 rounded-full bg-zinc-900 px-6 py-2 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-zinc-700"
+                  className="flex-1"
                 >
                   Apply filters
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
                   onClick={() => {
                     setFilters(initialFilters);
                     setAppliedFilters(initialFilters);
                   }}
-                  className="flex-1 rounded-full border border-zinc-200 px-6 py-2 text-sm font-semibold uppercase tracking-wide text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900"
+                  variant="secondary"
+                  className="flex-1"
                 >
                   Reset
-                </button>
+                </Button>
               </div>
             </form>
-          </article>
+          </Card>
         </section>
 
-        <section className="rounded-3xl bg-white p-6 shadow-sm">
+        <Card>
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <h2 className="text-lg font-semibold text-zinc-900">
-              Inventory overview
-            </h2>
+            <CardTitle>Inventory overview</CardTitle>
             <span className="text-sm text-zinc-700">
               {fetching ? 'Refreshing…' : `${products.length} items`}
             </span>
           </div>
 
           {statusMessage ? (
-            <p className="mt-4 rounded-md border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-600">
+            <InlineAlert tone="success" className="mt-4">
               {statusMessage}
-            </p>
+            </InlineAlert>
           ) : null}
 
           {error ? (
-            <p className="mt-4 rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+            <InlineAlert className="mt-4">
               {error}
-            </p>
+            </InlineAlert>
           ) : null}
 
           <div className="mt-6 space-y-4">
             {fetching ? (
-              <p className="text-sm text-zinc-700">Loading products…</p>
+              <LoadingState message="Loading products…" className="justify-start py-2" />
             ) : products.length === 0 ? (
-              <p className="text-sm text-zinc-700">
-                No products found. Create one using the form above.
-              </p>
+              <EmptyState title="No products found" description="Create one using the form above." />
             ) : (
               products
                 .filter((product) => {
@@ -802,22 +802,24 @@ export default function ProductsPage() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <button
+                        <Button
                           onClick={() =>
                             setEditingProductId((prev) =>
                               prev === product.id ? null : product.id,
                             )
                           }
-                          className="rounded-full border border-zinc-200 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900"
+                          variant="secondary"
+                          size="sm"
                         >
                           {isEditing ? 'Close' : 'Edit'}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           onClick={() => handleDelete(product.id)}
-                          className="rounded-full border border-red-200 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-red-600 transition hover:border-red-400 hover:text-red-700"
+                          variant="danger"
+                          size="sm"
                         >
                           Delete
-                        </button>
+                        </Button>
                       </div>
                     </div>
 
@@ -839,14 +841,15 @@ export default function ProductsPage() {
                             placeholder="+/- units"
                             className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
                           />
-                          <button
+                          <Button
                             type="button"
                             onClick={() => handleAdjustStock(product.id)}
                             disabled={adjusting[product.id]}
-                            className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60"
+                            variant="secondary"
+                            size="sm"
                           >
                             {adjusting[product.id] ? 'Updating…' : 'Apply'}
-                          </button>
+                          </Button>
                         </div>
                       </div>
                       <div>
@@ -963,14 +966,14 @@ export default function ProductsPage() {
                           )}
                         </div>
                         <div className="md:col-span-2 flex gap-3">
-                          <button
+                          <Button
                             onClick={() => handleUpdate(product.id)}
                             disabled={saving}
-                            className="flex-1 rounded-full bg-zinc-900 px-6 py-2 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-70"
+                            className="flex-1"
                           >
                             {saving ? 'Saving…' : 'Save changes'}
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
                             onClick={() => {
                               setEditingProductId(null);
@@ -996,10 +999,11 @@ export default function ProductsPage() {
                                 return next;
                               });
                             }}
-                            className="flex-1 rounded-full border border-zinc-200 px-6 py-2 text-sm font-semibold uppercase tracking-wide text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900"
+                            variant="secondary"
+                            className="flex-1"
                           >
                             Cancel
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     ) : null}
@@ -1008,9 +1012,9 @@ export default function ProductsPage() {
               })
             )}
           </div>
-        </section>
+        </Card>
       </div>
-    </main>
+    </PageShell>
   );
 }
 

@@ -5,6 +5,12 @@ import { useAuth } from '@/contexts/auth-context';
 import { useEffect, useMemo, useState } from 'react';
 import { expensesApi } from '@/lib/api-client';
 import type { Expense } from '@/types/expense';
+import { Button } from '@/components/ui/button';
+import { Card, CardTitle } from '@/components/ui/card';
+import { DataTable, DataTableBody, DataTableCell, DataTableHead, DataTableHeaderCell } from '@/components/ui/table';
+import { SelectInput, TextInput } from '@/components/ui/input';
+import { InlineAlert, EmptyState, LoadingState } from '@/components/ui/states';
+import { PageHeader, PageShell } from '@/components/ui/shell';
 
 export default function ExpensesListPage() {
   const { token } = useAuth();
@@ -53,46 +59,45 @@ export default function ExpensesListPage() {
   }, [load]);
 
   return (
-    <main className="mx-auto max-w-6xl p-6 space-y-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Expenses</h1>
-        <Link
-          href="/expenses/new"
-          className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700"
-        >
-          Add Expense
+    <PageShell className="py-8">
+      <div className="mx-auto max-w-6xl space-y-6">
+      <PageHeader>
+        <div>
+          <h1 className="text-2xl font-semibold text-zinc-900">Expenses</h1>
+          <p className="mt-1 text-sm text-zinc-600">Monitor operational spending and keep profitability visible.</p>
+        </div>
+        <Link href="/expenses/new" className="inline-flex">
+          <Button>Add Expense</Button>
         </Link>
-      </header>
+      </PageHeader>
 
-      <section className="rounded border border-zinc-200 p-4">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+      <Card>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
           <div className="flex flex-col gap-1">
             <label className="text-sm text-zinc-600">From</label>
-            <input
+            <TextInput
               type="date"
               value={from}
               onChange={(e) => {
                 setFrom(e.target.value);
                 setPage(1);
               }}
-              className="rounded border border-zinc-300 px-3 py-2"
             />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm text-zinc-600">To</label>
-            <input
+            <TextInput
               type="date"
               value={to}
               onChange={(e) => {
                 setTo(e.target.value);
                 setPage(1);
               }}
-              className="rounded border border-zinc-300 px-3 py-2"
             />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm text-zinc-600">Category</label>
-            <input
+            <TextInput
               type="text"
               value={category}
               onChange={(e) => {
@@ -100,136 +105,144 @@ export default function ExpensesListPage() {
                 setPage(1);
               }}
               placeholder="rent, salary, utilities"
-              className="rounded border border-zinc-300 px-3 py-2"
             />
           </div>
         </div>
         <div className="mt-3 flex gap-2">
-          <button
-            onClick={load}
-            className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700"
-          >
-            Apply
-          </button>
-          <button
+          <Button onClick={load}>Apply</Button>
+          <Button
             onClick={() => {
               setFrom('');
               setTo('');
               setCategory('');
               setPage(1);
             }}
-            className="rounded border border-zinc-300 px-4 py-2 hover:bg-zinc-50"
+            variant="secondary"
           >
             Reset
-          </button>
+          </Button>
         </div>
-      </section>
+      </Card>
 
       {error && (
-        <div className="rounded border border-red-300 bg-red-50 p-3 text-red-700">
+        <InlineAlert>
           {error}
-        </div>
+        </InlineAlert>
       )}
 
       <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <article className="rounded-3xl bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-900">Monthly Summary</h2>
+        <Card>
+          <CardTitle>Monthly Summary</CardTitle>
           <div className="mt-4 overflow-x-auto">
-            <table className="min-w-full divide-y divide-zinc-200">
-              <thead className="bg-zinc-50">
+            <DataTable className="divide-y divide-zinc-200">
+              <DataTableHead>
                 <tr>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">Month</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">Total</th>
+                  <DataTableHeaderCell>Month</DataTableHeaderCell>
+                  <DataTableHeaderCell>Total</DataTableHeaderCell>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-200 bg-white">
+              </DataTableHead>
+              <DataTableBody>
                 {monthly.map((m) => (
                   <tr key={m.month}>
-                    <td className="px-4 py-2 text-sm">{m.month}</td>
-                    <td className="px-4 py-2 text-sm">₹ {Number(m.total).toFixed(2)}</td>
+                    <DataTableCell>{m.month}</DataTableCell>
+                    <DataTableCell>₹ {Number(m.total).toFixed(2)}</DataTableCell>
                   </tr>
                 ))}
-                {!loading && monthly.length === 0 && (
-                  <tr>
-                    <td className="px-4 py-6 text-center text-sm text-zinc-700" colSpan={2}>
-                      No data
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+              </DataTableBody>
+            </DataTable>
+            {!loading && monthly.length === 0 && (
+              <EmptyState title="No summary yet" description="Add expenses to see monthly trends." />
+            )}
           </div>
-        </article>
+        </Card>
 
-        <article className="rounded-3xl bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-900">All Expenses</h2>
+        <Card className="hidden md:block">
+          <CardTitle>All Expenses</CardTitle>
           <div className="mt-4 overflow-x-auto">
-            <table className="min-w-full divide-y divide-zinc-200">
-              <thead className="bg-zinc-50">
+            <DataTable className="divide-y divide-zinc-200">
+              <DataTableHead>
                 <tr>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">Date</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">Category</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">Amount</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">Note</th>
-                  <th className="px-4 py-2"></th>
+                  <DataTableHeaderCell>Date</DataTableHeaderCell>
+                  <DataTableHeaderCell>Category</DataTableHeaderCell>
+                  <DataTableHeaderCell>Amount</DataTableHeaderCell>
+                  <DataTableHeaderCell>Note</DataTableHeaderCell>
+                  <DataTableHeaderCell />
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-200 bg-white">
+              </DataTableHead>
+              <DataTableBody>
                 {(loading ? [] : expenses).map((e) => (
                   <tr key={e.id}>
-                    <td className="px-4 py-2 text-sm">{new Date(e.date).toLocaleString()}</td>
-                    <td className="px-4 py-2 text-sm">{e.category}</td>
-                    <td className="px-4 py-2 text-sm">₹ {Number(e.amount).toFixed(2)}</td>
-                    <td className="px-4 py-2 text-sm">{e.note || '-'}</td>
-                    <td className="px-4 py-2 text-sm">
-                      <Link className="text-zinc-900 underline" href={`/expenses/${e.id}`}>
+                    <DataTableCell>{new Date(e.date).toLocaleString()}</DataTableCell>
+                    <DataTableCell>{e.category}</DataTableCell>
+                    <DataTableCell>₹ {Number(e.amount).toFixed(2)}</DataTableCell>
+                    <DataTableCell>{e.note || '-'}</DataTableCell>
+                    <DataTableCell>
+                      <Link className="text-brand-700 underline" href={`/expenses/${e.id}`}>
                         Edit
                       </Link>
-                    </td>
+                    </DataTableCell>
                   </tr>
                 ))}
                 {loading && (
                   <tr>
-                    <td className="px-4 py-6 text-center text-sm text-zinc-700" colSpan={5}>
-                      Loading...
-                    </td>
+                    <DataTableCell colSpan={5}><LoadingState className="py-6" /></DataTableCell>
                   </tr>
                 )}
-                {!loading && expenses.length === 0 && (
-                  <tr>
-                    <td className="px-4 py-6 text-center text-sm text-zinc-700" colSpan={5}>
-                      No expenses found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+              </DataTableBody>
+            </DataTable>
+            {!loading && expenses.length === 0 && (
+              <EmptyState title="No expenses found" description="Try changing filters or add your first expense." />
+            )}
           </div>
-        </article>
+        </Card>
       </section>
+
+      <div className="grid gap-3 md:hidden">
+        <Card>
+          <CardTitle>All Expenses</CardTitle>
+          <div className="mt-4 space-y-3">
+            {(loading ? [] : expenses).map((e) => (
+              <div key={e.id} className="rounded-xl border border-zinc-200 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-zinc-900">₹{Number(e.amount).toFixed(2)}</p>
+                  <p className="text-xs text-zinc-500">{new Date(e.date).toLocaleDateString()}</p>
+                </div>
+                <p className="mt-1 text-sm text-zinc-700">{e.category}</p>
+                <p className="mt-1 text-xs text-zinc-600">{e.note || 'No notes'}</p>
+                <Link className="mt-2 inline-block text-sm font-medium text-brand-700 underline" href={`/expenses/${e.id}`}>
+                  Edit
+                </Link>
+              </div>
+            ))}
+            {loading && <LoadingState />}
+            {!loading && expenses.length === 0 && <EmptyState title="No expenses found" />}
+          </div>
+        </Card>
+      </div>
 
       {Math.ceil(total / size) > 1 && (
         <div className="flex items-center justify-center gap-2">
-          <button
+          <Button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="rounded border border-zinc-300 px-4 py-2 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="secondary"
           >
             Previous
-          </button>
+          </Button>
           <span className="text-sm text-zinc-600">
             Page {page} of {Math.ceil(total / size)}
           </span>
-          <button
+          <Button
             onClick={() => setPage((p) => Math.min(Math.ceil(total / size), p + 1))}
             disabled={page >= Math.ceil(total / size)}
-            className="rounded border border-zinc-300 px-4 py-2 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="secondary"
           >
             Next
-          </button>
+          </Button>
         </div>
       )}
-    </main>
+      </div>
+    </PageShell>
   );
 }
 

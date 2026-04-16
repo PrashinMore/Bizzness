@@ -10,10 +10,10 @@ export function ConditionalContentWrapper({
   const { user, loading } = useAuth();
 
   // Only apply padding when user is logged in (side nav is visible)
-  const paddingClass = !loading && user ? 'md:pl-56' : '';
+  const paddingClass = !loading && user ? 'md:pl-64 pb-20 md:pb-0' : '';
 
   return (
-    <div className={`min-h-screen bg-zinc-50 ${paddingClass}`}>
+    <div className={`min-h-screen bg-app ${paddingClass}`}>
       {children}
     </div>
   );

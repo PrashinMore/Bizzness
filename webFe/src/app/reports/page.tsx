@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useRequireAuth } from '@/hooks/use-require-auth';
 import { reportsApi } from '@/lib/api-client';
+import { PageHeader, PageShell } from '@/components/ui/shell';
+import { Button } from '@/components/ui/button';
+import { InlineAlert, LoadingState } from '@/components/ui/states';
+import { Card } from '@/components/ui/card';
 
 type Tab = 'sales' | 'profit-loss' | 'inventory' | 'expenses';
 
@@ -147,7 +151,7 @@ export default function ReportsPage() {
 
   if (loading || !user || !token) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-zinc-50">
+      <main className="flex min-h-screen items-center justify-center bg-app">
         <p className="text-sm text-zinc-700">Loading…</p>
       </main>
     );
@@ -155,66 +159,69 @@ export default function ReportsPage() {
 
   if (user.role !== 'admin') {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-zinc-50">
+      <main className="flex min-h-screen items-center justify-center bg-app">
         <p className="text-sm text-red-600">Access denied. Admin only.</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-6 py-12">
+    <PageShell className="py-8 md:py-10">
       <div className="mx-auto w-full max-w-7xl">
-        <header className="mb-8">
-          <h1 className="text-3xl font-semibold text-zinc-900">Reports & Insights</h1>
-          <p className="mt-2 text-sm text-zinc-700">
-            Analyze your business performance and export data
-          </p>
-        </header>
+        <PageHeader className="mb-8">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Reports</p>
+            <h1 className="text-3xl font-semibold text-zinc-900">Reports & Insights</h1>
+            <p className="mt-2 text-sm text-zinc-700">
+              Analyze your business performance and export data
+            </p>
+          </div>
+        </PageHeader>
 
         {error && (
-          <div className="mb-4 rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+          <InlineAlert className="mb-4">
             {error}
-          </div>
+          </InlineAlert>
         )}
 
         {/* Tabs */}
-        <div className="mb-6 flex gap-2 border-b border-zinc-200">
+        <div className="mb-6 flex flex-wrap gap-2 rounded-xl border border-zinc-200 bg-white p-2">
           <button
             onClick={() => setActiveTab('sales')}
-            className={`px-4 py-2 text-sm font-medium transition ${
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
               activeTab === 'sales'
-                ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-700 hover:text-zinc-900'
+                ? 'bg-brand-50 text-brand-700'
+                : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'
             }`}
           >
             Sales Report
           </button>
           <button
             onClick={() => setActiveTab('profit-loss')}
-            className={`px-4 py-2 text-sm font-medium transition ${
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
               activeTab === 'profit-loss'
-                ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-700 hover:text-zinc-900'
+                ? 'bg-brand-50 text-brand-700'
+                : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'
             }`}
           >
             Profit & Loss
           </button>
           <button
             onClick={() => setActiveTab('inventory')}
-            className={`px-4 py-2 text-sm font-medium transition ${
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
               activeTab === 'inventory'
-                ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-700 hover:text-zinc-900'
+                ? 'bg-brand-50 text-brand-700'
+                : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'
             }`}
           >
             Inventory
           </button>
           <button
             onClick={() => setActiveTab('expenses')}
-            className={`px-4 py-2 text-sm font-medium transition ${
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
               activeTab === 'expenses'
-                ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-700 hover:text-zinc-900'
+                ? 'bg-brand-50 text-brand-700'
+                : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'
             }`}
           >
             Expenses
@@ -223,7 +230,7 @@ export default function ReportsPage() {
 
         {/* Date Filters (for reports that need them) */}
         {(activeTab === 'sales' || activeTab === 'profit-loss' || activeTab === 'expenses') && (
-          <div className="mb-6 flex gap-4 rounded-lg bg-white p-4 shadow-sm">
+          <Card className="mb-6 flex gap-4">
             <div>
               <label className="block text-xs font-medium text-zinc-700">From Date</label>
               <input
@@ -244,22 +251,17 @@ export default function ReportsPage() {
             </div>
             {activeTab === 'sales' && (
               <div className="flex items-end">
-                <button
-                  onClick={handleExportCSV}
-                  className="rounded-lg border border-zinc-300 bg-white px-4 py-1.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
-                >
+                <Button onClick={handleExportCSV} variant="secondary">
                   Export CSV
-                </button>
+                </Button>
               </div>
             )}
-          </div>
+          </Card>
         )}
 
-        <div className="rounded-3xl bg-white p-6 shadow-sm">
+        <Card>
           {loadingReport ? (
-            <div className="flex items-center justify-center py-12">
-              <p className="text-sm text-zinc-700">Loading report…</p>
-            </div>
+            <LoadingState className="py-12" message="Loading report..." />
           ) : (
             <>
               {/* Sales Report */}
@@ -588,9 +590,9 @@ export default function ReportsPage() {
               )}
             </>
           )}
-        </div>
+        </Card>
       </div>
-    </main>
+    </PageShell>
   );
 }
 
