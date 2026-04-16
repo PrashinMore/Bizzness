@@ -2,7 +2,6 @@ import {
 	ArrayMinSize,
 	IsArray,
 	IsBoolean,
-	IsDateString,
 	IsIn,
 	IsNotEmpty,
 	IsNumber,
@@ -29,7 +28,8 @@ class CreateSaleItemDto {
 }
 
 export class CreateSaleDto {
-	@IsDateString()
+	@IsString()
+	@IsNotEmpty()
 	date: string;
 
 	@IsArray()

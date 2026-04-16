@@ -30,6 +30,28 @@ export class SalesService {
 		private readonly stockService: StockService,
 	) {}
 
+	private normalizeSaleDate(input: string): Date {
+		const value = String(input || '').trim();
+		if (!value) {
+			throw new BadRequestException('date is required');
+		}
+
+		// Accept plain YYYY-MM-DD from clients and normalize safely.
+		if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+			const d = new Date(`${value}T12:00:00.000Z`);
+			if (Number.isNaN(d.getTime())) {
+				throw new BadRequestException('Invalid date value');
+			}
+			return d;
+		}
+
+		const d = new Date(value);
+		if (Number.isNaN(d.getTime())) {
+			throw new BadRequestException('Invalid date value');
+		}
+		return d;
+	}
+
 	async create(dto: CreateSaleDto & { organizationId: string; outletId?: string | null }, organizationIds: string[]) {
 		// Validate outletId is provided
 		if (!dto.outletId) {
@@ -92,6 +114,7 @@ export class SalesService {
 		}
 
 		const isPaid = round2(totalPaid) === round2(dto.totalAmount);
+		const normalizedSaleDate = this.normalizeSaleDate(dto.date);
 
 		return this.dataSource.transaction(async (manager) => {
 			const productIds = dto.items.map((i) => i.productId);
@@ -160,7 +183,7 @@ export class SalesService {
 
 			// Create sale + items
 			const sale = manager.getRepository(Sale).create({
-				date: new Date(dto.date),
+				date: normalizedSaleDate,
 				totalAmount: round2(dto.totalAmount),
 				soldBy: dto.soldBy,
 				paymentType: paymentType,
