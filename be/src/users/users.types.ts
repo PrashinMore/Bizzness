@@ -6,5 +6,6 @@ export interface AuthTokenResponse {
   accessToken: string;
   refreshToken: string;
   user: SanitizedUser;
+  needsOrganization: boolean;
 }
 

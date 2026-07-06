@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
+import { userHasOrganization } from '@/types/user';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function SignupPage() {
   useEffect(() => {
     if (!loading && user) {
       // Check if user has organizations
-      const hasOrganizations = user.organizations && user.organizations.length > 0;
+      const hasOrganizations = userHasOrganization(user);
       if (hasOrganizations) {
         router.replace('/dashboard');
       } else {

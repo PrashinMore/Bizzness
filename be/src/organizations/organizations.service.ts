@@ -57,13 +57,18 @@ export class OrganizationsService {
       isPrimary: true,
       isActive: true,
     });
-    await this.outletsRepository.save(defaultOutlet);
+    const savedDefaultOutlet = await this.outletsRepository.save(defaultOutlet);
     
     // Reload with users relation to return complete data
-    return await this.organizationsRepository.findOne({
+    const createdOrganization = await this.organizationsRepository.findOne({
       where: { id: saved.id },
       relations: ['users'],
     }) || saved;
+
+    // Keep response backward-compatible while exposing default outlet for immediate app hydration.
+    return Object.assign(createdOrganization, {
+      defaultOutlet: savedDefaultOutlet,
+    }) as Organization;
   }
 
   async findAll(userId: string, userRole: string): Promise<Organization[]> {

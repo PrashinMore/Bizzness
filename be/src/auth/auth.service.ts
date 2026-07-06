@@ -13,27 +13,49 @@ import { SignupDto } from './dto/signup.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AuthTokenResponse, SanitizedUser } from '../users/users.types';
 import { JWT_CONFIG } from './jwt.config';
+import { InvitesService } from '../organizations/invites.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly invitesService: InvitesService,
   ) {}
 
   async signup(signupDto: SignupDto): Promise<AuthTokenResponse> {
-    const user = await this.usersService.create(
+    const userHasInvite = await this.invitesService.hasPendingInviteForEmail(
+      signupDto.email,
+    );
+
+    const createdUser = await this.usersService.create(
       {
         name: signupDto.name,
         email: signupDto.email,
         password: signupDto.password,
+        role: userHasInvite ? 'staff' : 'admin',
       },
-      { allowAdminRole: false },
+      { allowAdminRole: true },
     );
+
+    await this.invitesService.consumePendingInvitesForEmail(
+      createdUser.email,
+      createdUser.id,
+    );
+
+    const user = await this.usersService.findById(createdUser.id);
+    if (!user) {
+      throw new UnauthorizedException('User no longer exists');
+    }
 
     const accessToken = await this.generateToken(user);
     const refreshToken = await this.generateAndSaveRefreshToken(user.id);
-    return { user, accessToken, refreshToken };
+    return {
+      user,
+      accessToken,
+      refreshToken,
+      needsOrganization: !user.organizations?.length,
+    };
   }
 
   async login(loginDto: LoginDto): Promise<AuthTokenResponse> {
@@ -51,9 +73,24 @@ export class AuthService {
       throw new UnauthorizedException('User no longer exists');
     }
 
-    const accessToken = await this.generateToken(sanitized);
-    const refreshToken = await this.generateAndSaveRefreshToken(sanitized.id);
-    return { user: sanitized, accessToken, refreshToken };
+    await this.invitesService.consumePendingInvitesForEmail(
+      sanitized.email,
+      sanitized.id,
+    );
+
+    const refreshedUser = await this.usersService.findById(sanitized.id);
+    if (!refreshedUser) {
+      throw new UnauthorizedException('User no longer exists');
+    }
+
+    const accessToken = await this.generateToken(refreshedUser);
+    const refreshToken = await this.generateAndSaveRefreshToken(refreshedUser.id);
+    return {
+      user: refreshedUser,
+      accessToken,
+      refreshToken,
+      needsOrganization: !refreshedUser.organizations?.length,
+    };
   }
 
   async refreshToken(refreshToken: string): Promise<AuthTokenResponse> {
@@ -78,8 +115,13 @@ export class AuthService {
     // Generate new tokens
     const accessToken = await this.generateToken(sanitized);
     const newRefreshToken = await this.generateAndSaveRefreshToken(sanitized.id);
-    
-    return { user: sanitized, accessToken, refreshToken: newRefreshToken };
+
+    return {
+      user: sanitized,
+      accessToken,
+      refreshToken: newRefreshToken,
+      needsOrganization: !sanitized.organizations?.length,
+    };
   }
 
   async resetPassword(

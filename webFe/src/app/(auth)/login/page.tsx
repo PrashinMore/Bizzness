@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
+import { userHasOrganization } from '@/types/user';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, user, loading, error } = useAuth();
+  const { login, user, loading, error, refreshProfile } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -15,7 +16,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace('/dashboard');
+      if (userHasOrganization(user)) {
+        router.replace('/dashboard');
+      } else {
+        router.replace('/dashboard/organizations');
+      }
     }
   }, [user, loading, router]);
 
@@ -25,7 +30,7 @@ export default function LoginPage() {
     setLocalError(null);
     try {
       await login(email, password);
-      router.push('/dashboard');
+      await refreshProfile();
     } catch (err) {
       if (err instanceof Error) {
         setLocalError(err.message);

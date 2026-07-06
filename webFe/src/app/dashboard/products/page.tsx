@@ -4,12 +4,13 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useRequireAuth } from '@/hooks/use-require-auth';
 import { productsApi, stockApi } from '@/lib/api-client';
-import { Product } from '@/types/product';
+import { Product, InventoryType } from '@/types/product';
 import { Stock } from '@/types/stock';
 import { PageHeader, PageShell } from '@/components/ui/shell';
 import { Card, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { InlineAlert, LoadingState, EmptyState } from '@/components/ui/states';
+import { RecipeEditor } from '@/components/recipe-editor';
 
 type CreateProductState = {
   name: string;
@@ -18,6 +19,13 @@ type CreateProductState = {
   sellingPrice: string;
   unit: string;
   lowStockThreshold: string;
+  /**
+   * Inventory behavior fields — default to the "SIMPLE, tracked" combo so
+   * existing muscle memory for staff isn't disrupted. The UI hides fields
+   * conditionally based on these two flags (see render section below).
+   */
+  trackInventory: boolean;
+  inventoryType: InventoryType;
 };
 
 const blankProduct: CreateProductState = {
@@ -27,18 +35,27 @@ const blankProduct: CreateProductState = {
   sellingPrice: '',
   unit: '',
   lowStockThreshold: '10',
+  trackInventory: true,
+  inventoryType: 'SIMPLE',
 };
 
 type FilterState = {
   search: string;
   category: string;
   lowStockOnly: boolean;
+  /**
+   * Client-side inventory-type filter. 'ALL' = no filter. 'SIMPLE' doubles as
+   * the "raw materials only" view for kitchen staff — the usual pattern is
+   * that raw ingredients are tracked SIMPLE, while menu dishes are RECIPE.
+   */
+  inventoryType: 'ALL' | InventoryType;
 };
 
 const initialFilters: FilterState = {
   search: '',
   category: '',
   lowStockOnly: false,
+  inventoryType: 'ALL',
 };
 
 export default function ProductsPage() {
@@ -67,6 +84,10 @@ export default function ProductsPage() {
 
   const [adjustInputs, setAdjustInputs] = useState<Record<string, string>>({});
   const [adjusting, setAdjusting] = useState<Record<string, boolean>>({});
+
+  // Recipe editor drawer state. We keep the whole product object (not just the
+  // id) so the modal has the name/context for its header without re-lookup.
+  const [recipeEditorProduct, setRecipeEditorProduct] = useState<Product | null>(null);
 
   // CSV bulk import state
   const [importing, setImporting] = useState(false);
@@ -119,6 +140,8 @@ export default function ProductsPage() {
             sellingPrice: product.sellingPrice.toString(),
             unit: product.unit,
             lowStockThreshold: product.lowStockThreshold.toString(),
+            trackInventory: product.trackInventory ?? true,
+            inventoryType: product.inventoryType ?? 'SIMPLE',
           },
         ]),
       );
@@ -163,6 +186,8 @@ export default function ProductsPage() {
         sellingPrice: Number(createState.sellingPrice),
         unit: createState.unit.trim(),
         lowStockThreshold: Number(createState.lowStockThreshold || '0'),
+        trackInventory: createState.trackInventory,
+        inventoryType: createState.inventoryType,
         imageUrl: null,
       };
       const created = await productsApi.create(token, payload, createImageFile || undefined);
@@ -215,6 +240,8 @@ export default function ProductsPage() {
         sellingPrice: Number(form.sellingPrice),
         unit: form.unit.trim(),
         lowStockThreshold: Number(form.lowStockThreshold),
+        trackInventory: form.trackInventory,
+        inventoryType: form.inventoryType,
       };
       const updated = await productsApi.update(token, id, payload, editImageFiles[id] || undefined);
       setProducts((prev) =>
@@ -229,6 +256,8 @@ export default function ProductsPage() {
           sellingPrice: updated.sellingPrice.toString(),
           unit: updated.unit,
           lowStockThreshold: updated.lowStockThreshold.toString(),
+          trackInventory: updated.trackInventory ?? true,
+          inventoryType: updated.inventoryType ?? 'SIMPLE',
         },
       }));
       setEditImageFiles((prev) => {
@@ -331,8 +360,15 @@ export default function ProductsPage() {
     [products],
   );
 
+  // Only SIMPLE, tracked products have a meaningful "low stock" signal — RECIPE
+  // items derive availability from ingredients, NONE items have no stock row.
   const lowStockCount = useMemo(
     () => products.filter((product) => {
+      const inventoryType = product.inventoryType ?? 'SIMPLE';
+      const tracked = product.trackInventory ?? true;
+      if (!tracked || inventoryType !== 'SIMPLE') {
+        return false;
+      }
       const stock = stocks.get(product.id);
       const stockQuantity = stock?.quantity ?? 0;
       return stockQuantity < product.lowStockThreshold;
@@ -571,19 +607,66 @@ export default function ProductsPage() {
                 }
                 className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
               />
-              <input
-                type="number"
-                min="0"
-                placeholder="Low stock warning threshold"
-                value={createState.lowStockThreshold}
-                onChange={(event) =>
-                  setCreateState((prev) => ({
-                    ...prev,
-                    lowStockThreshold: event.target.value,
-                  }))
-                }
-                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
-              />
+              {createState.trackInventory && createState.inventoryType !== 'NONE' && (
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Low stock warning threshold"
+                  value={createState.lowStockThreshold}
+                  onChange={(event) =>
+                    setCreateState((prev) => ({
+                      ...prev,
+                      lowStockThreshold: event.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                />
+              )}
+
+              {/* Inventory behavior controls. `trackInventory` is the master switch
+                  so services (e.g. a dine-in charge) can bypass stock logic entirely.
+                  `inventoryType` decides how stock is deducted on sale. */}
+              <label className="flex items-center gap-3 text-sm text-zinc-700">
+                <input
+                  type="checkbox"
+                  checked={createState.trackInventory}
+                  onChange={(event) =>
+                    setCreateState((prev) => ({
+                      ...prev,
+                      trackInventory: event.target.checked,
+                      inventoryType: event.target.checked ? prev.inventoryType : 'NONE',
+                    }))
+                  }
+                  className="h-4 w-4 rounded border-zinc-300"
+                />
+                Track inventory for this product
+              </label>
+              {createState.trackInventory && (
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-600">
+                    Inventory type
+                  </label>
+                  <select
+                    value={createState.inventoryType}
+                    onChange={(event) =>
+                      setCreateState((prev) => ({
+                        ...prev,
+                        inventoryType: event.target.value as InventoryType,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  >
+                    <option value="SIMPLE">Simple – deduct this product from stock</option>
+                    <option value="RECIPE">Recipe – deduct ingredients instead</option>
+                    <option value="NONE">None – never deduct stock</option>
+                  </select>
+                  {createState.inventoryType === 'RECIPE' && (
+                    <p className="mt-2 text-xs text-zinc-500">
+                      You&apos;ll be able to attach a recipe after the product is saved.
+                    </p>
+                  )}
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-zinc-700 mb-2">
                   Product Image (optional)
@@ -667,6 +750,26 @@ export default function ProductsPage() {
                 />
                 Show only low-stock items
               </label>
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-600">
+                  Inventory type
+                </label>
+                <select
+                  value={filters.inventoryType}
+                  onChange={(event) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      inventoryType: event.target.value as 'ALL' | InventoryType,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm"
+                >
+                  <option value="ALL">All products</option>
+                  <option value="SIMPLE">Raw materials (simple)</option>
+                  <option value="RECIPE">Recipe dishes</option>
+                  <option value="NONE">Not tracked</option>
+                </select>
+              </div>
               <div className="flex gap-3">
                 <Button
                   type="submit"
@@ -718,6 +821,12 @@ export default function ProductsPage() {
             ) : (
               products
                 .filter((product) => {
+                  if (appliedFilters.inventoryType !== 'ALL') {
+                    const invType = product.inventoryType ?? 'SIMPLE';
+                    if (invType !== appliedFilters.inventoryType) {
+                      return false;
+                    }
+                  }
                   if (!appliedFilters.lowStockOnly) return true;
                   const stock = stocks.get(product.id);
                   const stockQuantity = stock?.quantity ?? 0;
@@ -733,7 +842,11 @@ export default function ProductsPage() {
                   sellingPrice: product.sellingPrice.toString(),
                   unit: product.unit,
                   lowStockThreshold: product.lowStockThreshold.toString(),
+                  trackInventory: product.trackInventory ?? true,
+                  inventoryType: product.inventoryType ?? 'SIMPLE',
                 };
+                const inventoryType: InventoryType = form.inventoryType ?? 'SIMPLE';
+                const trackInventory = form.trackInventory ?? true;
                 const isEditing = editingProductId === product.id;
                 const deltaValue = adjustInputs[product.id] ?? '';
                 const lowStock = stockQuantity < product.lowStockThreshold;
@@ -775,14 +888,36 @@ export default function ProductsPage() {
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-4 text-sm text-zinc-600">
-                        <div>
-                          <p className="text-xs uppercase tracking-wide text-zinc-700">
-                            In stock
-                          </p>
-                          <p className="font-semibold text-zinc-900">
-                            {stockQuantity} {product.unit}
-                          </p>
-                        </div>
+                        {/* Stock display branches on the inventory type so the card
+                            stays honest — showing "0 in stock" for a RECIPE dish
+                            is confusing because its "stock" is derived from
+                            ingredients, not this row. */}
+                        {inventoryType === 'SIMPLE' && trackInventory && (
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-zinc-700">
+                              In stock
+                            </p>
+                            <p className="font-semibold text-zinc-900">
+                              {stockQuantity} {product.unit}
+                            </p>
+                          </div>
+                        )}
+                        {inventoryType === 'RECIPE' && (
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-zinc-700">
+                              Inventory
+                            </p>
+                            <p className="font-semibold text-brand-700">Recipe-driven</p>
+                          </div>
+                        )}
+                        {(inventoryType === 'NONE' || !trackInventory) && (
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-zinc-700">
+                              Inventory
+                            </p>
+                            <p className="font-semibold text-zinc-500">Not tracked</p>
+                          </div>
+                        )}
                         <div>
                           <p className="text-xs uppercase tracking-wide text-zinc-700">
                             Cost / Sell
@@ -801,7 +936,16 @@ export default function ProductsPage() {
                           </p>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
+                        {inventoryType === 'RECIPE' && (
+                          <Button
+                            onClick={() => setRecipeEditorProduct(product)}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            Manage recipe
+                          </Button>
+                        )}
                         <Button
                           onClick={() =>
                             setEditingProductId((prev) =>
@@ -823,44 +967,71 @@ export default function ProductsPage() {
                       </div>
                     </div>
 
-                    <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end">
-                      <div className="flex-1">
-                        <label className="block text-xs font-medium uppercase tracking-wide text-zinc-700">
-                          Adjust stock
-                        </label>
-                        <div className="mt-2 flex gap-3">
-                          <input
-                            type="number"
-                            value={deltaValue}
-                            onChange={(event) =>
-                              setAdjustInputs((prev) => ({
-                                ...prev,
-                                [product.id]: event.target.value,
-                              }))
-                            }
-                            placeholder="+/- units"
-                            className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
-                          />
-                          <Button
-                            type="button"
-                            onClick={() => handleAdjustStock(product.id)}
-                            disabled={adjusting[product.id]}
-                            variant="secondary"
-                            size="sm"
-                          >
-                            {adjusting[product.id] ? 'Updating…' : 'Apply'}
-                          </Button>
+                    {/* Quick stock adjust is only meaningful when this row itself
+                        is the stock-keeping unit. For RECIPE dishes, stock lives
+                        on the ingredients; for NONE, there is no stock at all. */}
+                    {inventoryType === 'SIMPLE' && trackInventory && (
+                      <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end">
+                        <div className="flex-1">
+                          <label className="block text-xs font-medium uppercase tracking-wide text-zinc-700">
+                            Adjust stock
+                          </label>
+                          <div className="mt-2 flex gap-3">
+                            <input
+                              type="number"
+                              value={deltaValue}
+                              onChange={(event) =>
+                                setAdjustInputs((prev) => ({
+                                  ...prev,
+                                  [product.id]: event.target.value,
+                                }))
+                              }
+                              placeholder="+/- units"
+                              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                            />
+                            <div className="flex gap-1">
+                              {/* Fast numeric presets — faster than typing for
+                                  bulk deliveries of common SKUs. */}
+                              {[1, 5, 10].map((preset) => (
+                                <Button
+                                  key={preset}
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    setAdjustInputs((prev) => ({
+                                      ...prev,
+                                      [product.id]: String(
+                                        (Number(prev[product.id]) || 0) + preset,
+                                      ),
+                                    }))
+                                  }
+                                >
+                                  +{preset}
+                                </Button>
+                              ))}
+                            </div>
+                            <Button
+                              type="button"
+                              onClick={() => handleAdjustStock(product.id)}
+                              disabled={adjusting[product.id]}
+                              variant="secondary"
+                              size="sm"
+                            >
+                              {adjusting[product.id] ? 'Updating…' : 'Apply'}
+                            </Button>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-zinc-700">
+                            Low stock threshold
+                          </p>
+                          <p className="text-sm font-semibold text-zinc-900">
+                            {product.lowStockThreshold} {product.unit}
+                          </p>
                         </div>
                       </div>
-                      <div>
-                        <p className="text-xs uppercase tracking-wide text-zinc-700">
-                          Low stock threshold
-                        </p>
-                        <p className="text-sm font-semibold text-zinc-900">
-                          {product.lowStockThreshold} {product.unit}
-                        </p>
-                      </div>
-                    </div>
+                    )}
 
                     {isEditing ? (
                       <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -918,6 +1089,66 @@ export default function ProductsPage() {
                           }
                           className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
                         />
+                        <label className="flex items-center gap-3 text-sm text-zinc-700 md:col-span-2">
+                          <input
+                            type="checkbox"
+                            checked={form.trackInventory}
+                            onChange={(event) =>
+                              setEditForms((prev) => ({
+                                ...prev,
+                                [product.id]: {
+                                  ...prev[product.id],
+                                  trackInventory: event.target.checked,
+                                  inventoryType: event.target.checked
+                                    ? prev[product.id].inventoryType
+                                    : 'NONE',
+                                },
+                              }))
+                            }
+                            className="h-4 w-4 rounded border-zinc-300"
+                          />
+                          Track inventory for this product
+                        </label>
+                        {form.trackInventory && (
+                          <div className="md:col-span-2">
+                            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-600">
+                              Inventory type
+                            </label>
+                            <div className="flex gap-3">
+                              <select
+                                value={form.inventoryType}
+                                onChange={(event) =>
+                                  setEditForms((prev) => ({
+                                    ...prev,
+                                    [product.id]: {
+                                      ...prev[product.id],
+                                      inventoryType: event.target.value as InventoryType,
+                                    },
+                                  }))
+                                }
+                                className="flex-1 rounded-xl border border-zinc-200 px-3 py-2 text-sm"
+                              >
+                                <option value="SIMPLE">
+                                  Simple – deduct this product
+                                </option>
+                                <option value="RECIPE">
+                                  Recipe – deduct ingredients
+                                </option>
+                                <option value="NONE">None – never deduct</option>
+                              </select>
+                              {form.inventoryType === 'RECIPE' && (
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => setRecipeEditorProduct(product)}
+                                >
+                                  Manage recipe
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        )}
                         <div className="md:col-span-2">
                           <label className="block text-sm font-medium text-zinc-700 mb-2">
                             Product Image (optional)
@@ -986,6 +1217,8 @@ export default function ProductsPage() {
                                   sellingPrice: product.sellingPrice.toString(),
                                   unit: product.unit,
                                   lowStockThreshold: product.lowStockThreshold.toString(),
+                                  trackInventory: product.trackInventory ?? true,
+                                  inventoryType: product.inventoryType ?? 'SIMPLE',
                                 },
                               }));
                               setEditImageFiles((prev) => {
@@ -1014,6 +1247,31 @@ export default function ProductsPage() {
           </div>
         </Card>
       </div>
+
+      {/* Recipe editor drawer — mounted at the page level so it overlays the
+          whole dashboard regardless of which row triggered it. We refresh the
+          product list on close so any inventoryType flips performed by the
+          backend (e.g. first recipe auto-sets inventoryType='RECIPE') show up. */}
+      {recipeEditorProduct && (
+        <RecipeEditor
+          open={Boolean(recipeEditorProduct)}
+          onClose={() => {
+            setRecipeEditorProduct(null);
+            loadProducts(appliedFilters);
+          }}
+          token={token}
+          product={recipeEditorProduct}
+          allProducts={products}
+          outletId={
+            typeof window !== 'undefined'
+              ? localStorage.getItem('selected-outlet-id')
+              : null
+          }
+          onSaved={() => {
+            loadProducts(appliedFilters);
+          }}
+        />
+      )}
     </PageShell>
   );
 }

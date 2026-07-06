@@ -76,6 +76,10 @@ export class Sale {
 	@Column({ type: 'decimal', precision: 14, scale: 2, nullable: true })
 	loyaltyDiscountAmount?: number | null;
 
+	/** Client-generated key; duplicate POSTs with the same key return the original sale */
+	@Column({ type: 'varchar', length: 36, nullable: true, unique: true })
+	idempotencyKey?: string | null;
+
 	@CreateDateColumn()
 	createdAt: Date;
 }

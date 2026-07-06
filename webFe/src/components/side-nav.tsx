@@ -35,23 +35,26 @@ export function SideNav() {
   });
   const pathname = usePathname();
   const router = useRouter();
-  const { token, logout } = useAuth();
+  const { token, logout, user } = useAuth();
   const { selectedOutlet, outlets, setSelectedOutlet, loading: outletsLoading } = useOutlet();
   const [settings, setSettings] = useState<Settings | null>(null);
+  const organizationId = user?.organizations?.[0]?.id ?? null;
 
   useEffect(() => {
     async function loadSettings() {
-      if (!token) return;
+      if (!token || !organizationId) return;
       try {
         const data = await settingsApi.get(token);
         setSettings(data);
       } catch (err) {
-        // Silently fail - just use default "Bizzness"
-        console.error('Failed to load settings:', err);
+        const message = err instanceof Error ? err.message : '';
+        if (!message.includes('assigned to at least one organization')) {
+          console.error('Failed to load settings:', err);
+        }
       }
     }
     loadSettings();
-  }, [token]);
+  }, [token, organizationId]);
 
   const toggle = () => {
     const next = !open;

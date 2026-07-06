@@ -5,6 +5,7 @@ import { AuthProvider } from '@/contexts/auth-context';
 import { OutletProviderWrapper } from '@/components/outlet-provider-wrapper';
 import { ConditionalSideNav } from '@/components/conditional-side-nav';
 import { ConditionalContentWrapper } from '@/components/conditional-content-wrapper';
+import { OrganizationOnboardingGate } from '@/components/organization-onboarding-gate';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -32,8 +33,10 @@ export default function RootLayout({
       <body suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
           <OutletProviderWrapper>
-            <ConditionalSideNav />
-            <ConditionalContentWrapper>{children}</ConditionalContentWrapper>
+            <OrganizationOnboardingGate>
+              <ConditionalSideNav />
+              <ConditionalContentWrapper>{children}</ConditionalContentWrapper>
+            </OrganizationOnboardingGate>
           </OutletProviderWrapper>
         </AuthProvider>
       </body>

@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { outletsApi } from '@/lib/api-client';
 import { Outlet } from '@/types/outlet';
+import { User, userHasOrganization } from '@/types/user';
 
 type OutletContextValue = {
   selectedOutlet: Outlet | null;
@@ -23,7 +24,15 @@ const STORAGE_KEY = 'selected-outlet-id';
 
 const OutletContext = createContext<OutletContextValue | undefined>(undefined);
 
-export function OutletProvider({ children, token }: { children: ReactNode; token: string | null }) {
+export function OutletProvider({
+  children,
+  token,
+  user,
+}: {
+  children: ReactNode;
+  token: string | null;
+  user: User | null;
+}) {
   const [selectedOutlet, setSelectedOutletState] = useState<Outlet | null>(null);
   const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,8 +49,12 @@ export function OutletProvider({ children, token }: { children: ReactNode; token
   }, []);
 
   const refreshOutlets = useCallback(async () => {
-    if (!token) {
+    if (!token || !userHasOrganization(user)) {
       setOutlets([]);
+      setSelectedOutletState(null);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(STORAGE_KEY);
+      }
       setLoading(false);
       return;
     }
@@ -78,12 +91,15 @@ export function OutletProvider({ children, token }: { children: ReactNode; token
         setSelectedOutlet(primary);
       }
     } catch (err) {
-      console.error('Failed to load outlets:', err);
+      const message = err instanceof Error ? err.message : '';
+      if (!message.includes('assigned to at least one organization')) {
+        console.error('Failed to load outlets:', err);
+      }
       setOutlets([]);
     } finally {
       setLoading(false);
     }
-  }, [token, selectedOutlet, setSelectedOutlet]);
+  }, [token, user, selectedOutlet, setSelectedOutlet]);
 
   useEffect(() => {
     refreshOutlets();

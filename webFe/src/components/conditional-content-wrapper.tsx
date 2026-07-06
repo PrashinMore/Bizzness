@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/contexts/auth-context';
+import { userHasOrganization } from '@/types/user';
 
 export function ConditionalContentWrapper({
   children,
@@ -9,8 +10,8 @@ export function ConditionalContentWrapper({
 }) {
   const { user, loading } = useAuth();
 
-  // Only apply padding when user is logged in (side nav is visible)
-  const paddingClass = !loading && user ? 'md:pl-64 pb-20 md:pb-0' : '';
+  const paddingClass =
+    !loading && user && userHasOrganization(user) ? 'md:pl-64 pb-20 md:pb-0' : '';
 
   return (
     <div className={`min-h-screen bg-app ${paddingClass}`}>

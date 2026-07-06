@@ -1,4 +1,5 @@
 import { User } from './user';
+import { Outlet } from './outlet';
 
 export interface Organization {
   id: string;
@@ -7,5 +8,6 @@ export interface Organization {
   createdAt: string;
   updatedAt: string;
   users?: User[];
+  defaultOutlet?: Outlet;
 }
 

@@ -109,6 +109,70 @@ export class InvitesService {
   }
 
   /**
+   * Returns true when a non-expired pending invite exists for the email.
+   * Used by signup role assignment logic.
+   */
+  async hasPendingInviteForEmail(userEmail: string): Promise<boolean> {
+    const now = new Date();
+    const count = await this.invitesRepository
+      .createQueryBuilder('invite')
+      .where('LOWER(invite.email) = LOWER(:email)', { email: userEmail })
+      .andWhere('invite.status = :status', { status: 'pending' })
+      .andWhere('invite.expiresAt > :now', { now })
+      .getCount();
+
+    return count > 0;
+  }
+
+  /**
+   * Automatically accept all valid pending invites for a user email.
+   * Used during auth flow to attach invited users on first login/signup.
+   */
+  async consumePendingInvitesForEmail(userEmail: string, userId: string): Promise<number> {
+    const now = new Date();
+    const pendingInvites = await this.invitesRepository
+      .createQueryBuilder('invite')
+      .where('LOWER(invite.email) = LOWER(:email)', { email: userEmail })
+      .andWhere('invite.status = :status', { status: 'pending' })
+      .andWhere('invite.expiresAt > :now', { now })
+      .getMany();
+
+    if (!pendingInvites.length) {
+      return 0;
+    }
+
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    let acceptedCount = 0;
+
+    for (const invite of pendingInvites) {
+      const organization = await this.organizationsRepository.findOne({
+        where: { id: invite.organizationId },
+        relations: ['users'],
+      });
+
+      if (!organization) {
+        continue;
+      }
+
+      const alreadyMember = organization.users.some((member) => member.id === user.id);
+      if (!alreadyMember) {
+        organization.users.push(user);
+        await this.organizationsRepository.save(organization);
+      }
+
+      invite.status = 'accepted';
+      await this.invitesRepository.save(invite);
+      acceptedCount += 1;
+    }
+
+    return acceptedCount;
+  }
+
+  /**
    * Get all invites for an organization (admin only)
    */
   async getOrganizationInvites(

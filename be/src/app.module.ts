@@ -1,10 +1,13 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { JwtModule } from '@nestjs/jwt';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { OrganizationRequiredMiddleware } from './common/middleware/organization-required.middleware';
+import { JWT_CONFIG } from './auth/jwt.config';
 import { User } from './users/entities/user.entity';
 import { ProductsModule } from './products/products.module';
 import { Product } from './products/entities/product.entity';
@@ -32,6 +35,10 @@ import { OutletsModule } from './outlets/outlets.module';
 import { Outlet } from './outlets/entities/outlet.entity';
 import { StockModule } from './stock/stock.module';
 import { Stock } from './stock/entities/stock.entity';
+import { RecipesModule } from './recipes/recipes.module';
+import { Recipe } from './recipes/entities/recipe.entity';
+import { RecipeItem } from './recipes/entities/recipe-item.entity';
+import { InventoryModule } from './inventory/inventory.module';
 import { CrmModule } from './crm/crm.module';
 import { Customer } from './crm/entities/customer.entity';
 import { CustomerVisit } from './crm/entities/customer-visit.entity';
@@ -46,6 +53,10 @@ import { Reward } from './crm/entities/reward.entity';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+    }),
+    JwtModule.register({
+      secret: JWT_CONFIG.secret,
+      signOptions: { expiresIn: JWT_CONFIG.expiresIn },
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -93,7 +104,7 @@ import { Reward } from './crm/entities/reward.entity';
           username: configService.get<string>('DB_USER') ?? 'postgres',
           password: configService.get<string>('DB_PASSWORD') ?? 'postgres',
           database: configService.get<string>('DB_NAME') ?? 'biznes',
-          entities: [User, Product, Sale, SaleItem, Expense, Settings, Organization, Category, GlobalProduct, Invoice, InvoiceCounter, OrganizationInvoiceSettings, DiningTable, Outlet, Stock, Customer, CustomerVisit, CustomerNote, CustomerFeedback, LoyaltyAccount, LoyaltyTransaction, Reward],
+          entities: [User, Product, Sale, SaleItem, Expense, Settings, Organization, Category, GlobalProduct, Invoice, InvoiceCounter, OrganizationInvoiceSettings, DiningTable, Outlet, Stock, Recipe, RecipeItem, Customer, CustomerVisit, CustomerNote, CustomerFeedback, LoyaltyAccount, LoyaltyTransaction, Reward],
           synchronize: true,
           // Disable retries completely in serverless to fail fast
           retryAttempts: isServerless ? 0 : 10,
@@ -144,9 +155,15 @@ import { Reward } from './crm/entities/reward.entity';
     TablesModule,
     OutletsModule,
     StockModule,
+    RecipesModule,
+    InventoryModule,
     CrmModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, OrganizationRequiredMiddleware],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(OrganizationRequiredMiddleware).forRoutes('*');
+  }
+}

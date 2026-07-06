@@ -93,6 +93,11 @@ export class CreateSaleDto {
 	@IsOptional()
 	@Min(0)
 	loyaltyDiscountAmount?: number;
+
+	/** Per-checkout UUID from POS; retries and offline sync reuse the same value for deduplication */
+	@IsUUID('4')
+	@IsOptional()
+	idempotencyKey?: string;
 }
 
 

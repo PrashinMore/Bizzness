@@ -8,6 +8,7 @@ import { DiningTable } from '../tables/entities/dining-table.entity';
 import { SettingsModule } from '../settings/settings.module';
 import { CrmModule } from '../crm/crm.module';
 import { StockModule } from '../stock/stock.module';
+import { InventoryModule } from '../inventory/inventory.module';
 
 @Module({
 	imports: [
@@ -15,6 +16,7 @@ import { StockModule } from '../stock/stock.module';
 		forwardRef(() => SettingsModule),
 		forwardRef(() => CrmModule),
 		forwardRef(() => StockModule),
+		forwardRef(() => InventoryModule),
 	],
 	controllers: [SalesController],
 	providers: [SalesService],

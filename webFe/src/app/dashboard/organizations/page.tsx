@@ -1,11 +1,14 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
+import { useOutlet } from '@/contexts/outlet-context';
 import { useRequireAuth } from '@/hooks/use-require-auth';
 import { organizationsApi, usersApi } from '@/lib/api-client';
 import type { Organization } from '@/types/organization';
 import type { User } from '@/types/user';
+import { userHasOrganization } from '@/types/user';
 
 interface CreateOrganizationFormState {
   name: string;
@@ -23,8 +26,10 @@ const initialCreateState: CreateOrganizationFormState = {
 };
 
 export default function OrganizationsManagementPage() {
-  const { user, loading } = useRequireAuth('admin');
-  const { token } = useAuth();
+  const router = useRouter();
+  const { user, loading } = useRequireAuth();
+  const { token, refreshProfile } = useAuth();
+  const { refreshOutlets, setSelectedOutlet } = useOutlet();
 
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -47,6 +52,14 @@ export default function OrganizationsManagementPage() {
     [organizations],
   );
 
+  const needsOnboarding = Boolean(user && !userHasOrganization(user));
+
+  useEffect(() => {
+    if (!loading && user && needsOnboarding && user.role !== 'admin') {
+      router.replace('/dashboard');
+    }
+  }, [loading, user, needsOnboarding, router]);
+
   useEffect(() => {
     async function loadData() {
       if (!token) {
@@ -55,12 +68,16 @@ export default function OrganizationsManagementPage() {
       setFetching(true);
       setError(null);
       try {
-        const [orgsData, usersData] = await Promise.all([
-          organizationsApi.list(token),
-          usersApi.list(token),
-        ]);
+        const orgsData = await organizationsApi.list(token);
         setOrganizations(orgsData);
-        setUsers(usersData);
+
+        if (!needsOnboarding) {
+          const usersData = await usersApi.list(token);
+          setUsers(usersData);
+        } else {
+          setUsers([]);
+        }
+
         const mapped = Object.fromEntries(
           orgsData.map((org) => [
             org.id,
@@ -85,7 +102,7 @@ export default function OrganizationsManagementPage() {
     if (!loading && user && token) {
       loadData();
     }
-  }, [loading, user, token]);
+  }, [loading, user, token, needsOnboarding]);
 
   const handleCreateOrganization = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -98,6 +115,7 @@ export default function OrganizationsManagementPage() {
     setError(null);
 
     try {
+      const wasFirstOrganization = organizations.length === 0;
       const created = await organizationsApi.create(token, {
         name: createState.name.trim(),
         description: createState.description.trim() || null,
@@ -112,6 +130,16 @@ export default function OrganizationsManagementPage() {
       }));
       setCreateState(initialCreateState);
       setStatusMessage(`Organization ${created.name} created successfully.`);
+
+      await refreshProfile();
+      if (created.defaultOutlet) {
+        setSelectedOutlet(created.defaultOutlet);
+      }
+      await refreshOutlets();
+
+      if (wasFirstOrganization) {
+        router.replace('/dashboard');
+      }
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -285,8 +313,93 @@ export default function OrganizationsManagementPage() {
     );
   }
 
+  if (needsOnboarding && user.role !== 'admin') {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-zinc-50 px-6">
+        <p className="max-w-md text-center text-sm text-zinc-600">
+          Your account is not assigned to an organization yet. Please ask an administrator to invite you.
+        </p>
+      </main>
+    );
+  }
+
+  if (needsOnboarding) {
+    return (
+      <main className="flex min-h-screen items-center justify-center px-6 py-12">
+        <div className="pointer-events-auto relative z-[202] w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl">
+          <h1 className="text-2xl font-semibold text-zinc-900">
+            Create your organization
+          </h1>
+          <p className="mt-2 text-sm text-zinc-600">
+            You need an organization before you can use the app. Complete this step to continue.
+          </p>
+
+          {error && (
+            <div className="mt-4 rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          <form className="mt-6 space-y-4" onSubmit={handleCreateOrganization}>
+            <div className="space-y-2">
+              <label
+                className="block text-sm font-medium text-zinc-700"
+                htmlFor="create-name"
+              >
+                Organization name
+              </label>
+              <input
+                id="create-name"
+                required
+                autoFocus
+                value={createState.name}
+                onChange={(event) =>
+                  setCreateState((prev) => ({ ...prev, name: event.target.value }))
+                }
+                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+              />
+            </div>
+            <div className="space-y-2">
+              <label
+                className="block text-sm font-medium text-zinc-700"
+                htmlFor="create-description"
+              >
+                Description (optional)
+              </label>
+              <input
+                id="create-description"
+                value={createState.description}
+                onChange={(event) =>
+                  setCreateState((prev) => ({
+                    ...prev,
+                    description: event.target.value,
+                  }))
+                }
+                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={creating}
+              className="w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:opacity-50"
+            >
+              {creating ? 'Creating…' : 'Create organization and continue'}
+            </button>
+          </form>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-zinc-50 px-6 py-12">
+      {user.role !== 'admin' ? (
+        <div className="mx-auto max-w-lg rounded-3xl bg-white p-8 text-center shadow-sm">
+          <p className="text-sm text-zinc-600">
+            Only administrators can manage organizations.
+          </p>
+        </div>
+      ) : (
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
         <header className="rounded-3xl bg-white p-6 shadow-sm">
           <h1 className="text-2xl font-semibold text-zinc-900">
@@ -567,6 +680,7 @@ export default function OrganizationsManagementPage() {
           )}
         </section>
       </div>
+      )}
     </main>
   );
 }

@@ -11,6 +11,7 @@ import { SettingsService } from '../settings/settings.service';
 import { AddItemsToSaleDto } from './dto/add-items-to-sale.dto';
 import { CrmService } from '../crm/crm.service';
 import { StockService } from '../stock/stock.service';
+import { InventoryService } from '../inventory/inventory.service';
 
 @Injectable()
 export class SalesService {
@@ -28,6 +29,8 @@ export class SalesService {
 		private readonly crmService: CrmService,
 		@Inject(forwardRef(() => StockService))
 		private readonly stockService: StockService,
+		@Inject(forwardRef(() => InventoryService))
+		private readonly inventoryService: InventoryService,
 	) {}
 
 	private normalizeSaleDate(input: string): Date {
@@ -117,37 +120,48 @@ export class SalesService {
 		const normalizedSaleDate = this.normalizeSaleDate(dto.date);
 
 		return this.dataSource.transaction(async (manager) => {
+			if (dto.idempotencyKey) {
+				const existing = await manager.getRepository(Sale).findOne({
+					where: {
+						organizationId: dto.organizationId,
+						outletId,
+						idempotencyKey: dto.idempotencyKey,
+					},
+					relations: ['items'],
+				});
+				if (existing) {
+					return existing;
+				}
+			}
+
 			const productIds = dto.items.map((i) => i.productId);
 			const products = await manager.getRepository(Product).find({
-				where: { 
+				where: {
 					id: In(productIds),
 					organizationId: In(organizationIds),
 				},
 			});
 			const productMap = new Map(products.map((p) => [p.id, p]));
 
-			// Get stock for all products in this outlet
-			const stockMap = await this.stockService.getStockForProducts(productIds, outletId);
-
-			// Validate availability
+			// Sanity check up front so we don't explode a recipe for a product
+			// that doesn't even belong to this org.
 			for (const item of dto.items) {
-				const product = productMap.get(item.productId);
-				if (!product) {
+				if (!productMap.has(item.productId)) {
 					throw new BadRequestException(`Product ${item.productId} not found`);
 				}
-				const stock = stockMap.get(item.productId);
-				const availableStock = stock?.quantity ?? 0;
-				if (availableStock < item.quantity) {
-					throw new BadRequestException(
-						`Insufficient stock for product ${product.name} (${product.id}). Available: ${availableStock}, Requested: ${item.quantity}`,
-					);
-				}
 			}
 
-			// Decrement stock
-			for (const item of dto.items) {
-				await this.stockService.adjustStock(item.productId, outletId, -item.quantity);
-			}
+			// Delegates to InventoryService: expands RECIPE lines into ingredient
+			// requirements, aggregates duplicates across lines, validates stock
+			// in one shot, then deducts — all on the SAME transactional manager,
+			// so a failure mid-deduction rolls back cleanly.
+			await this.inventoryService.consumeForSale(
+				dto.items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+				productMap,
+				dto.organizationId,
+				outletId,
+				manager,
+			);
 
 			// Handle table assignment
 			let table: DiningTable | null = null;
@@ -197,6 +211,7 @@ export class SalesService {
 				loyaltyPointsRedeemed: dto.loyaltyPointsRedeemed || null,
 				loyaltyDiscountAmount: dto.loyaltyDiscountAmount ? round2(dto.loyaltyDiscountAmount) : null,
 				openedAt: dto.tableId ? new Date() : null,
+				idempotencyKey: dto.idempotencyKey ?? null,
 			});
 			const savedSale = await manager.getRepository(Sale).save(sale);
 
@@ -573,35 +588,31 @@ export class SalesService {
 			// Validate products and stock
 			const productIds = dto.items.map((i) => i.productId);
 			const products = await manager.getRepository(Product).find({
-				where: { 
+				where: {
 					id: In(productIds),
 					organizationId: sale.organizationId,
 				},
 			});
 			const productMap = new Map(products.map((p) => [p.id, p]));
 
-			// Get stock for all products in this outlet
-			const stockMap = await this.stockService.getStockForProducts(productIds, sale.outletId);
-
 			for (const item of dto.items) {
-				const product = productMap.get(item.productId);
-				if (!product) {
+				if (!productMap.has(item.productId)) {
 					throw new BadRequestException(`Product ${item.productId} not found`);
 				}
-				const stock = stockMap.get(item.productId);
-				const availableStock = stock?.quantity ?? 0;
-				if (availableStock < item.quantity) {
-					throw new BadRequestException(
-						`Insufficient stock for product ${product.name} (${product.id}). Available: ${availableStock}, Requested: ${item.quantity}`,
-					);
-				}
 			}
 
-			// Decrement stock
+			// Same recipe-aware deduction path as the initial sale creation.
+			// Runs inside the existing transaction so added items + stock moves
+			// either both persist or both roll back.
+			await this.inventoryService.consumeForSale(
+				dto.items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+				productMap,
+				sale.organizationId,
+				sale.outletId,
+				manager,
+			);
+
 			const round2 = (n: number) => Math.round(n * 100) / 100;
-			for (const item of dto.items) {
-				await this.stockService.adjustStock(item.productId, sale.outletId, -item.quantity);
-			}
 
 			// Add new items
 			const newItems = dto.items.map((i) =>

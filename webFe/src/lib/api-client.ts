@@ -1,5 +1,6 @@
 import { AuthResponse, User } from '@/types/user';
 import { Product } from '@/types/product';
+import { Recipe, RecipeUnit } from '@/types/recipe';
 import { Sale } from '@/types/sale';
 import { Expense } from '@/types/expense';
 import { Organization } from '@/types/organization';
@@ -201,6 +202,12 @@ export const productsApi = {
       }
       formData.append('unit', payload.unit);
       formData.append('lowStockThreshold', payload.lowStockThreshold.toString());
+      if (payload.trackInventory !== undefined) {
+        formData.append('trackInventory', payload.trackInventory ? 'true' : 'false');
+      }
+      if (payload.inventoryType) {
+        formData.append('inventoryType', payload.inventoryType);
+      }
       if (payload.imageUrl) {
         formData.append('imageUrl', payload.imageUrl);
       }
@@ -331,6 +338,36 @@ export const stockApi = {
     request<Stock>(`/stock/product/${productId}/adjust`, { method: 'PATCH', body: { delta }, token }),
   setStock: (token: string, productId: string, quantity: number): Promise<Stock> =>
     request<Stock>(`/stock/product/${productId}/set`, { method: 'PATCH', body: { quantity }, token }),
+};
+
+/**
+ * Recipe-based inventory API. A recipe binds a RECIPE-type product (dish) to a
+ * list of ingredient products with quantities. The backend deducts ingredient
+ * stock automatically when the dish is sold. See RECIPE_INVENTORY_UPGRADE.md.
+ */
+export type RecipeItemPayload = {
+  ingredientProductId: string;
+  quantity: number;
+  unit: RecipeUnit;
+};
+
+export const recipesApi = {
+  /** Returns null (200 no-content) when the product has no recipe yet. */
+  getByProduct: (token: string, productId: string): Promise<Recipe | null> =>
+    request<Recipe | null>(`/recipes/product/${productId}`, { token }),
+  create: (
+    token: string,
+    payload: { productId: string; outletId?: string | null; items: RecipeItemPayload[] },
+  ): Promise<Recipe> =>
+    request<Recipe>('/recipes', { method: 'POST', body: payload, token }),
+  update: (
+    token: string,
+    id: string,
+    payload: { items: RecipeItemPayload[] },
+  ): Promise<Recipe> =>
+    request<Recipe>(`/recipes/${id}`, { method: 'PATCH', body: payload, token }),
+  remove: (token: string, id: string): Promise<void> =>
+    request<void>(`/recipes/${id}`, { method: 'DELETE', token }),
 };
 
 type SalesFilters = {

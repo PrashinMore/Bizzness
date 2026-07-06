@@ -1,14 +1,23 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useRequireAuth } from '@/hooks/use-require-auth';
-import { productsApi, salesApi, tablesApi, settingsApi, stockApi, crmApi } from '@/lib/api-client';
+import {
+  productsApi,
+  salesApi,
+  tablesApi,
+  settingsApi,
+  stockApi,
+  crmApi,
+  recipesApi,
+} from '@/lib/api-client';
 import type { Product } from '@/types/product';
 import type { DiningTable } from '@/types/table';
 import type { Sale } from '@/types/sale';
 import type { Customer } from '@/types/crm';
 import { useRouter } from 'next/navigation';
+import { RecipeEditor } from '@/components/recipe-editor';
 
 type CartItem = {
   productId: string;
@@ -58,6 +67,25 @@ export default function MenuPage() {
   }>>([]);
   const [redemptionDiscount, setRedemptionDiscount] = useState<number>(0);
   const [loadingEligibleRewards, setLoadingEligibleRewards] = useState(false);
+
+  // ---------------------------------------------------------------------------
+  // Recipe-inventory UX state
+  // ---------------------------------------------------------------------------
+  // Products the cashier tried to sell but the backend rejected for lack of
+  // ingredient stock. We keep them "temporarily disabled" in the UI so the
+  // cashier doesn't keep hitting the same error; they re-enable themselves on
+  // the next menu reload.
+  const [disabledProductIds, setDisabledProductIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [toast, setToast] = useState<string | null>(null);
+  // Product to open the recipe editor for — either from an explicit "add recipe"
+  // prompt (after checkout finds a RECIPE dish with no recipe) or from an
+  // error path ("no recipe configured").
+  const [recipeEditorProduct, setRecipeEditorProduct] = useState<Product | null>(null);
+  // Prompt banner state: "Track ingredients for <dish>?" shown after the most
+  // recent checkout if we detected a RECIPE product with no recipe attached.
+  const [recipePrompt, setRecipePrompt] = useState<Product | null>(null);
 
   // Get unique categories from all menu items for the filter dropdown
   const availableCategories = useMemo(() => {
@@ -434,7 +462,7 @@ export default function MenuPage() {
         }
 
         await salesApi.addItems(token, activeSale.id, newItems);
-        
+
         // Reload active sale to get updated total
         if (selectedTableId) {
           const refreshed = await tablesApi.getActiveSale(token, selectedTableId);
@@ -442,8 +470,16 @@ export default function MenuPage() {
             setActiveSale(refreshed);
           }
         }
-        
+
+        // Snapshot cart before clearing so the recipe probe still has it.
+        const soldItems = [...cart];
         setCart([]);
+        const missing = await findMissingRecipe(soldItems);
+        if (missing) {
+          setRecipePrompt(missing);
+          setToast(`Order updated. Want to track ingredients for "${missing.name}"?`);
+          return;
+        }
         router.push(`/sales/${activeSale.id}`);
       } else {
         // Handle reward redemption if applicable
@@ -510,6 +546,8 @@ export default function MenuPage() {
         };
 
         const created = await salesApi.create(token, payload);
+        // Snapshot cart before clearing so the recipe probe still has it.
+        const soldItems = [...cart];
         setCart([]);
         setSelectedTableId('');
         setActiveSale(null);
@@ -518,18 +556,105 @@ export default function MenuPage() {
         setSelectedCustomer(null);
         setSelectedRewardId(null);
         setRedemptionDiscount(0);
+        const missing = await findMissingRecipe(soldItems);
+        if (missing) {
+          setRecipePrompt(missing);
+          setToast(`Sale recorded. Want to track ingredients for "${missing.name}"?`);
+          // Stay on menu so the cashier can accept/dismiss. They can still
+          // open the sale from the Sales tab if they want.
+          return;
+        }
         router.push(`/sales/${created.id}`);
       }
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Unable to complete checkout.');
-      }
+      handleCheckoutError(err);
     } finally {
       setCheckingOut(false);
     }
   };
+
+  // ---------------------------------------------------------------------------
+  // Error routing. Recipe-backed inventory produces two common 400s that we
+  // want to handle specially in the UI:
+  //
+  //  1. "Insufficient stock for ingredient X" — cashier can't fulfill this
+  //     dish right now. We show a toast and temporarily disable the dish so
+  //     the same error can't fire again for this session.
+  //
+  //  2. "No recipe configured for product Y" — the admin forgot to set up
+  //     the recipe. We open the recipe editor on the faulted dish so it
+  //     can be fixed in place rather than sending the cashier hunting.
+  //
+  // Anything else falls back to the generic error banner.
+  // ---------------------------------------------------------------------------
+  const handleCheckoutError = (err: unknown) => {
+    const message = err instanceof Error ? err.message : 'Unable to complete checkout.';
+    const lower = message.toLowerCase();
+
+    if (lower.includes('insufficient') && lower.includes('ingredient')) {
+      setToast(message);
+      // Best-effort: try to match the faulted product name back to cart items,
+      // then disable every RECIPE cart item mentioned. Without structured
+      // error data from the backend we just disable all RECIPE items in the
+      // cart — safer than letting the cashier retry blindly.
+      setDisabledProductIds((prev) => {
+        const next = new Set(prev);
+        cart.forEach((item) => {
+          if ((item.product.inventoryType ?? 'SIMPLE') === 'RECIPE') {
+            next.add(item.productId);
+          }
+        });
+        return next;
+      });
+      setError(null);
+      return;
+    }
+
+    if (lower.includes('recipe') && (lower.includes('not') || lower.includes('no '))) {
+      // Find the RECIPE product in the cart that the backend is complaining
+      // about and hand it to the editor for immediate fix-in-place.
+      const culprit = cart.find(
+        (item) => (item.product.inventoryType ?? 'SIMPLE') === 'RECIPE',
+      );
+      if (culprit) {
+        setToast(`${culprit.product.name} needs a recipe before it can be sold.`);
+        setRecipeEditorProduct(culprit.product);
+        setError(null);
+        return;
+      }
+    }
+
+    setError(message);
+  };
+
+  // Post-checkout probe: for every RECIPE dish that was just sold, confirm it
+  // has a recipe attached. Returns the first dish lacking a recipe (or null),
+  // so the caller can decide whether to navigate away or show the lazy
+  // "Track ingredients for this item?" prompt first. We dedupe to keep this
+  // to one request per distinct product.
+  const findMissingRecipe = useCallback(
+    async (soldItems: CartItem[]): Promise<Product | null> => {
+      if (!token) {
+        return null;
+      }
+      const seen = new Set<string>();
+      for (const item of soldItems) {
+        if (seen.has(item.productId)) continue;
+        seen.add(item.productId);
+        if ((item.product.inventoryType ?? 'SIMPLE') !== 'RECIPE') continue;
+        try {
+          const recipe = await recipesApi.getByProduct(token, item.productId);
+          if (!recipe || recipe.items.length === 0) {
+            return item.product;
+          }
+        } catch {
+          // Silent — a failed probe isn't worth interrupting the cashier.
+        }
+      }
+      return null;
+    },
+    [token],
+  );
 
   if (loading || !user || !token) {
     return (
@@ -595,6 +720,62 @@ export default function MenuPage() {
             </div>
           )}
 
+          {/* Lightweight toast-style banner for recipe/ingredient feedback.
+              Sits above the grid so it's visible while the cashier decides
+              what to do next. Auto-clears on any subsequent action. */}
+          {toast && (
+            <div className="mb-4 flex items-start justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              <span>{toast}</span>
+              <button
+                type="button"
+                onClick={() => setToast(null)}
+                className="text-amber-700 hover:text-amber-900"
+                aria-label="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          {/* Lazy recipe prompt — shown after a checkout that included a
+              RECIPE-typed dish with no recipe yet. Two actions only: wire up
+              the recipe now, or ignore (dismisses until next occurrence). */}
+          {recipePrompt && (
+            <div className="mb-4 flex flex-col gap-3 rounded-lg border border-brand-200 bg-brand-50 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-semibold text-brand-900">
+                  Track ingredients for &quot;{recipePrompt.name}&quot;?
+                </p>
+                <p className="text-xs text-brand-700">
+                  Set up its recipe once and future sales will deduct raw
+                  materials automatically.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRecipeEditorProduct(recipePrompt);
+                    setRecipePrompt(null);
+                  }}
+                  className="rounded-full bg-brand-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-brand-700"
+                >
+                  Add recipe
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRecipePrompt(null);
+                    setToast(null);
+                  }}
+                  className="rounded-full border border-brand-200 bg-white px-4 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-100"
+                >
+                  Ignore
+                </button>
+              </div>
+            </div>
+          )}
+
           {fetching ? (
             <p className="text-sm text-zinc-700">Loading menu items…</p>
           ) : menuItems.length === 0 ? (
@@ -611,7 +792,26 @@ export default function MenuPage() {
                 const inCart = cart.find((item) => item.productId === product.id);
                 const cartQuantity = inCart?.quantity || 0;
                 const stock = product.stock ?? 0;
-                const isOutOfStock = stock <= 0;
+
+                // Branch availability on inventory type. Only SIMPLE products
+                // have a meaningful stock count on this row — for RECIPE dishes,
+                // "stock" lives on the ingredients and the backend is the
+                // source of truth. We default to Available for RECIPE and
+                // rely on a disabled flip after an ingredient-out-of-stock
+                // error to stop the cashier from retrying.
+                const inventoryType = product.inventoryType ?? 'SIMPLE';
+                const trackInventory = product.trackInventory ?? true;
+                const isRecipe = inventoryType === 'RECIPE';
+                const isUntracked = !trackInventory || inventoryType === 'NONE';
+                const isTemporarilyDisabled = disabledProductIds.has(product.id);
+                const isSimpleOutOfStock =
+                  inventoryType === 'SIMPLE' && trackInventory && stock <= 0;
+                const isLowSimpleStock =
+                  inventoryType === 'SIMPLE' &&
+                  trackInventory &&
+                  stock > 0 &&
+                  stock <= product.lowStockThreshold;
+                const isOutOfStock = isSimpleOutOfStock || isTemporarilyDisabled;
 
                 return (
                   <div
@@ -649,13 +849,31 @@ export default function MenuPage() {
                         <p className="text-base sm:text-2xl font-bold text-zinc-900">
                           ₹{Number(product.sellingPrice).toFixed(2)}
                         </p>
-                        {stock > 0 && (
-                          <p className="text-xs text-zinc-700">
+                        {/* Availability display — distinct per inventory type so
+                            the cashier sees the right signal at a glance. */}
+                        {inventoryType === 'SIMPLE' && trackInventory && stock > 0 && (
+                          <p
+                            className={`text-xs ${
+                              isLowSimpleStock ? 'text-amber-600' : 'text-zinc-700'
+                            }`}
+                          >
+                            {isLowSimpleStock ? '⚠ ' : ''}
                             {stock} in stock
                           </p>
                         )}
-                        {isOutOfStock && (
+                        {isSimpleOutOfStock && (
                           <p className="text-xs text-red-500">Out of stock</p>
+                        )}
+                        {isRecipe && !isTemporarilyDisabled && (
+                          <p className="text-xs text-emerald-600">Available</p>
+                        )}
+                        {isRecipe && isTemporarilyDisabled && (
+                          <p className="text-xs text-red-500">
+                            Ingredients unavailable
+                          </p>
+                        )}
+                        {isUntracked && (
+                          <p className="text-xs text-zinc-400">Always available</p>
                         )}
                       </div>
 
@@ -684,7 +902,15 @@ export default function MenuPage() {
                               onClick={() =>
                                 updateQuantity(product.id, cartQuantity + 1)
                               }
-                              disabled={cartQuantity >= stock}
+                              // For SIMPLE/tracked we cap at on-hand stock so
+                              // the cashier can't oversell. RECIPE and
+                              // untracked items have no upfront cap — the
+                              // backend is authoritative during checkout.
+                              disabled={
+                                inventoryType === 'SIMPLE' &&
+                                trackInventory &&
+                                cartQuantity >= stock
+                              }
                               className="rounded-full border border-zinc-200 px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               +
@@ -930,7 +1156,13 @@ export default function MenuPage() {
                             onClick={() =>
                               updateQuantity(item.productId, item.quantity + 1)
                             }
-                            disabled={item.quantity >= (item.product.stock ?? 0)}
+                            // Only cap SIMPLE/tracked items; RECIPE and
+                            // untracked items have no client-side ceiling.
+                            disabled={
+                              (item.product.inventoryType ?? 'SIMPLE') === 'SIMPLE' &&
+                              (item.product.trackInventory ?? true) &&
+                              item.quantity >= (item.product.stock ?? 0)
+                            }
                             className="rounded border border-zinc-200 px-2 py-0.5 text-xs hover:bg-zinc-50 disabled:opacity-50"
                           >
                             +
@@ -1015,6 +1247,33 @@ export default function MenuPage() {
           </div>
         </aside>
       </div>
+
+      {/* Recipe editor — shared across error paths and the lazy prompt. We
+          mount it at the page root so it overlays the whole screen. After
+          saving, the temporary-disable set is cleared for that product so
+          the cashier can retry immediately. */}
+      {recipeEditorProduct && (
+        <RecipeEditor
+          open={Boolean(recipeEditorProduct)}
+          onClose={() => setRecipeEditorProduct(null)}
+          token={token}
+          product={recipeEditorProduct}
+          allProducts={allMenuItems}
+          outletId={
+            typeof window !== 'undefined'
+              ? localStorage.getItem('selected-outlet-id')
+              : null
+          }
+          onSaved={(saved) => {
+            setDisabledProductIds((prev) => {
+              const next = new Set(prev);
+              next.delete(saved.productId);
+              return next;
+            });
+            setToast(`Recipe saved for "${recipeEditorProduct.name}".`);
+          }}
+        />
+      )}
     </main>
   );
 }
