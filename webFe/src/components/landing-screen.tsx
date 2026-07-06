@@ -4,55 +4,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { ui } from '@/lib/ui';
-
-function VerifiedStamp() {
-  return (
-    <div
-      className="landing-stamp pointer-events-none absolute -right-2 -top-2 sm:right-4 sm:top-4"
-      aria-hidden="true"
-    >
-      <svg
-        width="72"
-        height="72"
-        viewBox="0 0 72 72"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="drop-shadow-sm"
-      >
-        <circle
-          cx="36"
-          cy="36"
-          r="30"
-          stroke="var(--accent)"
-          strokeWidth="1.5"
-          strokeDasharray="3 2"
-          fill="var(--paper)"
-          fillOpacity="0.92"
-        />
-        <circle
-          cx="36"
-          cy="36"
-          r="24"
-          stroke="var(--success)"
-          strokeWidth="0.75"
-          strokeOpacity="0.55"
-        />
-        <text
-          x="36"
-          y="38"
-          textAnchor="middle"
-          fill="var(--success)"
-          fontSize="8"
-          fontWeight="600"
-          letterSpacing="2"
-          fontFamily="var(--font-body), sans-serif"
-        >
-          VERIFIED
-        </text>
-      </svg>
-    </div>
-  );
-}
+import { VerifiedStamp } from '@/components/marketing/verified-stamp';
 
 function LedgerCorner({ className }: { className: string }) {
   return (
@@ -126,7 +78,7 @@ export function LandingScreen() {
           <LedgerCorner className="bottom-0 left-0 border-b-2 border-l-2" />
           <LedgerCorner className="bottom-0 right-0 border-b-2 border-r-2" />
 
-          <VerifiedStamp />
+          <VerifiedStamp className="landing-stamp pointer-events-none absolute -right-2 -top-2 sm:right-4 sm:top-4" />
 
           <div className="mb-8 flex items-center gap-3" aria-hidden="true">
             <span className="h-px flex-1 bg-border" />
