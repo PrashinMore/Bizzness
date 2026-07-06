@@ -8,45 +8,22 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { OrganizationRequiredMiddleware } from './common/middleware/organization-required.middleware';
 import { JWT_CONFIG } from './auth/jwt.config';
-import { User } from './users/entities/user.entity';
 import { ProductsModule } from './products/products.module';
-import { Product } from './products/entities/product.entity';
 import { SalesModule } from './sales/sales.module';
-import { Sale } from './sales/entities/sale.entity';
-import { SaleItem } from './sales/entities/sale-item.entity';
 import { ExpensesModule } from './expenses/expenses.module';
-import { Expense } from './expenses/entities/expense.entity';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { SettingsModule } from './settings/settings.module';
-import { Settings } from './settings/entities/settings.entity';
 import { ReportsModule } from './reports/reports.module';
 import { OrganizationsModule } from './organizations/organizations.module';
-import { Organization } from './organizations/entities/organization.entity';
 import { CategoriesModule } from './categories/categories.module';
-import { Category } from './categories/entities/category.entity';
-import { GlobalProduct } from './products/entities/global-product.entity';
 import { InvoicesModule } from './invoices/invoices.module';
-import { Invoice } from './invoices/entities/invoice.entity';
-import { InvoiceCounter } from './invoices/entities/invoice-counter.entity';
-import { OrganizationInvoiceSettings } from './invoices/entities/organization-invoice-settings.entity';
 import { TablesModule } from './tables/tables.module';
-import { DiningTable } from './tables/entities/dining-table.entity';
 import { OutletsModule } from './outlets/outlets.module';
-import { Outlet } from './outlets/entities/outlet.entity';
 import { StockModule } from './stock/stock.module';
-import { Stock } from './stock/entities/stock.entity';
 import { RecipesModule } from './recipes/recipes.module';
-import { Recipe } from './recipes/entities/recipe.entity';
-import { RecipeItem } from './recipes/entities/recipe-item.entity';
 import { InventoryModule } from './inventory/inventory.module';
 import { CrmModule } from './crm/crm.module';
-import { Customer } from './crm/entities/customer.entity';
-import { CustomerVisit } from './crm/entities/customer-visit.entity';
-import { CustomerNote } from './crm/entities/customer-note.entity';
-import { CustomerFeedback } from './crm/entities/customer-feedback.entity';
-import { LoyaltyAccount } from './crm/entities/loyalty-account.entity';
-import { LoyaltyTransaction } from './crm/entities/loyalty-transaction.entity';
-import { Reward } from './crm/entities/reward.entity';
+import { buildTypeOrmConfig } from './database/database.config';
 
 @Module({
   imports: [
@@ -60,85 +37,7 @@ import { Reward } from './crm/entities/reward.entity';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => {
-        const host = configService.get<string>('DB_HOST') ?? configService.get<string>('DBHOST') ?? 'localhost';
-        // const isSupabase = host.includes('supabase.co');
-        const isSupabase = false;
-        
-        // Detect serverless environment
-        const isServerless = 
-          !!process.env.AWS_LAMBDA_FUNCTION_NAME ||
-          !!process.env.VERCEL ||
-          !!process.env.IS_SERVERLESS ||
-          process.cwd().startsWith('/var/task');
-        
-        const port = parseInt(configService.get<string>('DB_PORT') ?? '5432', 10);
-        const isPooler = port === 6543; // Supabase connection pooler port
-        
-        // Serverless-optimized connection settings
-        const serverlessPoolConfig = {
-          max: 1, // Single connection for serverless
-          min: 0,
-          idleTimeoutMillis: 5000, // Close idle connections quickly
-          connectionTimeoutMillis: 3000, // Very short timeout for serverless (3 seconds)
-          statement_timeout: 5000, // Query timeout
-        };
-        
-        // Regular pool configuration
-        const regularPoolConfig = isPooler
-          ? {
-              max: 10, // Limit for Session mode pooler
-              idleTimeoutMillis: 30000,
-              connectionTimeoutMillis: 10000,
-            }
-          : {
-              max: 20, // Higher limit for direct connection
-              idleTimeoutMillis: 30000,
-              connectionTimeoutMillis: 10000,
-            };
-        
-        const baseConfig = {
-          type: 'postgres' as const,
-          host,
-          port,
-          username: configService.get<string>('DB_USER') ?? 'postgres',
-          password: configService.get<string>('DB_PASSWORD') ?? 'postgres',
-          database: configService.get<string>('DB_NAME') ?? 'biznes',
-          entities: [User, Product, Sale, SaleItem, Expense, Settings, Organization, Category, GlobalProduct, Invoice, InvoiceCounter, OrganizationInvoiceSettings, DiningTable, Outlet, Stock, Recipe, RecipeItem, Customer, CustomerVisit, CustomerNote, CustomerFeedback, LoyaltyAccount, LoyaltyTransaction, Reward],
-          synchronize: true,
-          // Disable retries completely in serverless to fail fast
-          retryAttempts: isServerless ? 0 : 10,
-          retryDelay: isServerless ? 0 : 3000,
-          // Auto-reconnect settings
-          autoLoadEntities: true,
-          keepConnectionAlive: !isServerless, // Don't keep connections alive in serverless
-        };
-
-        // SSL configuration for Supabase and other cloud databases
-        if (isSupabase || isServerless) {
-          const poolConfig = isServerless ? serverlessPoolConfig : regularPoolConfig;
-          
-          return {
-            ...baseConfig,
-            extra: {
-              ssl: isSupabase ? {
-                rejectUnauthorized: false,
-              } : undefined,
-              ...poolConfig,
-              // Disable automatic retries in the pool
-              ...(isServerless && {
-                maxUses: 1, // Use connection only once in serverless
-                allowExitOnIdle: true, // Allow process to exit when idle
-              }),
-            },
-          };
-        }
-
-        return {
-          ...baseConfig,
-          extra: regularPoolConfig,
-        };
-      },
+      useFactory: (configService: ConfigService) => buildTypeOrmConfig(configService),
       inject: [ConfigService],
     }),
     UsersModule,
