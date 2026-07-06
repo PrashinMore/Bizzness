@@ -1,21 +1,11 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/contexts/auth-context';
 import { OutletProviderWrapper } from '@/components/outlet-provider-wrapper';
 import { ConditionalSideNav } from '@/components/conditional-side-nav';
 import { ConditionalContentWrapper } from '@/components/conditional-content-wrapper';
 import { OrganizationOnboardingGate } from '@/components/organization-onboarding-gate';
-
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
+import { fraunces, ibmPlexSans } from '@/lib/app-fonts';
 
 export const metadata: Metadata = {
   title: 'Bizzness Portal',
@@ -30,7 +20,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        suppressHydrationWarning
+        className={`${fraunces.variable} ${ibmPlexSans.variable} font-sans antialiased`}
+      >
         <AuthProvider>
           <OutletProviderWrapper>
             <OrganizationOnboardingGate>

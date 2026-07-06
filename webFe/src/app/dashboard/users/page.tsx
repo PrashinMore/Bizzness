@@ -321,43 +321,43 @@ export default function UsersManagementPage() {
 
   if (loading || !user || !token) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-zinc-50">
-        <p className="text-sm text-zinc-700">Loading user management…</p>
+      <main className="flex min-h-screen items-center justify-center bg-paper">
+        <p className="text-sm text-muted">Loading user management…</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-6 py-12">
+    <main className="min-h-screen bg-paper px-6 py-12">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-        <header className="rounded-3xl bg-white p-6 shadow-sm">
-          <h1 className="text-2xl font-semibold text-zinc-900">
+        <header className="rounded-panel bg-surface p-6 shadow-sm">
+          <h1 className="text-2xl font-semibold text-ink">
             Team management
           </h1>
-          <p className="mt-2 text-sm text-zinc-700">
+          <p className="mt-2 text-sm text-muted">
             Add staff, assign roles, reset passwords, and keep your roster up to
             date.
           </p>
         </header>
 
-        <section className="rounded-3xl bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-900">
+        <section className="rounded-panel bg-surface p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-ink">
             Invite a new member
           </h2>
-          <p className="mt-1 text-sm text-zinc-700">
+          <p className="mt-1 text-sm text-muted">
             Search for existing users by email or enter any email address to send an invite.
           </p>
           <form className="mt-4 space-y-4" onSubmit={handleInviteSubmit}>
             {organizations.length > 1 && (
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-zinc-700" htmlFor="invite-org">
+                <label className="block text-sm font-medium text-muted" htmlFor="invite-org">
                   Organization
                 </label>
                 <select
                   id="invite-org"
                   value={selectedOrgId || ''}
                   onChange={(e) => setSelectedOrgId(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                   required
                 >
                   {organizations.map((org) => (
@@ -369,7 +369,7 @@ export default function UsersManagementPage() {
               </div>
             )}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-zinc-700" htmlFor="invite-email">
+              <label className="block text-sm font-medium text-muted" htmlFor="invite-email">
                 Email address
               </label>
               <div className="relative">
@@ -392,24 +392,24 @@ export default function UsersManagementPage() {
                     setTimeout(() => setShowEmailSuggestions(false), 200);
                   }}
                   placeholder="Search by email or enter any email address"
-                  className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                 />
                 {searchingEmails && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600"></div>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-muted"></div>
                   </div>
                 )}
                 {showEmailSuggestions && emailSearchResults.length > 0 && (
-                  <div className="absolute z-10 mt-1 w-full rounded-lg border border-zinc-200 bg-white shadow-lg">
+                  <div className="absolute z-10 mt-1 w-full rounded-lg border border-border bg-surface shadow-lg">
                     <ul className="max-h-48 overflow-y-auto">
                       {emailSearchResults.map((user) => (
                         <li
                           key={user.id}
                           onClick={() => handleEmailSelect(user.email)}
-                          className="cursor-pointer px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+                          className="cursor-pointer px-3 py-2 text-sm text-muted hover:bg-paper"
                         >
                           <div className="font-medium">{user.email}</div>
-                          <div className="text-xs text-zinc-500">{user.name}</div>
+                          <div className="text-xs text-muted">{user.name}</div>
                         </li>
                       ))}
                     </ul>
@@ -417,7 +417,7 @@ export default function UsersManagementPage() {
                 )}
               </div>
               {inviteError && (
-                <p className="text-sm text-red-600">{inviteError}</p>
+                <p className="text-sm text-danger">{inviteError}</p>
               )}
               {inviteSuccess && (
                 <p className="text-sm text-emerald-600">Invite sent successfully!</p>
@@ -426,20 +426,20 @@ export default function UsersManagementPage() {
             <button
               type="submit"
               disabled={inviting || !selectedOrgId}
-              className="rounded-full bg-zinc-900 px-6 py-2 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-70"
+              className="rounded-lg bg-ink px-6 py-2 text-sm font-semibold tracking-wide text-white transition hover:bg-ink-light disabled:cursor-not-allowed disabled:opacity-70"
             >
               {inviting ? 'Sending…' : 'Send Invite'}
             </button>
           </form>
         </section>
 
-        <section className="rounded-3xl bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-900">
+        <section className="rounded-panel bg-surface p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-ink">
             Create user account
           </h2>
           <form className="mt-4 grid gap-4 md:grid-cols-2" onSubmit={handleCreateUser}>
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-zinc-700" htmlFor="create-name">
+              <label className="block text-sm font-medium text-muted" htmlFor="create-name">
                 Full name
               </label>
               <input
@@ -449,11 +449,11 @@ export default function UsersManagementPage() {
                 onChange={(event) =>
                   setCreateState((prev) => ({ ...prev, name: event.target.value }))
                 }
-                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               />
             </div>
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-zinc-700" htmlFor="create-email">
+              <label className="block text-sm font-medium text-muted" htmlFor="create-email">
                 Email
               </label>
               <input
@@ -464,11 +464,11 @@ export default function UsersManagementPage() {
                 onChange={(event) =>
                   setCreateState((prev) => ({ ...prev, email: event.target.value }))
                 }
-                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               />
             </div>
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-zinc-700" htmlFor="create-password">
+              <label className="block text-sm font-medium text-muted" htmlFor="create-password">
                 Temporary password
               </label>
               <input
@@ -479,11 +479,11 @@ export default function UsersManagementPage() {
                 onChange={(event) =>
                   setCreateState((prev) => ({ ...prev, password: event.target.value }))
                 }
-                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               />
             </div>
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-zinc-700" htmlFor="create-role">
+              <label className="block text-sm font-medium text-muted" htmlFor="create-role">
                 Role
               </label>
               <select
@@ -495,7 +495,7 @@ export default function UsersManagementPage() {
                     role: event.target.value as UserRole,
                   }))
                 }
-                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               >
                 <option value="staff">Staff</option>
                 <option value="admin">Admin</option>
@@ -505,7 +505,7 @@ export default function UsersManagementPage() {
               <button
                 type="submit"
                 disabled={creating}
-                className="rounded-full bg-zinc-900 px-6 py-2 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-70"
+                className="rounded-lg bg-ink px-6 py-2 text-sm font-semibold tracking-wide text-white transition hover:bg-ink-light disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {creating ? 'Creating…' : 'Create user'}
               </button>
@@ -513,12 +513,12 @@ export default function UsersManagementPage() {
           </form>
         </section>
 
-        <section className="rounded-3xl bg-white p-6 shadow-sm">
+        <section className="rounded-panel bg-surface p-6 shadow-sm">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-zinc-900">
+            <h2 className="text-lg font-semibold text-ink">
               Current team members
             </h2>
-            <span className="text-sm text-zinc-700">
+            <span className="text-sm text-muted">
               {fetching ? 'Loading…' : `${users.length} users`}
             </span>
           </div>
@@ -530,16 +530,16 @@ export default function UsersManagementPage() {
           ) : null}
 
           {error ? (
-            <p className="mt-4 rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+            <p className="mt-4 rounded-md border border-danger/20 bg-danger-muted px-3 py-2 text-sm text-danger">
               {error}
             </p>
           ) : null}
 
           <div className="mt-6 space-y-4">
             {fetching ? (
-              <p className="text-sm text-zinc-700">Loading users…</p>
+              <p className="text-sm text-muted">Loading users…</p>
             ) : sortedUsers.length === 0 ? (
-              <p className="text-sm text-zinc-700">
+              <p className="text-sm text-muted">
                 No users found. Create your first team member above.
               </p>
             ) : (
@@ -554,15 +554,15 @@ export default function UsersManagementPage() {
                 return (
                   <div
                     key={u.id}
-                    className="rounded-2xl border border-zinc-100 p-4 shadow-sm"
+                    className="rounded-2xl border border-border p-4 shadow-sm"
                   >
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                       <div>
-                        <h3 className="text-base font-semibold text-zinc-900">
+                        <h3 className="text-base font-semibold text-ink">
                           {u.name}
                         </h3>
-                        <p className="text-sm text-zinc-700">{u.email}</p>
-                        <p className="text-xs uppercase tracking-wide text-zinc-700">
+                        <p className="text-sm text-muted">{u.email}</p>
+                        <p className="text-xs uppercase tracking-wide text-muted">
                           {u.role}
                         </p>
                       </div>
@@ -571,13 +571,13 @@ export default function UsersManagementPage() {
                           onClick={() =>
                             setSelectedUserId((prev) => (prev === u.id ? null : u.id))
                           }
-                          className="rounded-full border border-zinc-200 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900"
+                          className="rounded-full border border-border px-4 py-1 text-xs font-semibold uppercase tracking-wide text-muted transition hover:border-ink hover:text-ink"
                         >
                           {isEditing ? 'Close' : 'Edit'}
                         </button>
                         <button
                           onClick={() => handleDeleteUser(u.id)}
-                          className="rounded-full border border-red-200 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-red-600 transition hover:border-red-400 hover:text-red-700"
+                          className="rounded-full border border-red-200 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-danger transition hover:border-red-400 hover:text-danger"
                         >
                           Delete
                         </button>
@@ -587,7 +587,7 @@ export default function UsersManagementPage() {
                     {isEditing ? (
                       <div className="mt-4 grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <label className="block text-sm font-medium text-zinc-700">
+                          <label className="block text-sm font-medium text-muted">
                             Full name
                           </label>
                           <input
@@ -595,11 +595,11 @@ export default function UsersManagementPage() {
                             onChange={(event) =>
                               handleEditChange(u.id, 'name', event.target.value)
                             }
-                            className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="block text-sm font-medium text-zinc-700">
+                          <label className="block text-sm font-medium text-muted">
                             Email
                           </label>
                           <input
@@ -608,11 +608,11 @@ export default function UsersManagementPage() {
                             onChange={(event) =>
                               handleEditChange(u.id, 'email', event.target.value)
                             }
-                            className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="block text-sm font-medium text-zinc-700">
+                          <label className="block text-sm font-medium text-muted">
                             Role
                           </label>
                           <select
@@ -620,14 +620,14 @@ export default function UsersManagementPage() {
                             onChange={(event) =>
                               handleEditChange(u.id, 'role', event.target.value)
                             }
-                            className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                           >
                             <option value="staff">Staff</option>
                             <option value="admin">Admin</option>
                           </select>
                         </div>
                         <div className="space-y-2">
-                          <label className="block text-sm font-medium text-zinc-700">
+                          <label className="block text-sm font-medium text-muted">
                             Reset password (optional)
                           </label>
                           <input
@@ -637,14 +637,14 @@ export default function UsersManagementPage() {
                             onChange={(event) =>
                               handleEditChange(u.id, 'password', event.target.value)
                             }
-                            className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                           />
                         </div>
                         <div className="md:col-span-2">
                           <button
                             onClick={() => handleUpdateUser(u.id)}
                             disabled={saving}
-                            className="rounded-full bg-zinc-900 px-6 py-2 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-70"
+                            className="rounded-lg bg-ink px-6 py-2 text-sm font-semibold tracking-wide text-white transition hover:bg-ink-light disabled:cursor-not-allowed disabled:opacity-70"
                           >
                             {saving ? 'Saving…' : 'Save changes'}
                           </button>

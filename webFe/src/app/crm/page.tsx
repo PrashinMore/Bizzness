@@ -74,32 +74,32 @@ export default function CrmDashboardPage() {
       <div className="mx-auto max-w-7xl">
         <PageHeader className="mb-8">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">CRM</p>
-            <h1 className="mt-1 text-3xl font-bold text-zinc-900">CRM Dashboard</h1>
-            <p className="mt-2 text-zinc-600">Customer relationship management overview</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">CRM</p>
+            <h1 className="mt-1 text-3xl font-bold text-ink">CRM Dashboard</h1>
+            <p className="mt-2 text-muted">Customer relationship management overview</p>
           </div>
         </PageHeader>
 
         {stats && (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
             <Card>
-              <div className="text-sm font-medium text-zinc-600">Total Customers</div>
-              <div className="mt-2 text-3xl font-bold text-zinc-900">{stats.totalCustomers}</div>
+              <div className="text-sm font-medium text-muted">Total Customers</div>
+              <div className="mt-2 text-3xl font-bold text-ink">{stats.totalCustomers}</div>
             </Card>
 
             <Card>
-              <div className="text-sm font-medium text-zinc-600">New Customers (7 days)</div>
-              <div className="mt-2 text-3xl font-bold text-zinc-900">{stats.newCustomersLast7Days}</div>
+              <div className="text-sm font-medium text-muted">New Customers (7 days)</div>
+              <div className="mt-2 text-3xl font-bold text-ink">{stats.newCustomersLast7Days}</div>
             </Card>
 
             <Card>
-              <div className="text-sm font-medium text-zinc-600">Repeat Rate</div>
-              <div className="mt-2 text-3xl font-bold text-zinc-900">{stats.repeatRate}%</div>
+              <div className="text-sm font-medium text-muted">Repeat Rate</div>
+              <div className="mt-2 text-3xl font-bold text-ink">{stats.repeatRate}%</div>
             </Card>
 
             <Card>
-              <div className="text-sm font-medium text-zinc-600">Avg Visits/Customer</div>
-              <div className="mt-2 text-3xl font-bold text-zinc-900">{stats.avgVisitsPerCustomer.toFixed(1)}</div>
+              <div className="text-sm font-medium text-muted">Avg Visits/Customer</div>
+              <div className="mt-2 text-3xl font-bold text-ink">{stats.avgVisitsPerCustomer.toFixed(1)}</div>
             </Card>
           </div>
         )}

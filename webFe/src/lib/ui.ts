@@ -4,10 +4,15 @@ export function cn(...classes: Array<string | false | null | undefined>) {
 
 export const ui = {
   colors: {
-    brand: 'var(--color-brand-600)',
-    success: 'var(--color-success-600)',
-    danger: 'var(--color-danger-600)',
-    warning: 'var(--color-warning-600)',
+    ink: 'var(--ink)',
+    accent: 'var(--accent)',
+    success: 'var(--success)',
+    warning: 'var(--warning)',
+    danger: 'var(--danger)',
+    border: 'var(--border)',
+    paper: 'var(--paper)',
+    surface: 'var(--surface)',
+    muted: 'var(--muted)',
   },
   radius: {
     sm: 'var(--radius-sm)',
@@ -15,4 +20,6 @@ export const ui = {
     lg: 'var(--radius-lg)',
     xl: 'var(--radius-xl)',
   },
+  focusRing:
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper',
 } as const;

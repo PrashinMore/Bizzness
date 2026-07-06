@@ -1,20 +1,18 @@
 'use client';
 
-import { cn } from '@/lib/ui';
+import { cn, ui } from '@/lib/ui';
 import type React from 'react';
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'accent';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 const variantClass: Record<ButtonVariant, string> = {
-  primary:
-    'bg-brand-600 text-white hover:bg-brand-700 focus-visible:ring-brand-500',
+  primary: 'bg-ink text-paper hover:bg-ink-light active:bg-ink-dark',
   secondary:
-    'border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 focus-visible:ring-brand-500',
-  ghost:
-    'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:ring-brand-500',
-  danger:
-    'bg-danger-600 text-white hover:bg-danger-700 focus-visible:ring-danger-500',
+    'border border-border bg-surface text-ink hover:border-ink hover:bg-paper active:bg-accent-muted/40',
+  ghost: 'text-muted hover:bg-paper hover:text-ink',
+  danger: 'bg-danger text-paper hover:bg-danger/90 active:bg-danger/80',
+  accent: 'bg-accent text-paper hover:bg-accent-dark active:bg-accent-dark',
 };
 
 const sizeClass: Record<ButtonSize, string> = {
@@ -37,7 +35,8 @@ export function Button({
   return (
     <button
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60',
+        'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors duration-200 disabled:pointer-events-none disabled:opacity-60',
+        ui.focusRing,
         variantClass[variant],
         sizeClass[size],
         className,

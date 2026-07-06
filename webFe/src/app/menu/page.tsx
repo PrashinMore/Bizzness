@@ -658,20 +658,20 @@ export default function MenuPage() {
 
   if (loading || !user || !token) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-zinc-50">
-        <p className="text-sm text-zinc-700">Loading menu…</p>
+      <main className="flex min-h-screen items-center justify-center bg-paper">
+        <p className="text-sm text-muted">Loading menu…</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-6 py-12">
+    <main className="min-h-screen bg-paper px-6 py-12">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 lg:flex-row">
         {/* Menu Items Grid */}
         <div className="flex-1">
           <header className="mb-6">
-            <h1 className="text-3xl font-semibold text-zinc-900">Menu</h1>
-            <p className="mt-2 text-sm text-zinc-700">
+            <h1 className="text-3xl font-semibold text-ink">Menu</h1>
+            <p className="mt-2 text-sm text-muted">
               Select items to add to your cart
             </p>
           </header>
@@ -684,14 +684,14 @@ export default function MenuPage() {
                 placeholder="Search by name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-zinc-200 px-4 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-lg border border-border px-4 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               />
             </div>
             <div className="sm:w-48">
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full rounded-lg border border-zinc-200 px-4 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-lg border border-border px-4 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               >
                 <option value="">All Categories</option>
                 {availableCategories.map((category) => (
@@ -707,7 +707,7 @@ export default function MenuPage() {
                   setSearchQuery('');
                   setCategoryFilter('');
                 }}
-                className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted hover:bg-paper"
               >
                 Clear
               </button>
@@ -715,7 +715,7 @@ export default function MenuPage() {
           </div>
 
           {error && (
-            <div className="mb-4 rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+            <div className="mb-4 rounded-md border border-danger/20 bg-danger-muted px-3 py-2 text-sm text-danger">
               {error}
             </div>
           )}
@@ -724,7 +724,7 @@ export default function MenuPage() {
               Sits above the grid so it's visible while the cashier decides
               what to do next. Auto-clears on any subsequent action. */}
           {toast && (
-            <div className="mb-4 flex items-start justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <div className="mb-4 flex items-start justify-between gap-3 rounded-md border border-warning/30 bg-warning-muted px-3 py-2 text-sm text-amber-900">
               <span>{toast}</span>
               <button
                 type="button"
@@ -741,12 +741,12 @@ export default function MenuPage() {
               RECIPE-typed dish with no recipe yet. Two actions only: wire up
               the recipe now, or ignore (dismisses until next occurrence). */}
           {recipePrompt && (
-            <div className="mb-4 flex flex-col gap-3 rounded-lg border border-brand-200 bg-brand-50 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-4 flex flex-col gap-3 rounded-lg border border-brand-200 bg-accent-muted px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="font-semibold text-brand-900">
                   Track ingredients for &quot;{recipePrompt.name}&quot;?
                 </p>
-                <p className="text-xs text-brand-700">
+                <p className="text-xs text-accent-dark">
                   Set up its recipe once and future sales will deduct raw
                   materials automatically.
                 </p>
@@ -768,7 +768,7 @@ export default function MenuPage() {
                     setRecipePrompt(null);
                     setToast(null);
                   }}
-                  className="rounded-full border border-brand-200 bg-white px-4 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-100"
+                  className="rounded-full border border-brand-200 bg-surface px-4 py-1.5 text-xs font-semibold text-accent-dark hover:bg-brand-100"
                 >
                   Ignore
                 </button>
@@ -777,10 +777,10 @@ export default function MenuPage() {
           )}
 
           {fetching ? (
-            <p className="text-sm text-zinc-700">Loading menu items…</p>
+            <p className="text-sm text-muted">Loading menu items…</p>
           ) : menuItems.length === 0 ? (
-            <div className="rounded-3xl bg-white p-8 shadow-sm">
-              <p className="text-sm text-zinc-700">
+            <div className="rounded-panel bg-surface p-8 shadow-sm">
+              <p className="text-sm text-muted">
                 {searchQuery || categoryFilter
                   ? 'No menu items found matching your filters.'
                   : 'No menu items found. Add products to see them here.'}
@@ -816,12 +816,12 @@ export default function MenuPage() {
                 return (
                   <div
                     key={product.id}
-                    className={`rounded-2xl bg-white p-3 sm:p-6 shadow-sm transition hover:shadow-md ${
+                    className={`rounded-2xl bg-surface p-3 sm:p-6 shadow-sm transition hover:shadow-md ${
                       isOutOfStock ? 'opacity-60' : ''
                     }`}
                   >
                     {product.imageUrl ? (
-                      <div className="mb-3 sm:mb-4 aspect-square w-full overflow-hidden rounded-xl sm:rounded-2xl bg-zinc-100">
+                      <div className="mb-3 sm:mb-4 aspect-square w-full overflow-hidden rounded-xl sm:rounded-2xl bg-paper">
                         <img
                           src={`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'}${product.imageUrl}`}
                           alt={product.name}
@@ -832,21 +832,21 @@ export default function MenuPage() {
                         />
                       </div>
                     ) : (
-                      <div className="mb-3 sm:mb-4 aspect-square w-full rounded-xl sm:rounded-2xl bg-zinc-100 flex items-center justify-center">
-                        <span className="text-zinc-700 text-xs sm:text-sm">No image</span>
+                      <div className="mb-3 sm:mb-4 aspect-square w-full rounded-xl sm:rounded-2xl bg-paper flex items-center justify-center">
+                        <span className="text-muted text-xs sm:text-sm">No image</span>
                       </div>
                     )}
 
-                    <h3 className="text-sm sm:text-lg font-semibold text-zinc-900 line-clamp-2">
+                    <h3 className="text-sm sm:text-lg font-semibold text-ink line-clamp-2">
                       {product.name}
                     </h3>
-                    <p className="mt-1 text-xs sm:text-sm text-zinc-700 line-clamp-1">
+                    <p className="mt-1 text-xs sm:text-sm text-muted line-clamp-1">
                       {product.category}
                     </p>
 
                     <div className="mt-3 sm:mt-4">
                       <div className="mb-2 sm:mb-3">
-                        <p className="text-base sm:text-2xl font-bold text-zinc-900">
+                        <p className="text-base sm:text-2xl font-bold text-ink">
                           ₹{Number(product.sellingPrice).toFixed(2)}
                         </p>
                         {/* Availability display — distinct per inventory type so
@@ -854,7 +854,7 @@ export default function MenuPage() {
                         {inventoryType === 'SIMPLE' && trackInventory && stock > 0 && (
                           <p
                             className={`text-xs ${
-                              isLowSimpleStock ? 'text-amber-600' : 'text-zinc-700'
+                              isLowSimpleStock ? 'text-amber-600' : 'text-muted'
                             }`}
                           >
                             {isLowSimpleStock ? '⚠ ' : ''}
@@ -873,7 +873,7 @@ export default function MenuPage() {
                           </p>
                         )}
                         {isUntracked && (
-                          <p className="text-xs text-zinc-400">Always available</p>
+                          <p className="text-xs text-muted/60">Always available</p>
                         )}
                       </div>
 
@@ -881,7 +881,7 @@ export default function MenuPage() {
                         {isOutOfStock ? (
                           <button
                             disabled
-                            className="w-full sm:w-auto rounded-full border border-zinc-200 px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-semibold text-zinc-700 cursor-not-allowed"
+                            className="w-full sm:w-auto rounded-full border border-border px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-semibold text-muted cursor-not-allowed"
                           >
                             Out of Stock
                           </button>
@@ -891,11 +891,11 @@ export default function MenuPage() {
                               onClick={() =>
                                 updateQuantity(product.id, cartQuantity - 1)
                               }
-                              className="rounded-full border border-zinc-200 px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+                              className="rounded-full border border-border px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold text-muted hover:bg-paper"
                             >
                               −
                             </button>
-                            <span className="min-w-[1.5rem] sm:min-w-[2rem] text-center text-xs sm:text-sm font-semibold text-zinc-900">
+                            <span className="min-w-[1.5rem] sm:min-w-[2rem] text-center text-xs sm:text-sm font-semibold text-ink">
                               {cartQuantity}
                             </span>
                             <button
@@ -911,7 +911,7 @@ export default function MenuPage() {
                                 trackInventory &&
                                 cartQuantity >= stock
                               }
-                              className="rounded-full border border-zinc-200 px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="rounded-full border border-border px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold text-muted hover:bg-paper disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               +
                             </button>
@@ -919,7 +919,7 @@ export default function MenuPage() {
                         ) : (
                           <button
                             onClick={() => addToCart(product)}
-                            className="w-full sm:w-auto rounded-full bg-zinc-900 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white transition hover:bg-zinc-700"
+                            className="w-full sm:w-auto rounded-lg bg-ink px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white transition hover:bg-ink-light"
                           >
                             Add to Cart
                           </button>
@@ -935,13 +935,13 @@ export default function MenuPage() {
 
         {/* Cart Sidebar */}
         <aside className="w-full lg:w-80">
-          <div className="sticky top-6 rounded-3xl bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-zinc-900">Cart</h2>
+          <div className="sticky top-6 rounded-panel bg-surface p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-ink">Cart</h2>
 
             {crmEnabled && (
               <>
                 <div className="mt-4">
-                  <label className="mb-2 block text-sm font-medium text-zinc-700">
+                  <label className="mb-2 block text-sm font-medium text-muted">
                     Customer Phone (Optional)
                   </label>
                   <input
@@ -949,7 +949,7 @@ export default function MenuPage() {
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                     placeholder="Enter customer phone number"
-                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                   />
                   {selectedCustomer ? (
                     <div className="mt-2 rounded-lg bg-blue-50 border border-blue-200 p-3">
@@ -969,7 +969,7 @@ export default function MenuPage() {
                           {loadingEligibleRewards ? (
                             <p className="text-xs text-blue-600">Loading rewards...</p>
                           ) : eligibleRewards.length === 0 ? (
-                            <p className="text-xs text-zinc-500">No eligible rewards available</p>
+                            <p className="text-xs text-muted">No eligible rewards available</p>
                           ) : (
                             <>
                               <p className="text-xs text-blue-700 mb-2 font-medium">
@@ -1003,7 +1003,7 @@ export default function MenuPage() {
                                       className={`w-full text-left rounded border p-2 text-xs transition ${
                                         isSelected
                                           ? 'border-green-500 bg-green-50'
-                                          : 'border-blue-200 bg-white hover:bg-blue-50'
+                                          : 'border-blue-200 bg-surface hover:bg-blue-50'
                                       }`}
                                     >
                                       <div className="flex items-start justify-between">
@@ -1015,7 +1015,7 @@ export default function MenuPage() {
                                             {getRewardDesc()}
                                           </p>
                                           {reward.minOrderValue && (
-                                            <p className="mt-0.5 text-zinc-500 text-[10px]">
+                                            <p className="mt-0.5 text-muted text-[10px]">
                                               Min order: ₹{reward.minOrderValue}
                                             </p>
                                           )}
@@ -1047,14 +1047,14 @@ export default function MenuPage() {
                       New customer will be created
                     </p>
                   ) : (
-                    <p className="mt-1 text-xs text-zinc-500">
+                    <p className="mt-1 text-xs text-muted">
                       Customer will be automatically created/linked if phone is provided
                     </p>
                   )}
                 </div>
                 {customerPhone.trim() && !selectedCustomer && (
                   <div className="mt-4">
-                    <label className="mb-2 block text-sm font-medium text-zinc-700">
+                    <label className="mb-2 block text-sm font-medium text-muted">
                       Customer Name (Optional)
                     </label>
                     <input
@@ -1062,9 +1062,9 @@ export default function MenuPage() {
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
                       placeholder="Enter customer name"
-                      className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                     />
-                    <p className="mt-1 text-xs text-zinc-500">
+                    <p className="mt-1 text-xs text-muted">
                       Leave empty to create customer as "Guest"
                     </p>
                   </div>
@@ -1074,13 +1074,13 @@ export default function MenuPage() {
 
             {tablesEnabled && (
               <div className="mt-4">
-                <label className="mb-2 block text-sm font-medium text-zinc-700">
+                <label className="mb-2 block text-sm font-medium text-muted">
                   Table (Optional)
                 </label>
                 <select
                   value={selectedTableId}
                   onChange={(e) => setSelectedTableId(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                   disabled={loadingActiveSale}
                 >
                   <option value="">No table</option>
@@ -1093,7 +1093,7 @@ export default function MenuPage() {
                     ))}
                 </select>
                 {loadingActiveSale && (
-                  <p className="mt-1 text-xs text-zinc-500">Loading...</p>
+                  <p className="mt-1 text-xs text-muted">Loading...</p>
                 )}
                 {activeSale && !loadingActiveSale && (
                   <div className="mt-2 rounded-lg bg-blue-50 border border-blue-200 p-2">
@@ -1114,14 +1114,14 @@ export default function MenuPage() {
             )}
 
             {cart.length === 0 ? (
-              <p className="mt-4 text-sm text-zinc-700">Your cart is empty</p>
+              <p className="mt-4 text-sm text-muted">Your cart is empty</p>
             ) : (
               <>
                 <div className="mt-4 space-y-3 max-h-96 overflow-y-auto">
                   {cart.map((item) => (
                     <div
                       key={item.productId}
-                      className="flex items-start gap-3 rounded-lg border border-zinc-200 p-3"
+                      className="flex items-start gap-3 rounded-lg border border-border p-3"
                     >
                       {item.product.imageUrl && (
                         <img
@@ -1134,10 +1134,10 @@ export default function MenuPage() {
                         />
                       )}
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-semibold text-zinc-900 truncate">
+                        <h4 className="text-sm font-semibold text-ink truncate">
                           {item.product.name}
                         </h4>
-                        <p className="text-xs text-zinc-700">
+                        <p className="text-xs text-muted">
                           ₹{Number(item.sellingPrice || 0).toFixed(2)} × {Number(item.quantity || 0)}
                         </p>
                         <div className="mt-1 flex items-center gap-2">
@@ -1145,11 +1145,11 @@ export default function MenuPage() {
                             onClick={() =>
                               updateQuantity(item.productId, item.quantity - 1)
                             }
-                            className="rounded border border-zinc-200 px-2 py-0.5 text-xs hover:bg-zinc-50"
+                            className="rounded border border-border px-2 py-0.5 text-xs hover:bg-paper"
                           >
                             −
                           </button>
-                          <span className="text-xs font-medium text-zinc-700">
+                          <span className="text-xs font-medium text-muted">
                             {item.quantity}
                           </span>
                           <button
@@ -1163,13 +1163,13 @@ export default function MenuPage() {
                               (item.product.trackInventory ?? true) &&
                               item.quantity >= (item.product.stock ?? 0)
                             }
-                            className="rounded border border-zinc-200 px-2 py-0.5 text-xs hover:bg-zinc-50 disabled:opacity-50"
+                            className="rounded border border-border px-2 py-0.5 text-xs hover:bg-paper disabled:opacity-50"
                           >
                             +
                           </button>
                           <button
                             onClick={() => removeFromCart(item.productId)}
-                            className="ml-auto text-xs text-red-600 hover:text-red-700"
+                            className="ml-auto text-xs text-danger hover:text-danger"
                           >
                             Remove
                           </button>
@@ -1179,15 +1179,15 @@ export default function MenuPage() {
                   ))}
                 </div>
 
-                <div className="mt-6 border-t border-zinc-200 pt-4">
+                <div className="mt-6 border-t border-border pt-4">
                   <div className="mb-4">
-                    <label className="mb-2 block text-sm font-medium text-zinc-700">
+                    <label className="mb-2 block text-sm font-medium text-muted">
                       Payment Type
                     </label>
                     <select
                       value={paymentType}
                       onChange={(e) => setPaymentType(e.target.value)}
-                      className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                     >
                       <option value="cash">Cash</option>
                       <option value="UPI">UPI</option>
@@ -1199,9 +1199,9 @@ export default function MenuPage() {
                         type="checkbox"
                         checked={isPaid}
                         onChange={(e) => setIsPaid(e.target.checked)}
-                        className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-2 focus:ring-zinc-200"
+                        className="h-4 w-4 rounded border-border text-ink focus:ring-2 focus:ring-accent/25"
                       />
-                      <span className="text-sm font-medium text-zinc-700">
+                      <span className="text-sm font-medium text-muted">
                         Mark payment as completed
                       </span>
                     </label>
@@ -1218,18 +1218,18 @@ export default function MenuPage() {
                       <span>-₹{redemptionDiscount.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="flex items-center justify-between text-lg font-semibold text-zinc-900">
+                  <div className="flex items-center justify-between text-lg font-semibold text-ink">
                     <span>{activeSale ? 'New Items Total' : 'Total'}</span>
                     <span>₹{Number(totalAmount || 0).toFixed(2)}</span>
                   </div>
                   {activeSale && (
-                    <div className="flex items-center justify-between text-sm text-zinc-600 border-t border-zinc-200 pt-2">
+                    <div className="flex items-center justify-between text-sm text-muted border-t border-border pt-2">
                       <span>Current Order Total</span>
                       <span>₹{Number(activeSale.totalAmount || 0).toFixed(2)}</span>
                     </div>
                   )}
                   {activeSale && (
-                    <div className="flex items-center justify-between text-base font-semibold text-zinc-900 border-t border-zinc-200 pt-2">
+                    <div className="flex items-center justify-between text-base font-semibold text-ink border-t border-border pt-2">
                       <span>New Total After Adding</span>
                       <span>₹{(Number(activeSale.totalAmount || 0) + Number(totalAmount || 0)).toFixed(2)}</span>
                     </div>
@@ -1237,7 +1237,7 @@ export default function MenuPage() {
                   <button
                     onClick={handleCheckout}
                     disabled={checkingOut || cart.length === 0}
-                    className="mt-4 w-full rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="mt-4 w-full rounded-lg bg-ink px-6 py-3 text-sm font-semibold tracking-wide text-white transition hover:bg-ink-light disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {checkingOut ? 'Processing…' : activeSale ? 'Add to Order' : 'Checkout'}
                   </button>

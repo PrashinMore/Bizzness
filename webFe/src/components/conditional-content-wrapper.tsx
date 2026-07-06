@@ -13,10 +13,5 @@ export function ConditionalContentWrapper({
   const paddingClass =
     !loading && user && userHasOrganization(user) ? 'md:pl-64 pb-20 md:pb-0' : '';
 
-  return (
-    <div className={`min-h-screen bg-app ${paddingClass}`}>
-      {children}
-    </div>
-  );
+  return <div className={`min-h-screen bg-paper ${paddingClass}`}>{children}</div>;
 }
-

@@ -195,25 +195,25 @@ export default function RewardsPage() {
 
   if (loading || !user || !token) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-zinc-50">
-        <p className="text-sm text-zinc-700">Loading…</p>
+      <main className="flex min-h-screen items-center justify-center bg-paper">
+        <p className="text-sm text-muted">Loading…</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-6 py-12">
+    <main className="min-h-screen bg-paper px-6 py-12">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-zinc-900">Rewards Catalog</h1>
-            <p className="mt-2 text-sm text-zinc-600">
+            <h1 className="text-3xl font-bold text-ink">Rewards Catalog</h1>
+            <p className="mt-2 text-sm text-muted">
               Create and manage rewards that customers can redeem with loyalty points
             </p>
           </div>
           <button
             onClick={handleCreate}
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+            className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white hover:bg-ink-light"
           >
             + Create Reward
           </button>
@@ -227,14 +227,14 @@ export default function RewardsPage() {
 
         {fetching ? (
           <div className="text-center py-12">
-            <p className="text-sm text-zinc-700">Loading rewards…</p>
+            <p className="text-sm text-muted">Loading rewards…</p>
           </div>
         ) : rewards.length === 0 ? (
-          <div className="rounded-lg bg-white p-12 text-center shadow-sm">
-            <p className="text-zinc-600">No rewards created yet</p>
+          <div className="rounded-lg bg-surface p-12 text-center shadow-sm">
+            <p className="text-muted">No rewards created yet</p>
             <button
               onClick={handleCreate}
-              className="mt-4 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+              className="mt-4 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white hover:bg-ink-light"
             >
               Create Your First Reward
             </button>
@@ -245,38 +245,38 @@ export default function RewardsPage() {
               <div
                 key={reward.id}
                 className={`rounded-lg border p-6 shadow-sm ${
-                  reward.isActive ? 'border-zinc-200 bg-white' : 'border-zinc-100 bg-zinc-50 opacity-60'
+                  reward.isActive ? 'border-border bg-surface' : 'border-border bg-paper opacity-60'
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-zinc-900">{reward.name}</h3>
+                    <h3 className="text-lg font-semibold text-ink">{reward.name}</h3>
                     {reward.description && (
-                      <p className="mt-1 text-sm text-zinc-600">{reward.description}</p>
+                      <p className="mt-1 text-sm text-muted">{reward.description}</p>
                     )}
                     <div className="mt-3 space-y-1">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-zinc-600">Type:</span>
-                        <span className="font-medium text-zinc-900">{getRewardDescription(reward)}</span>
+                        <span className="text-muted">Type:</span>
+                        <span className="font-medium text-ink">{getRewardDescription(reward)}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-zinc-600">Points Required:</span>
-                        <span className="font-medium text-zinc-900">{reward.pointsRequired}</span>
+                        <span className="text-muted">Points Required:</span>
+                        <span className="font-medium text-ink">{reward.pointsRequired}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-zinc-600">Redemptions:</span>
-                        <span className="font-medium text-zinc-900">
+                        <span className="text-muted">Redemptions:</span>
+                        <span className="font-medium text-ink">
                           {reward.totalRedemptions}
                           {reward.maxRedemptions ? ` / ${reward.maxRedemptions}` : ''}
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-zinc-600">Status:</span>
+                        <span className="text-muted">Status:</span>
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                             reward.isActive
                               ? 'bg-green-100 text-green-800'
-                              : 'bg-zinc-100 text-zinc-800'
+                              : 'bg-paper text-ink'
                           }`}
                         >
                           {reward.isActive ? 'Active' : 'Inactive'}
@@ -288,13 +288,13 @@ export default function RewardsPage() {
                 <div className="mt-4 flex gap-2">
                   <button
                     onClick={() => handleEdit(reward)}
-                    className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                    className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-muted hover:bg-paper"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(reward.id)}
-                    className="rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
+                    className="rounded-lg border border-red-300 bg-surface px-3 py-2 text-sm font-medium text-danger hover:bg-red-50"
                   >
                     Delete
                   </button>
@@ -307,40 +307,40 @@ export default function RewardsPage() {
         {/* Create/Edit Modal */}
         {showCreateModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-            <div className="w-full max-w-2xl max-h-[90vh] rounded-lg bg-white shadow-xl flex flex-col">
-              <div className="px-6 pt-6 pb-4 border-b border-zinc-200">
-                <h2 className="text-xl font-semibold text-zinc-900">
+            <div className="w-full max-w-2xl max-h-[90vh] rounded-lg bg-surface shadow-xl flex flex-col">
+              <div className="px-6 pt-6 pb-4 border-b border-border">
+                <h2 className="text-xl font-semibold text-ink">
                   {editingReward ? 'Edit Reward' : 'Create Reward'}
                 </h2>
               </div>
               <form ref={formRef} onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700">Name *</label>
+                  <label className="block text-sm font-medium text-muted">Name *</label>
                   <input
                     type="text"
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700">Description</label>
+                  <label className="block text-sm font-medium text-muted">Description</label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={2}
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700">Type *</label>
+                  <label className="block text-sm font-medium text-muted">Type *</label>
                   <select
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value as RewardType })}
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   >
                     <option value="DISCOUNT_PERCENTAGE">Discount Percentage</option>
                     <option value="DISCOUNT_FIXED">Fixed Discount</option>
@@ -350,21 +350,21 @@ export default function RewardsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700">Points Required *</label>
+                  <label className="block text-sm font-medium text-muted">Points Required *</label>
                   <input
                     type="number"
                     required
                     min="1"
                     value={formData.pointsRequired}
                     onChange={(e) => setFormData({ ...formData, pointsRequired: parseInt(e.target.value) || 0 })}
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   />
                 </div>
 
                 {formData.type === 'DISCOUNT_PERCENTAGE' && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-zinc-700">Discount Percentage *</label>
+                      <label className="block text-sm font-medium text-muted">Discount Percentage *</label>
                       <input
                         type="number"
                         required
@@ -372,30 +372,30 @@ export default function RewardsPage() {
                         max="100"
                         value={formData.discountPercentage || ''}
                         onChange={(e) => setFormData({ ...formData, discountPercentage: parseFloat(e.target.value) || undefined })}
-                        className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-zinc-700">Maximum Discount Amount (₹) *</label>
+                      <label className="block text-sm font-medium text-muted">Maximum Discount Amount (₹) *</label>
                       <input
                         type="number"
                         required
                         min="0"
                         value={formData.maxDiscountAmount || ''}
                         onChange={(e) => setFormData({ ...formData, maxDiscountAmount: parseFloat(e.target.value) || undefined })}
-                        className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                       />
-                      <p className="mt-1 text-xs text-zinc-500">Maximum discount that can be applied regardless of percentage</p>
+                      <p className="mt-1 text-xs text-muted">Maximum discount that can be applied regardless of percentage</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-zinc-700">Minimum Order Value (₹) (Optional)</label>
+                      <label className="block text-sm font-medium text-muted">Minimum Order Value (₹) (Optional)</label>
                       <input
                         type="number"
                         min="0"
                         value={formData.minOrderValue || ''}
                         onChange={(e) => setFormData({ ...formData, minOrderValue: parseFloat(e.target.value) || undefined })}
                         placeholder="Leave empty for no minimum"
-                        className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                       />
                     </div>
                   </>
@@ -404,37 +404,37 @@ export default function RewardsPage() {
                 {formData.type === 'DISCOUNT_FIXED' && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-zinc-700">Discount Amount (₹) *</label>
+                      <label className="block text-sm font-medium text-muted">Discount Amount (₹) *</label>
                       <input
                         type="number"
                         required
                         min="0"
                         value={formData.discountAmount || ''}
                         onChange={(e) => setFormData({ ...formData, discountAmount: parseFloat(e.target.value) || undefined })}
-                        className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-zinc-700">Maximum Discount Amount (₹) *</label>
+                      <label className="block text-sm font-medium text-muted">Maximum Discount Amount (₹) *</label>
                       <input
                         type="number"
                         required
                         min="0"
                         value={formData.maxDiscountAmount || ''}
                         onChange={(e) => setFormData({ ...formData, maxDiscountAmount: parseFloat(e.target.value) || undefined })}
-                        className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                       />
-                      <p className="mt-1 text-xs text-zinc-500">Maximum discount that can be applied</p>
+                      <p className="mt-1 text-xs text-muted">Maximum discount that can be applied</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-zinc-700">Minimum Order Value (₹) (Optional)</label>
+                      <label className="block text-sm font-medium text-muted">Minimum Order Value (₹) (Optional)</label>
                       <input
                         type="number"
                         min="0"
                         value={formData.minOrderValue || ''}
                         onChange={(e) => setFormData({ ...formData, minOrderValue: parseFloat(e.target.value) || undefined })}
                         placeholder="Leave empty for no minimum"
-                        className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                       />
                     </div>
                   </>
@@ -442,40 +442,40 @@ export default function RewardsPage() {
 
                 {formData.type === 'FREE_ITEM' && (
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700">Free Item Name *</label>
+                    <label className="block text-sm font-medium text-muted">Free Item Name *</label>
                     <input
                       type="text"
                       required
                       value={formData.freeItemName}
                       onChange={(e) => setFormData({ ...formData, freeItemName: e.target.value })}
-                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                     />
                   </div>
                 )}
 
                 {formData.type === 'CASHBACK' && (
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700">Cashback Amount (₹) *</label>
+                    <label className="block text-sm font-medium text-muted">Cashback Amount (₹) *</label>
                     <input
                       type="number"
                       required
                       min="0"
                       value={formData.cashbackAmount || ''}
                       onChange={(e) => setFormData({ ...formData, cashbackAmount: parseFloat(e.target.value) || undefined })}
-                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                     />
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700">Max Redemptions (optional)</label>
+                  <label className="block text-sm font-medium text-muted">Max Redemptions (optional)</label>
                   <input
                     type="number"
                     min="1"
                     value={formData.maxRedemptions || ''}
                     onChange={(e) => setFormData({ ...formData, maxRedemptions: parseInt(e.target.value) || undefined })}
                     placeholder="Leave empty for unlimited"
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   />
                 </div>
 
@@ -484,17 +484,17 @@ export default function RewardsPage() {
                     type="checkbox"
                     checked={formData.isActive}
                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                    className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                    className="h-4 w-4 rounded border-border text-ink focus:ring-accent"
                   />
-                  <label className="text-sm font-medium text-zinc-700">Active</label>
+                  <label className="text-sm font-medium text-muted">Active</label>
                 </div>
 
               </form>
-              <div className="px-6 py-4 border-t border-zinc-200 flex gap-3 bg-white">
+              <div className="px-6 py-4 border-t border-border flex gap-3 bg-surface">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                  className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-muted hover:bg-paper"
                 >
                   Cancel
                 </button>
@@ -505,7 +505,7 @@ export default function RewardsPage() {
                       formRef.current.requestSubmit();
                     }
                   }}
-                  className="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+                  className="flex-1 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white hover:bg-ink-light"
                 >
                   {editingReward ? 'Update' : 'Create'}
                 </button>

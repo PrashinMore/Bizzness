@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { cn } from '@/lib/ui';
+import { cn, ui } from '@/lib/ui';
 
 type DrawerProps = {
   open: boolean;
@@ -18,22 +18,25 @@ export function Drawer({ open, onClose, title, children, className }: DrawerProp
         aria-label="Close drawer overlay"
         onClick={onClose}
         className={cn(
-          'absolute inset-0 bg-zinc-900/40 transition-opacity',
+          'absolute inset-0 bg-ink/40 transition-opacity',
           open ? 'opacity-100' : 'opacity-0',
         )}
       />
       <aside
         className={cn(
-          'absolute right-0 top-0 h-full w-full max-w-md border-l border-zinc-200 bg-white shadow-lifted transition-transform duration-200',
+          'absolute right-0 top-0 h-full w-full max-w-md border-l border-border bg-surface shadow-lifted transition-transform duration-200',
           open ? 'translate-x-0' : 'translate-x-full',
           className,
         )}
       >
-        <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-3">
-          <h2 className="text-sm font-semibold text-zinc-900">{title || 'Details'}</h2>
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <h2 className="font-display text-base font-semibold text-ink">{title || 'Details'}</h2>
           <button
             onClick={onClose}
-            className="rounded-lg px-2 py-1 text-sm text-zinc-600 hover:bg-zinc-100"
+            className={cn(
+              'rounded-lg px-2 py-1 text-sm text-muted hover:bg-paper hover:text-ink',
+              ui.focusRing,
+            )}
           >
             Close
           </button>

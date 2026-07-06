@@ -245,7 +245,7 @@ export default function TablesPage() {
       )}
 
       {showCreateForm && (
-        <form onSubmit={handleCreate} className="bg-white border rounded-lg p-6 mb-6">
+        <form onSubmit={handleCreate} className="bg-surface border rounded-lg p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Create New Table</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
@@ -315,7 +315,7 @@ export default function TablesPage() {
                     required
                     value={editState.name}
                     onChange={(e) => setEditState({ ...editState, name: e.target.value })}
-                    className="w-full border rounded px-2 py-1 text-sm bg-white"
+                    className="w-full border rounded px-2 py-1 text-sm bg-surface"
                   />
                 </div>
                 <div>
@@ -326,7 +326,7 @@ export default function TablesPage() {
                     min="1"
                     value={editState.capacity}
                     onChange={(e) => setEditState({ ...editState, capacity: e.target.value })}
-                    className="w-full border rounded px-2 py-1 text-sm bg-white"
+                    className="w-full border rounded px-2 py-1 text-sm bg-surface"
                   />
                 </div>
                 <div>
@@ -335,7 +335,7 @@ export default function TablesPage() {
                     type="text"
                     value={editState.area}
                     onChange={(e) => setEditState({ ...editState, area: e.target.value })}
-                    className="w-full border rounded px-2 py-1 text-sm bg-white"
+                    className="w-full border rounded px-2 py-1 text-sm bg-surface"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -362,7 +362,7 @@ export default function TablesPage() {
               <>
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-bold text-lg">{table.name}</h3>
-                  <span className="text-xs font-semibold px-2 py-1 rounded bg-white/50">
+                  <span className="text-xs font-semibold px-2 py-1 rounded bg-surface/50">
                     {statusLabels[table.status]}
                   </span>
                 </div>
@@ -370,7 +370,7 @@ export default function TablesPage() {
                   <div>Capacity: {table.capacity} seats</div>
                   {table.area && <div>Area: {table.area}</div>}
                   {isOccupied && activeSale && (
-                    <div className="font-semibold text-red-700 mt-2">
+                    <div className="font-semibold text-danger mt-2">
                       Order Total: ₹{Number(activeSale.totalAmount).toFixed(2)}
                     </div>
                   )}
@@ -390,7 +390,7 @@ export default function TablesPage() {
                   <select
                     value={table.status}
                     onChange={(e) => handleStatusChange(table.id, e.target.value as TableStatus)}
-                    className="border rounded px-2 py-1 text-xs bg-white"
+                    className="border rounded px-2 py-1 text-xs bg-surface"
                   >
                     {Object.entries(statusLabels).map(([value, label]) => (
                       <option key={value} value={value}>

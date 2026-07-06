@@ -41,8 +41,8 @@ export function OrganizationOnboardingGate({
 
   if (!isOnboardingPage) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50">
-        <p className="text-sm text-zinc-600">Redirecting to organization setup…</p>
+      <div className="flex min-h-screen items-center justify-center bg-paper">
+        <p className="text-sm text-muted">Redirecting to organization setup…</p>
       </div>
     );
   }
@@ -50,7 +50,7 @@ export function OrganizationOnboardingGate({
   return (
     <>
       <div
-        className="fixed inset-0 z-[200] bg-zinc-900/60 backdrop-blur-sm"
+        className="fixed inset-0 z-[200] bg-ink/60 backdrop-blur-sm"
         aria-hidden="true"
       />
       <div className="pointer-events-none fixed inset-0 z-[201]">

@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { useOutlet } from '@/contexts/outlet-context';
 import { settingsApi, type Settings } from '@/lib/api-client';
-import { cn } from '@/lib/ui';
+import { cn, ui } from '@/lib/ui';
 import {
   ChartColumn,
   ClipboardList,
@@ -66,11 +66,20 @@ export function SideNav() {
 
   const linkClasses = (href: string) =>
     cn(
-      'flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all duration-200',
+      'relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors duration-200',
+      ui.focusRing,
       pathname?.startsWith(href)
-        ? 'bg-brand-50 text-brand-700'
-        : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900',
+        ? 'bg-ink-light text-paper'
+        : 'text-paper/70 hover:bg-ink-light/60 hover:text-paper',
     );
+
+  const activeIndicator = (href: string) =>
+    pathname?.startsWith(href) ? (
+      <span
+        aria-hidden="true"
+        className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-accent"
+      />
+    ) : null;
 
   const businessName = settings?.businessName || 'Bizzness';
   const businessLogo = settings?.businessLogo;
@@ -99,7 +108,10 @@ export function SideNav() {
       <button
         aria-label="Toggle navigation"
         onClick={toggle}
-        className="fixed left-4 top-4 z-50 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm shadow-soft hover:bg-zinc-50 md:hidden"
+        className={cn(
+          'fixed left-4 top-4 z-50 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink shadow-soft hover:bg-paper md:hidden',
+          ui.focusRing,
+        )}
       >
         ☰
       </button>
@@ -108,7 +120,10 @@ export function SideNav() {
         <button
           aria-label="Show sidebar"
           onClick={toggle}
-          className="fixed left-4 top-4 z-50 hidden rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm shadow-soft transition hover:bg-zinc-50 md:flex"
+          className={cn(
+            'fixed left-4 top-4 z-50 hidden rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink shadow-soft hover:bg-paper md:flex',
+            ui.focusRing,
+          )}
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -117,11 +132,12 @@ export function SideNav() {
       )}
 
       <aside
-        className={`fixed left-0 top-0 z-40 hidden h-full w-64 border-r border-zinc-200 bg-white shadow-soft transition-transform duration-200 md:flex md:flex-col ${
-          open ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={cn(
+          'fixed left-0 top-0 z-40 hidden h-full w-64 border-r border-ink-dark bg-ink shadow-lifted transition-transform duration-200 md:flex md:flex-col',
+          open ? 'translate-x-0' : '-translate-x-full',
+        )}
       >
-        <div className="flex h-16 items-center justify-between gap-3 border-b border-zinc-200 px-4">
+        <div className="flex h-16 items-center justify-between gap-3 border-b border-ink-light px-4">
           <div className="flex items-center gap-3">
             {businessLogo && (
               <img
@@ -129,17 +145,19 @@ export function SideNav() {
                 alt={businessName}
                 className="h-9 w-9 rounded-lg object-cover"
                 onError={(e) => {
-                  // Hide image if it fails to load
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
               />
             )}
-            <span className="truncate text-sm font-semibold text-zinc-900">{businessName}</span>
+            <span className="truncate font-display text-sm font-semibold text-paper">{businessName}</span>
           </div>
           <button
             onClick={toggle}
             aria-label="Toggle sidebar"
-            className="hidden rounded p-1.5 text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900 md:flex"
+            className={cn(
+              'hidden rounded p-1.5 text-paper/70 transition hover:bg-ink-light hover:text-paper md:flex',
+              ui.focusRing,
+            )}
           >
             {open ? (
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -153,15 +171,18 @@ export function SideNav() {
           </button>
         </div>
         {!outletsLoading && outlets.length > 1 && (
-          <div className="border-b border-zinc-200 px-4 py-3">
-            <label className="mb-1 block text-xs font-medium text-zinc-600">Outlet</label>
+          <div className="border-b border-ink-light px-4 py-3">
+            <label className="mb-1 block text-xs font-medium text-paper/60">Outlet</label>
             <select
               value={selectedOutlet?.id || ''}
               onChange={(e) => {
                 const outlet = outlets.find((o) => o.id === e.target.value);
                 if (outlet) setSelectedOutlet(outlet);
               }}
-              className="w-full rounded-lg border border-zinc-200 bg-white px-2.5 py-2 text-xs text-zinc-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
+              className={cn(
+                'w-full rounded-lg border border-ink-light bg-ink-light px-2.5 py-2 text-xs text-paper',
+                ui.focusRing,
+              )}
             >
               {outlets.map((outlet) => (
                 <option key={outlet.id} value={outlet.id}>
@@ -176,16 +197,25 @@ export function SideNav() {
             {navItems
               .filter((item) => item.enabled !== false)
               .map((item) => (
-                <Link key={item.href} href={item.href} className={linkClasses(item.href)} prefetch={false}>
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={linkClasses(item.href)}
+                  prefetch={false}
+                >
+                  {activeIndicator(item.href)}
                   <item.icon className="h-4 w-4" />
                   {item.label}
                 </Link>
               ))}
           </div>
-          <div className="border-t border-zinc-200 p-2">
+          <div className="border-t border-ink-light p-2">
             <button
               onClick={handleLogout}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900"
+              className={cn(
+                'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-paper/70 transition hover:bg-ink-light hover:text-paper',
+                ui.focusRing,
+              )}
             >
               <LogOut className="h-4 w-4" />
               Logout
@@ -194,12 +224,13 @@ export function SideNav() {
         </nav>
       </aside>
 
-      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-200 bg-white/95 px-2 py-2 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-surface/95 px-2 py-2 backdrop-blur md:hidden">
         <div className="grid grid-cols-5 gap-1">
           {navItems
-            .filter((item) =>
-              ['/dashboard', '/sales', '/products', '/crm', '/settings'].includes(item.href) &&
-              item.enabled !== false
+            .filter(
+              (item) =>
+                ['/dashboard', '/sales', '/products', '/crm', '/settings'].includes(item.href) &&
+                item.enabled !== false,
             )
             .map((item) => (
               <Link
@@ -207,9 +238,10 @@ export function SideNav() {
                 href={item.href}
                 className={cn(
                   'flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-2 text-[11px] font-medium',
+                  ui.focusRing,
                   pathname?.startsWith(item.href)
-                    ? 'bg-brand-50 text-brand-700'
-                    : 'text-zinc-500',
+                    ? 'bg-accent-muted text-ink'
+                    : 'text-muted',
                 )}
                 prefetch={false}
               >
@@ -222,5 +254,3 @@ export function SideNav() {
     </>
   );
 }
-
-

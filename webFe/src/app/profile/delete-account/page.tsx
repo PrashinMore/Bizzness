@@ -89,7 +89,7 @@ export default function DeleteAccountPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white shadow-lg rounded-lg p-8">
+        <div className="bg-surface shadow-lg rounded-lg p-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Delete Account</h1>
             <p className="text-gray-600">
@@ -116,7 +116,7 @@ export default function DeleteAccountPage() {
                 <h3 className="text-sm font-medium text-red-800">
                   Warning: This action is permanent
                 </h3>
-                <div className="mt-2 text-sm text-red-700">
+                <div className="mt-2 text-sm text-danger">
                   <ul className="list-disc list-inside space-y-1">
                     <li>Your account will be marked for deletion immediately</li>
                     <li>All your personal data will be anonymized</li>
@@ -154,7 +154,7 @@ export default function DeleteAccountPage() {
                 htmlFor="confirm"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Type <span className="font-bold text-red-600">DELETE</span> to confirm
+                Type <span className="font-bold text-danger">DELETE</span> to confirm
               </label>
               <input
                 id="confirm"
@@ -169,7 +169,7 @@ export default function DeleteAccountPage() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded">
+              <div className="bg-red-50 border-l-4 border-red-500 text-danger px-4 py-3 rounded">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">

@@ -63,8 +63,8 @@ export default function ExpensesListPage() {
       <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader>
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-900">Expenses</h1>
-          <p className="mt-1 text-sm text-zinc-600">Monitor operational spending and keep profitability visible.</p>
+          <h1 className="text-2xl font-semibold text-ink">Expenses</h1>
+          <p className="mt-1 text-sm text-muted">Monitor operational spending and keep profitability visible.</p>
         </div>
         <Link href="/expenses/new" className="inline-flex">
           <Button>Add Expense</Button>
@@ -74,7 +74,7 @@ export default function ExpensesListPage() {
       <Card>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-600">From</label>
+            <label className="text-sm text-muted">From</label>
             <TextInput
               type="date"
               value={from}
@@ -85,7 +85,7 @@ export default function ExpensesListPage() {
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-600">To</label>
+            <label className="text-sm text-muted">To</label>
             <TextInput
               type="date"
               value={to}
@@ -96,7 +96,7 @@ export default function ExpensesListPage() {
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-600">Category</label>
+            <label className="text-sm text-muted">Category</label>
             <TextInput
               type="text"
               value={category}
@@ -134,7 +134,7 @@ export default function ExpensesListPage() {
         <Card>
           <CardTitle>Monthly Summary</CardTitle>
           <div className="mt-4 overflow-x-auto">
-            <DataTable className="divide-y divide-zinc-200">
+            <DataTable className="divide-y divide-border">
               <DataTableHead>
                 <tr>
                   <DataTableHeaderCell>Month</DataTableHeaderCell>
@@ -159,7 +159,7 @@ export default function ExpensesListPage() {
         <Card className="hidden md:block">
           <CardTitle>All Expenses</CardTitle>
           <div className="mt-4 overflow-x-auto">
-            <DataTable className="divide-y divide-zinc-200">
+            <DataTable className="divide-y divide-border">
               <DataTableHead>
                 <tr>
                   <DataTableHeaderCell>Date</DataTableHeaderCell>
@@ -177,7 +177,7 @@ export default function ExpensesListPage() {
                     <DataTableCell>₹ {Number(e.amount).toFixed(2)}</DataTableCell>
                     <DataTableCell>{e.note || '-'}</DataTableCell>
                     <DataTableCell>
-                      <Link className="text-brand-700 underline" href={`/expenses/${e.id}`}>
+                      <Link className="text-accent-dark underline" href={`/expenses/${e.id}`}>
                         Edit
                       </Link>
                     </DataTableCell>
@@ -202,14 +202,14 @@ export default function ExpensesListPage() {
           <CardTitle>All Expenses</CardTitle>
           <div className="mt-4 space-y-3">
             {(loading ? [] : expenses).map((e) => (
-              <div key={e.id} className="rounded-xl border border-zinc-200 p-3">
+              <div key={e.id} className="rounded-xl border border-border p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-zinc-900">₹{Number(e.amount).toFixed(2)}</p>
-                  <p className="text-xs text-zinc-500">{new Date(e.date).toLocaleDateString()}</p>
+                  <p className="text-sm font-semibold text-ink">₹{Number(e.amount).toFixed(2)}</p>
+                  <p className="text-xs text-muted">{new Date(e.date).toLocaleDateString()}</p>
                 </div>
-                <p className="mt-1 text-sm text-zinc-700">{e.category}</p>
-                <p className="mt-1 text-xs text-zinc-600">{e.note || 'No notes'}</p>
-                <Link className="mt-2 inline-block text-sm font-medium text-brand-700 underline" href={`/expenses/${e.id}`}>
+                <p className="mt-1 text-sm text-muted">{e.category}</p>
+                <p className="mt-1 text-xs text-muted">{e.note || 'No notes'}</p>
+                <Link className="mt-2 inline-block text-sm font-medium text-accent-dark underline" href={`/expenses/${e.id}`}>
                   Edit
                 </Link>
               </div>
@@ -229,7 +229,7 @@ export default function ExpensesListPage() {
           >
             Previous
           </Button>
-          <span className="text-sm text-zinc-600">
+          <span className="text-sm text-muted">
             Page {page} of {Math.ceil(total / size)}
           </span>
           <Button

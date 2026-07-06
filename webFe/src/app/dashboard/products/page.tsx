@@ -6,7 +6,9 @@ import { useRequireAuth } from '@/hooks/use-require-auth';
 import { productsApi, stockApi } from '@/lib/api-client';
 import { Product, InventoryType } from '@/types/product';
 import { Stock } from '@/types/stock';
-import { PageHeader, PageShell } from '@/components/ui/shell';
+import { PageEyebrow, PageHeader, PageShell, PageSubtitle, PageTitle } from '@/components/ui/shell';
+import { getStockStatus, stockStatusBorder, stockStatusDot } from '@/lib/design-tokens';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { InlineAlert, LoadingState, EmptyState } from '@/components/ui/states';
@@ -158,16 +160,18 @@ export default function ProductsPage() {
   };
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setAppliedFilters(filters);
+    }, filters.search.trim() ? 300 : 0);
+    return () => clearTimeout(timer);
+  }, [filters]);
+
+  useEffect(() => {
     if (!loading && user && token) {
       loadProducts(appliedFilters);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, user, token, appliedFilters]);
-
-  const handleFiltersSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setAppliedFilters(filters);
-  };
 
   const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -444,7 +448,7 @@ export default function ProductsPage() {
   if (loading || !user || !token) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-app">
-        <p className="text-sm text-zinc-700">Loading product dashboard…</p>
+        <p className="text-sm text-muted">Loading product dashboard…</p>
       </main>
     );
   }
@@ -455,31 +459,25 @@ export default function ProductsPage() {
         <PageHeader>
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">
-                Inventory
-              </p>
-              <h1 className="text-3xl font-semibold text-zinc-900">
-                Product & stock management
-              </h1>
-              <p className="mt-2 text-sm text-zinc-700">
+              <PageEyebrow>Inventory</PageEyebrow>
+              <PageTitle className="mt-1">Product &amp; stock management</PageTitle>
+              <PageSubtitle>
                 Track costs, selling prices, and ensure you never run out of stock.
-              </p>
+              </PageSubtitle>
             </div>
-            <div className="grid gap-2 text-sm text-zinc-700 md:text-right">
+            <div className="grid gap-2 text-sm text-muted md:text-right">
               <p>
-                <span className="font-semibold text-zinc-900">{products.length}</span>{' '}
+                <span className="tabular-data font-semibold text-ink">{products.length}</span>{' '}
                 products
               </p>
               <p>
-                <span className="font-semibold text-zinc-900">
-                  {lowStockCount}
-                </span>{' '}
+                <span className="tabular-data font-semibold text-ink">{lowStockCount}</span>{' '}
                 at risk
               </p>
               <p>
                 Inventory value:{' '}
-                <span className="font-semibold text-zinc-900">
-                  ${inventoryValue.toFixed(2)}
+                <span className="tabular-data font-semibold text-ink">
+                  ₹{inventoryValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                 </span>
               </p>
             </div>
@@ -489,7 +487,7 @@ export default function ProductsPage() {
         {/* CSV Bulk Import Section */}
         <Card>
           <CardTitle>Bulk Import Products</CardTitle>
-          <p className="mt-1 text-sm text-zinc-700">
+          <p className="mt-1 text-sm text-muted">
             Import multiple products at once using a CSV file. Existing products with the same name will be updated.
           </p>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -500,7 +498,7 @@ export default function ProductsPage() {
             >
               📥 Download Template
             </Button>
-            <label className="flex cursor-pointer items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+            <label className="flex cursor-pointer items-center justify-center rounded-xl border border-border bg-surface px-4 py-2 text-sm font-medium text-muted transition hover:bg-paper">
               <input
                 type="file"
                 accept=".csv"
@@ -512,17 +510,17 @@ export default function ProductsPage() {
             </label>
           </div>
           {importResult && (
-            <div className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-              <p className="text-sm font-medium text-zinc-900">
+            <div className="mt-4 rounded-lg border border-border bg-paper p-4">
+              <p className="text-sm font-medium text-ink">
                 {importResult.created + importResult.updated} products processed
               </p>
               <div className="mt-2 grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-zinc-600">Created:</span>{' '}
+                  <span className="text-muted">Created:</span>{' '}
                   <span className="font-semibold text-green-600">{importResult.created}</span>
                 </div>
                 <div>
-                  <span className="text-zinc-600">Updated:</span>{' '}
+                  <span className="text-muted">Updated:</span>{' '}
                   <span className="font-semibold text-blue-600">{importResult.updated}</span>
                 </div>
               </div>
@@ -545,9 +543,9 @@ export default function ProductsPage() {
         </Card>
 
         <section className="grid gap-6 md:grid-cols-2">
-          <Card>
+          <Card id="add-product-form">
             <CardTitle>Add a product</CardTitle>
-            <p className="mt-1 text-sm text-zinc-700">
+            <p className="mt-1 text-sm text-muted">
               Create new SKUs with costs, selling price, and stock thresholds.
             </p>
             <form className="mt-4 grid gap-4" onSubmit={handleCreate}>
@@ -558,7 +556,7 @@ export default function ProductsPage() {
                 onChange={(event) =>
                   setCreateState((prev) => ({ ...prev, name: event.target.value }))
                 }
-                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               />
               <input
                 required
@@ -567,7 +565,7 @@ export default function ProductsPage() {
                 onChange={(event) =>
                   setCreateState((prev) => ({ ...prev, category: event.target.value }))
                 }
-                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               />
               <div className="grid gap-4 md:grid-cols-2">
                 <input
@@ -580,7 +578,7 @@ export default function ProductsPage() {
                   onChange={(event) =>
                     setCreateState((prev) => ({ ...prev, costPrice: event.target.value }))
                   }
-                  className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                 />
                 <input
                   required
@@ -595,7 +593,7 @@ export default function ProductsPage() {
                       sellingPrice: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                 />
               </div>
               <input
@@ -605,7 +603,7 @@ export default function ProductsPage() {
                 onChange={(event) =>
                   setCreateState((prev) => ({ ...prev, unit: event.target.value }))
                 }
-                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               />
               {createState.trackInventory && createState.inventoryType !== 'NONE' && (
                 <input
@@ -619,14 +617,14 @@ export default function ProductsPage() {
                       lowStockThreshold: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                 />
               )}
 
               {/* Inventory behavior controls. `trackInventory` is the master switch
                   so services (e.g. a dine-in charge) can bypass stock logic entirely.
                   `inventoryType` decides how stock is deducted on sale. */}
-              <label className="flex items-center gap-3 text-sm text-zinc-700">
+              <label className="flex items-center gap-3 text-sm text-muted">
                 <input
                   type="checkbox"
                   checked={createState.trackInventory}
@@ -637,13 +635,13 @@ export default function ProductsPage() {
                       inventoryType: event.target.checked ? prev.inventoryType : 'NONE',
                     }))
                   }
-                  className="h-4 w-4 rounded border-zinc-300"
+                  className="h-4 w-4 rounded border-border"
                 />
                 Track inventory for this product
               </label>
               {createState.trackInventory && (
                 <div>
-                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-600">
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted">
                     Inventory type
                   </label>
                   <select
@@ -654,21 +652,21 @@ export default function ProductsPage() {
                         inventoryType: event.target.value as InventoryType,
                       }))
                     }
-                    className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                    className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                   >
                     <option value="SIMPLE">Simple – deduct this product from stock</option>
                     <option value="RECIPE">Recipe – deduct ingredients instead</option>
                     <option value="NONE">None – never deduct stock</option>
                   </select>
                   {createState.inventoryType === 'RECIPE' && (
-                    <p className="mt-2 text-xs text-zinc-500">
+                    <p className="mt-2 text-xs text-muted">
                       You&apos;ll be able to attach a recipe after the product is saved.
                     </p>
                   )}
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-2">
+                <label className="block text-sm font-medium text-muted mb-2">
                   Product Image (optional)
                 </label>
                 <input
@@ -688,14 +686,14 @@ export default function ProductsPage() {
                       setCreateImagePreview(null);
                     }
                   }}
-                  className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                 />
                 {createImagePreview && (
                   <div className="mt-2">
                     <img
                       src={createImagePreview}
                       alt="Preview"
-                      className="h-32 w-32 object-cover rounded-lg border border-zinc-200"
+                      className="h-32 w-32 object-cover rounded-lg border border-border"
                     />
                   </div>
                 )}
@@ -704,7 +702,7 @@ export default function ProductsPage() {
                 type="submit"
                 disabled={creating}
               >
-                {creating ? 'Saving…' : 'Add product'}
+                {creating ? 'Saving…' : 'Add Product'}
               </Button>
             </form>
           </Card>
@@ -713,21 +711,23 @@ export default function ProductsPage() {
             <CardTitle>
               Search & filters
             </CardTitle>
-            <form className="mt-4 space-y-4" onSubmit={handleFiltersSubmit}>
+            <div className="mt-4 space-y-4">
               <input
+                type="search"
                 placeholder="Search by name"
+                aria-label="Search products by name"
                 value={filters.search}
                 onChange={(event) =>
                   setFilters((prev) => ({ ...prev, search: event.target.value }))
                 }
-                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               />
               <select
                 value={filters.category}
                 onChange={(event) =>
                   setFilters((prev) => ({ ...prev, category: event.target.value }))
                 }
-                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               >
                 <option value="">All categories</option>
                 {categories.map((category) => (
@@ -736,7 +736,7 @@ export default function ProductsPage() {
                   </option>
                 ))}
               </select>
-              <label className="flex items-center gap-3 text-sm text-zinc-600">
+              <label className="flex items-center gap-3 text-sm text-muted">
                 <input
                   type="checkbox"
                   checked={filters.lowStockOnly}
@@ -746,12 +746,12 @@ export default function ProductsPage() {
                       lowStockOnly: event.target.checked,
                     }))
                   }
-                  className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500"
+                  className="h-4 w-4 rounded border-border text-ink focus:ring-accent"
                 />
                 Show only low-stock items
               </label>
               <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-600">
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted">
                   Inventory type
                 </label>
                 <select
@@ -762,7 +762,7 @@ export default function ProductsPage() {
                       inventoryType: event.target.value as 'ALL' | InventoryType,
                     }))
                   }
-                  className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm"
+                  className="w-full rounded-xl border border-border px-3 py-2 text-sm"
                 >
                   <option value="ALL">All products</option>
                   <option value="SIMPLE">Raw materials (simple)</option>
@@ -772,31 +772,25 @@ export default function ProductsPage() {
               </div>
               <div className="flex gap-3">
                 <Button
-                  type="submit"
-                  className="flex-1"
-                >
-                  Apply filters
-                </Button>
-                <Button
                   type="button"
                   onClick={() => {
                     setFilters(initialFilters);
                     setAppliedFilters(initialFilters);
                   }}
                   variant="secondary"
-                  className="flex-1"
+                  className="w-full"
                 >
-                  Reset
+                  Clear filters
                 </Button>
               </div>
-            </form>
+            </div>
           </Card>
         </section>
 
         <Card>
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <CardTitle>Inventory overview</CardTitle>
-            <span className="text-sm text-zinc-700">
+            <span className="text-sm text-muted">
               {fetching ? 'Refreshing…' : `${products.length} items`}
             </span>
           </div>
@@ -817,7 +811,14 @@ export default function ProductsPage() {
             {fetching ? (
               <LoadingState message="Loading products…" className="justify-start py-2" />
             ) : products.length === 0 ? (
-              <EmptyState title="No products found" description="Create one using the form above." />
+              <EmptyState
+                title="No items yet"
+                description="Add your first product to start tracking stock levels and costs."
+                actionLabel="Add Product"
+                onAction={() => {
+                  document.getElementById('add-product-form')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              />
             ) : (
               products
                 .filter((product) => {
@@ -849,14 +850,16 @@ export default function ProductsPage() {
                 const trackInventory = form.trackInventory ?? true;
                 const isEditing = editingProductId === product.id;
                 const deltaValue = adjustInputs[product.id] ?? '';
-                const lowStock = stockQuantity < product.lowStockThreshold;
+                const stockStatus =
+                  inventoryType === 'SIMPLE' && trackInventory
+                    ? getStockStatus(stockQuantity, product.lowStockThreshold, true)
+                    : 'untracked';
+                const lowStock = stockStatus === 'low' || stockStatus === 'out';
                 const profitPerUnit = Number(product.sellingPrice) - Number(product.costPrice);
                 return (
                   <div
                     key={product.id}
-                    className={`rounded-2xl border p-4 shadow-sm ${
-                      lowStock ? 'border-amber-200 bg-amber-50/40' : 'border-zinc-100 bg-white'
-                    }`}
+                    className={`rounded-panel border border-border border-l-4 bg-surface p-4 shadow-soft ${stockStatusBorder[stockStatus]}`}
                   >
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                       <div className="flex gap-4">
@@ -864,7 +867,7 @@ export default function ProductsPage() {
                           <img
                             src={`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'}${product.imageUrl}`}
                             alt={product.name}
-                            className="h-20 w-20 object-cover rounded-lg border border-zinc-200 flex-shrink-0"
+                            className="h-20 w-20 object-cover rounded-lg border border-border flex-shrink-0"
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.display = 'none';
                             }}
@@ -872,39 +875,43 @@ export default function ProductsPage() {
                         )}
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="text-base font-semibold text-zinc-900">
+                            <span
+                              className={`h-2 w-2 rounded-full ${stockStatusDot[stockStatus]}`}
+                              aria-hidden="true"
+                            />
+                            <h3 className="text-base font-semibold text-ink">
                               {product.name}
                             </h3>
-                            {lowStock ? (
-                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
-                                Low stock
-                              </span>
+                            {stockStatus === 'low' ? (
+                              <Badge variant="warning">Low stock</Badge>
+                            ) : stockStatus === 'out' ? (
+                              <Badge variant="danger">Out of stock</Badge>
                             ) : null}
                           </div>
-                          <p className="text-sm text-zinc-700">{product.category}</p>
-                          <p className="text-xs text-zinc-700">
+                          <p className="text-sm text-muted">{product.category}</p>
+                          <p className="text-xs text-muted">
                             Added {new Date(product.createdAt).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
-                      <div className="flex flex-wrap gap-4 text-sm text-zinc-600">
+                      <div className="flex flex-wrap gap-4 text-sm text-muted">
                         {/* Stock display branches on the inventory type so the card
                             stays honest — showing "0 in stock" for a RECIPE dish
                             is confusing because its "stock" is derived from
                             ingredients, not this row. */}
                         {inventoryType === 'SIMPLE' && trackInventory && (
                           <div>
-                            <p className="text-xs uppercase tracking-wide text-zinc-700">
+                            <p className="text-xs uppercase tracking-wide text-muted">
                               In stock
                             </p>
-                            <p className="font-semibold text-zinc-900">
+                            <p className="font-semibold text-ink">
                               {stockQuantity} {product.unit}
                             </p>
                           </div>
                         )}
                         {inventoryType === 'RECIPE' && (
                           <div>
-                            <p className="text-xs uppercase tracking-wide text-zinc-700">
+                            <p className="text-xs uppercase tracking-wide text-muted">
                               Inventory
                             </p>
                             <p className="font-semibold text-brand-700">Recipe-driven</p>
@@ -912,26 +919,26 @@ export default function ProductsPage() {
                         )}
                         {(inventoryType === 'NONE' || !trackInventory) && (
                           <div>
-                            <p className="text-xs uppercase tracking-wide text-zinc-700">
+                            <p className="text-xs uppercase tracking-wide text-muted">
                               Inventory
                             </p>
-                            <p className="font-semibold text-zinc-500">Not tracked</p>
+                            <p className="font-semibold text-muted">Not tracked</p>
                           </div>
                         )}
                         <div>
-                          <p className="text-xs uppercase tracking-wide text-zinc-700">
+                          <p className="text-xs uppercase tracking-wide text-muted">
                             Cost / Sell
                           </p>
-                          <p className="font-semibold text-zinc-900">
+                          <p className="font-semibold text-ink">
                             ${Number(product.costPrice).toFixed(2)} / $
                             {Number(product.sellingPrice).toFixed(2)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs uppercase tracking-wide text-zinc-700">
+                          <p className="text-xs uppercase tracking-wide text-muted">
                             Profit / unit
                           </p>
-                          <p className="font-semibold text-zinc-900">
+                          <p className="font-semibold text-ink">
                             ${profitPerUnit.toFixed(2)}
                           </p>
                         </div>
@@ -973,7 +980,7 @@ export default function ProductsPage() {
                     {inventoryType === 'SIMPLE' && trackInventory && (
                       <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end">
                         <div className="flex-1">
-                          <label className="block text-xs font-medium uppercase tracking-wide text-zinc-700">
+                          <label className="block text-xs font-medium uppercase tracking-wide text-muted">
                             Adjust stock
                           </label>
                           <div className="mt-2 flex gap-3">
@@ -987,7 +994,7 @@ export default function ProductsPage() {
                                 }))
                               }
                               placeholder="+/- units"
-                              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                             />
                             <div className="flex gap-1">
                               {/* Fast numeric presets — faster than typing for
@@ -1023,10 +1030,10 @@ export default function ProductsPage() {
                           </div>
                         </div>
                         <div>
-                          <p className="text-xs uppercase tracking-wide text-zinc-700">
+                          <p className="text-xs uppercase tracking-wide text-muted">
                             Low stock threshold
                           </p>
-                          <p className="text-sm font-semibold text-zinc-900">
+                          <p className="text-sm font-semibold text-ink">
                             {product.lowStockThreshold} {product.unit}
                           </p>
                         </div>
@@ -1040,14 +1047,14 @@ export default function ProductsPage() {
                           onChange={(event) =>
                             handleEditChange(product.id, 'name', event.target.value)
                           }
-                          className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                          className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                         />
                         <input
                           value={form.category}
                           onChange={(event) =>
                             handleEditChange(product.id, 'category', event.target.value)
                           }
-                          className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                          className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                         />
                         <input
                           type="number"
@@ -1057,7 +1064,7 @@ export default function ProductsPage() {
                           onChange={(event) =>
                             handleEditChange(product.id, 'costPrice', event.target.value)
                           }
-                          className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                          className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                         />
                         <input
                           type="number"
@@ -1067,14 +1074,14 @@ export default function ProductsPage() {
                           onChange={(event) =>
                             handleEditChange(product.id, 'sellingPrice', event.target.value)
                           }
-                          className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                          className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                         />
                         <input
                           value={form.unit}
                           onChange={(event) =>
                             handleEditChange(product.id, 'unit', event.target.value)
                           }
-                          className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                          className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                         />
                         <input
                           type="number"
@@ -1087,9 +1094,9 @@ export default function ProductsPage() {
                               event.target.value,
                             )
                           }
-                          className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                          className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                         />
-                        <label className="flex items-center gap-3 text-sm text-zinc-700 md:col-span-2">
+                        <label className="flex items-center gap-3 text-sm text-muted md:col-span-2">
                           <input
                             type="checkbox"
                             checked={form.trackInventory}
@@ -1105,13 +1112,13 @@ export default function ProductsPage() {
                                 },
                               }))
                             }
-                            className="h-4 w-4 rounded border-zinc-300"
+                            className="h-4 w-4 rounded border-border"
                           />
                           Track inventory for this product
                         </label>
                         {form.trackInventory && (
                           <div className="md:col-span-2">
-                            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-600">
+                            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted">
                               Inventory type
                             </label>
                             <div className="flex gap-3">
@@ -1126,7 +1133,7 @@ export default function ProductsPage() {
                                     },
                                   }))
                                 }
-                                className="flex-1 rounded-xl border border-zinc-200 px-3 py-2 text-sm"
+                                className="flex-1 rounded-xl border border-border px-3 py-2 text-sm"
                               >
                                 <option value="SIMPLE">
                                   Simple – deduct this product
@@ -1150,7 +1157,7 @@ export default function ProductsPage() {
                           </div>
                         )}
                         <div className="md:col-span-2">
-                          <label className="block text-sm font-medium text-zinc-700 mb-2">
+                          <label className="block text-sm font-medium text-muted mb-2">
                             Product Image (optional)
                           </label>
                           <input
@@ -1181,7 +1188,7 @@ export default function ProductsPage() {
                                 });
                               }
                             }}
-                            className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                            className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                           />
                           {(editImagePreviews[product.id] || product.imageUrl) && (
                             <div className="mt-2">
@@ -1191,7 +1198,7 @@ export default function ProductsPage() {
                                   `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'}${product.imageUrl}`
                                 }
                                 alt="Preview"
-                                className="h-32 w-32 object-cover rounded-lg border border-zinc-200"
+                                className="h-32 w-32 object-cover rounded-lg border border-border"
                               />
                             </div>
                           )}

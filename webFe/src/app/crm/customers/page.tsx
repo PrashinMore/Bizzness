@@ -61,7 +61,7 @@ export default function CustomersListPage() {
 
   if (loading || fetching) {
     return (
-      <main className="min-h-screen bg-zinc-50 px-6 py-12">
+      <main className="min-h-screen bg-paper px-6 py-12">
         <div className="mx-auto max-w-7xl">
           <div className="text-center">Loading...</div>
         </div>
@@ -70,37 +70,37 @@ export default function CustomersListPage() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-6 py-12">
+    <main className="min-h-screen bg-paper px-6 py-12">
       <div className="mx-auto max-w-7xl">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-zinc-900">Customers</h1>
-          <p className="mt-2 text-zinc-600">Manage your customer relationships</p>
+          <h1 className="text-3xl font-bold text-ink">Customers</h1>
+          <p className="mt-2 text-muted">Manage your customer relationships</p>
         </header>
 
         {error && (
           <div className="mb-6 rounded-lg bg-red-50 p-4 text-red-800">{error}</div>
         )}
 
-        <div className="mb-6 rounded-lg bg-white p-6 shadow-sm">
+        <div className="mb-6 rounded-lg bg-surface p-6 shadow-sm">
           <form onSubmit={handleSearch} className="space-y-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div>
-                <label className="block text-sm font-medium text-zinc-700">Search</label>
+                <label className="block text-sm font-medium text-muted">Search</label>
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Name, phone, or email"
-                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700">Segment</label>
+                <label className="block text-sm font-medium text-muted">Segment</label>
                 <select
                   value={segment}
                   onChange={(e) => setSegment(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                 >
                   <option value="">All Customers</option>
                   <option value="first-time">First-time Customers</option>
@@ -112,80 +112,80 @@ export default function CustomersListPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700">Tag</label>
+                <label className="block text-sm font-medium text-muted">Tag</label>
                 <input
                   type="text"
                   value={tag}
                   onChange={(e) => setTag(e.target.value)}
                   placeholder="Filter by tag"
-                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                 />
               </div>
             </div>
 
             <button
               type="submit"
-              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white hover:bg-zinc-800"
+              className="rounded-lg bg-ink px-4 py-2 text-sm text-white hover:bg-ink-light"
             >
               Search
             </button>
           </form>
         </div>
 
-        <div className="rounded-lg bg-white shadow-sm">
+        <div className="rounded-lg bg-surface shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-zinc-50">
+              <thead className="bg-paper">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
                     Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
                     Phone
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
                     Visits
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
                     Total Spend
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
                     Avg Order
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
                     Last Visit
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-200 bg-white">
+              <tbody className="divide-y divide-border bg-surface">
                 {customers.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-zinc-500">
+                    <td colSpan={7} className="px-6 py-8 text-center text-muted">
                       No customers found
                     </td>
                   </tr>
                 ) : (
                   customers.map((customer) => (
-                    <tr key={customer.id} className="hover:bg-zinc-50">
-                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-zinc-900">
+                    <tr key={customer.id} className="hover:bg-paper">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-ink">
                         {customer.name}
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-500">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">
                         {customer.phone}
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-500">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">
                         {customer.totalVisits}
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-500">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">
                         ₹{Number(customer.totalSpend).toFixed(2)}
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-500">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">
                         ₹{Number(customer.avgOrderValue).toFixed(2)}
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-500">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">
                         {customer.lastVisitAt
                           ? new Date(customer.lastVisitAt).toLocaleDateString()
                           : 'Never'}
@@ -193,7 +193,7 @@ export default function CustomersListPage() {
                       <td className="whitespace-nowrap px-6 py-4 text-sm">
                         <Link
                           href={`/crm/customers/${customer.id}`}
-                          className="text-zinc-600 hover:text-zinc-900"
+                          className="text-muted hover:text-ink"
                         >
                           View
                         </Link>
@@ -206,23 +206,23 @@ export default function CustomersListPage() {
           </div>
 
           {totalPages > 1 && (
-            <div className="border-t border-zinc-200 bg-zinc-50 px-6 py-4">
+            <div className="border-t border-border bg-paper px-6 py-4">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-zinc-700">
+                <div className="text-sm text-muted">
                   Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, total)} of {total} customers
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="rounded-lg border border-zinc-300 px-3 py-1 text-sm disabled:opacity-50"
+                    className="rounded-lg border border-border px-3 py-1 text-sm disabled:opacity-50"
                   >
                     Previous
                   </button>
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className="rounded-lg border border-zinc-300 px-3 py-1 text-sm disabled:opacity-50"
+                    className="rounded-lg border border-border px-3 py-1 text-sm disabled:opacity-50"
                   >
                     Next
                   </button>

@@ -86,57 +86,57 @@ export default function EditExpensePage() {
     <main className="mx-auto max-w-3xl p-6 space-y-6">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Edit Expense</h1>
-        <Link href="/expenses" className="text-zinc-900 underline">
+        <Link href="/expenses" className="text-ink underline">
           Back to Expenses
         </Link>
       </header>
 
       {error && (
-        <div className="rounded border border-red-300 bg-red-50 p-3 text-red-700">
+        <div className="rounded border border-red-300 bg-red-50 p-3 text-danger">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSave} className="space-y-4 rounded border border-zinc-200 bg-white p-6">
+      <form onSubmit={handleSave} className="space-y-4 rounded border border-border bg-surface p-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-600">Category</label>
+            <label className="text-sm text-muted">Category</label>
             <input
               type="text"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               required
-              className="rounded border border-zinc-300 px-3 py-2"
+              className="rounded border border-border px-3 py-2"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-600">Amount</label>
+            <label className="text-sm text-muted">Amount</label>
             <input
               type="number"
               step="0.01"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               required
-              className="rounded border border-zinc-300 px-3 py-2"
+              className="rounded border border-border px-3 py-2"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-600">Date</label>
+            <label className="text-sm text-muted">Date</label>
             <input
               type="datetime-local"
               value={date}
               onChange={(e) => setDate(e.target.value)}
               required
-              className="rounded border border-zinc-300 px-3 py-2"
+              className="rounded border border-border px-3 py-2"
             />
           </div>
           <div className="flex flex-col gap-1 sm:col-span-2">
-            <label className="text-sm text-zinc-600">Note</label>
+            <label className="text-sm text-muted">Note</label>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={3}
-              className="rounded border border-zinc-300 px-3 py-2"
+              className="rounded border border-border px-3 py-2"
             />
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function EditExpensePage() {
           <button
             type="submit"
             disabled={loading}
-            className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700 disabled:opacity-50"
+            className="rounded bg-ink px-4 py-2 text-white hover:bg-ink-light disabled:opacity-50"
           >
             {loading ? 'Saving…' : 'Save'}
           </button>
@@ -153,7 +153,7 @@ export default function EditExpensePage() {
             type="button"
             disabled={loading}
             onClick={handleDelete}
-            className="rounded border border-red-300 px-4 py-2 text-red-700 hover:bg-red-50 disabled:opacity-50"
+            className="rounded border border-red-300 px-4 py-2 text-danger hover:bg-red-50 disabled:opacity-50"
           >
             Delete
           </button>

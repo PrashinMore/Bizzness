@@ -102,8 +102,8 @@ export default function SalesListPage() {
       <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader>
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-900">Sales</h1>
-          <p className="mt-1 text-sm text-zinc-600">Track transactions, payment mix, and staff performance.</p>
+          <h1 className="text-2xl font-semibold text-ink">Sales</h1>
+          <p className="mt-1 text-sm text-muted">Track transactions, payment mix, and staff performance.</p>
         </div>
         <div className="flex gap-2">
         <Link
@@ -124,7 +124,7 @@ export default function SalesListPage() {
       <Card>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-5">
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-600">From</label>
+            <label className="text-sm text-muted">From</label>
             <TextInput
               type="date"
               value={from}
@@ -135,7 +135,7 @@ export default function SalesListPage() {
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-600">To</label>
+            <label className="text-sm text-muted">To</label>
             <TextInput
               type="date"
               value={to}
@@ -146,7 +146,7 @@ export default function SalesListPage() {
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-600">Product</label>
+            <label className="text-sm text-muted">Product</label>
             <SelectInput
               value={productId}
               onChange={(e) => {
@@ -163,7 +163,7 @@ export default function SalesListPage() {
             </SelectInput>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-600">Staff</label>
+            <label className="text-sm text-muted">Staff</label>
             <TextInput
               type="text"
               value={staff}
@@ -175,7 +175,7 @@ export default function SalesListPage() {
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-600">Payment Type</label>
+            <label className="text-sm text-muted">Payment Type</label>
             <SelectInput
               value={paymentType}
               onChange={(e) => {
@@ -210,7 +210,7 @@ export default function SalesListPage() {
       </Card>
 
       {error && (
-        <div className="rounded border border-red-300 bg-red-50 p-3 text-red-700">
+        <div className="rounded border border-red-300 bg-red-50 p-3 text-danger">
           {error}
         </div>
       )}
@@ -219,26 +219,26 @@ export default function SalesListPage() {
       {paymentTotals && (
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Card>
-            <div className="text-sm uppercase tracking-widest text-zinc-700">
+            <div className="text-sm uppercase tracking-widest text-muted">
               Cash Payments
             </div>
-            <div className="mt-2 text-2xl font-semibold text-zinc-900">
+            <div className="mt-2 text-2xl font-semibold text-ink">
               ₹{paymentTotals.cash.toFixed(2)}
             </div>
           </Card>
           <Card>
-            <div className="text-sm uppercase tracking-widest text-zinc-700">
+            <div className="text-sm uppercase tracking-widest text-muted">
               UPI Payments
             </div>
-            <div className="mt-2 text-2xl font-semibold text-zinc-900">
+            <div className="mt-2 text-2xl font-semibold text-ink">
               ₹{paymentTotals.UPI.toFixed(2)}
             </div>
           </Card>
           <Card>
-            <div className="text-sm uppercase tracking-widest text-zinc-700">
+            <div className="text-sm uppercase tracking-widest text-muted">
               Total
             </div>
-            <div className="mt-2 text-2xl font-semibold text-zinc-900">
+            <div className="mt-2 text-2xl font-semibold text-ink">
               ₹{paymentTotals.total.toFixed(2)}
             </div>
           </Card>
@@ -246,7 +246,7 @@ export default function SalesListPage() {
       )}
 
       <Card className="hidden p-0 md:block overflow-x-auto">
-        <DataTable className="divide-y divide-zinc-200">
+        <DataTable className="divide-y divide-border">
           <DataTableHead>
             <tr>
               <DataTableHeaderCell>Date</DataTableHeaderCell>
@@ -276,27 +276,27 @@ export default function SalesListPage() {
                 <DataTableCell>
                   {s.id ? (
                     <Link
-                      className="text-brand-700 underline"
+                      className="text-accent-dark underline"
                       href={`/sales/${s.id}`}
                     >
                       View
                     </Link>
                   ) : (
-                    <span className="text-zinc-700">No ID</span>
+                    <span className="text-muted">No ID</span>
                   )}
                 </DataTableCell>
               </tr>
             ))}
             {loading && (
               <tr>
-                <DataTableCell className="py-6 text-center text-sm text-zinc-700" colSpan={6}>
+                <DataTableCell className="py-6 text-center text-sm text-muted" colSpan={6}>
                   Loading...
                 </DataTableCell>
               </tr>
             )}
             {!loading && sales.length === 0 && (
               <tr>
-                <DataTableCell className="py-6 text-center text-sm text-zinc-700" colSpan={6}>
+                <DataTableCell className="py-6 text-center text-sm text-muted" colSpan={6}>
                   No sales found
                 </DataTableCell>
               </tr>
@@ -310,18 +310,18 @@ export default function SalesListPage() {
           <Card key={s.id || Math.random().toString(36)}>
             <div className="flex items-start justify-between gap-2">
               <div>
-                <p className="text-sm font-semibold text-zinc-900">₹{Number(s.totalAmount).toFixed(2)}</p>
-                <p className="text-xs text-zinc-600">{new Date(s.date).toLocaleString()}</p>
+                <p className="text-sm font-semibold text-ink">₹{Number(s.totalAmount).toFixed(2)}</p>
+                <p className="text-xs text-muted">{new Date(s.date).toLocaleString()}</p>
               </div>
               <Badge>{s.paymentType || 'cash'}</Badge>
             </div>
-            <p className="mt-3 text-sm text-zinc-700">{s.items.reduce((sum, it) => sum + it.quantity, 0)} items</p>
-            <p className="text-sm text-zinc-700">Sold by {userMap.get(s.soldBy)?.name || s.soldBy}</p>
-            {s.id && <Link className="mt-2 inline-block text-sm font-medium text-brand-700 underline" href={`/sales/${s.id}`}>View details</Link>}
+            <p className="mt-3 text-sm text-muted">{s.items.reduce((sum, it) => sum + it.quantity, 0)} items</p>
+            <p className="text-sm text-muted">Sold by {userMap.get(s.soldBy)?.name || s.soldBy}</p>
+            {s.id && <Link className="mt-2 inline-block text-sm font-medium text-accent-dark underline" href={`/sales/${s.id}`}>View details</Link>}
           </Card>
         ))}
-        {loading && <Card><p className="text-center text-sm text-zinc-700">Loading...</p></Card>}
-        {!loading && sales.length === 0 && <Card><p className="text-center text-sm text-zinc-700">No sales found</p></Card>}
+        {loading && <Card><p className="text-center text-sm text-muted">Loading...</p></Card>}
+        {!loading && sales.length === 0 && <Card><p className="text-center text-sm text-muted">No sales found</p></Card>}
       </div>
 
       {Math.ceil(total / size) > 1 && (
@@ -333,7 +333,7 @@ export default function SalesListPage() {
           >
             Previous
           </Button>
-          <span className="text-sm text-zinc-600">
+          <span className="text-sm text-muted">
             Page {page} of {Math.ceil(total / size)}
           </span>
           <Button

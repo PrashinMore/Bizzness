@@ -243,12 +243,12 @@ export default function SaleDetailPage() {
           ) : (
             <button
               onClick={() => setShowInvoiceForm(true)}
-              className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700"
+              className="rounded bg-ink px-4 py-2 text-white hover:bg-ink-light"
             >
               Generate Invoice
             </button>
           )}
-          <Link href="/sales" className="text-zinc-900 underline">
+          <Link href="/sales" className="text-ink underline">
             Back to Sales
           </Link>
         </div>
@@ -256,42 +256,42 @@ export default function SaleDetailPage() {
 
       {loading && <div>Loading...</div>}
       {error && (
-        <div className="rounded border border-red-300 bg-red-50 p-3 text-red-700">
+        <div className="rounded border border-red-300 bg-red-50 p-3 text-danger">
           {error}
         </div>
       )}
       {sale && (
-        <section className="space-y-4 rounded border border-zinc-200 p-4">
+        <section className="space-y-4 rounded border border-border p-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <div className="text-sm text-zinc-700">Sale ID</div>
+              <div className="text-sm text-muted">Sale ID</div>
               <div className="font-mono text-sm">{sale.id}</div>
             </div>
             <div>
-              <div className="text-sm text-zinc-700">Date</div>
+              <div className="text-sm text-muted">Date</div>
               <div>{new Date(sale.date).toLocaleString()}</div>
             </div>
             <div>
-              <div className="text-sm text-zinc-700">Sold By</div>
+              <div className="text-sm text-muted">Sold By</div>
               <div>{userMap.get(sale.soldBy)?.name || sale.soldBy}</div>
             </div>
             <div>
-              <div className="text-sm text-zinc-700">Total Amount</div>
+              <div className="text-sm text-muted">Total Amount</div>
               <div>₹ {Number(sale.totalAmount).toFixed(2)}</div>
             </div>
             <div>
-              <div className="text-sm text-zinc-700">Payment Type</div>
+              <div className="text-sm text-muted">Payment Type</div>
               <div className="capitalize">{sale.paymentType || 'cash'}</div>
             </div>
             <div>
-              <div className="text-sm text-zinc-700">Payment Status</div>
+              <div className="text-sm text-muted">Payment Status</div>
               <div className={sale.isPaid ? 'text-green-600 font-medium' : 'text-orange-600 font-medium'}>
                 {sale.isPaid ? 'Paid' : 'Pending'}
               </div>
             </div>
             {sale.tableId && (
               <div>
-                <div className="text-sm text-zinc-700">Table</div>
+                <div className="text-sm text-muted">Table</div>
                 <div>Table ID: {sale.tableId.slice(0, 8)}...</div>
               </div>
             )}
@@ -317,11 +317,11 @@ export default function SaleDetailPage() {
 
           {/* Invoice Generation Form */}
           {showInvoiceForm && !invoice && (
-            <div className="mt-6 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-              <h3 className="mb-4 text-lg font-semibold text-zinc-900">Generate Invoice</h3>
+            <div className="mt-6 rounded-lg border border-border bg-paper p-4">
+              <h3 className="mb-4 text-lg font-semibold text-ink">Generate Invoice</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-zinc-700">
+                  <label className="mb-2 block text-sm font-medium text-muted">
                     Customer Name (Optional)
                   </label>
                   <input
@@ -329,11 +329,11 @@ export default function SaleDetailPage() {
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     placeholder="Enter customer name"
-                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-zinc-700">
+                  <label className="mb-2 block text-sm font-medium text-muted">
                     Customer Phone (Optional)
                   </label>
                   <input
@@ -341,11 +341,11 @@ export default function SaleDetailPage() {
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                     placeholder="Enter customer phone"
-                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-zinc-700">
+                  <label className="mb-2 block text-sm font-medium text-muted">
                     Customer GSTIN (Optional)
                   </label>
                   <input
@@ -353,14 +353,14 @@ export default function SaleDetailPage() {
                     value={customerGstin}
                     onChange={(e) => setCustomerGstin(e.target.value)}
                     placeholder="Enter customer GSTIN"
-                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                   />
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={handleGenerateInvoice}
                     disabled={generatingInvoice}
-                    className="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex-1 rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-ink-light disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {generatingInvoice ? 'Generating...' : 'Generate Invoice'}
                   </button>
@@ -371,7 +371,7 @@ export default function SaleDetailPage() {
                       setCustomerPhone('');
                       setCustomerGstin('');
                     }}
-                    className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+                    className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-muted hover:bg-paper"
                   >
                     Cancel
                   </button>
@@ -381,17 +381,17 @@ export default function SaleDetailPage() {
           )}
 
           {/* Payment Update Section */}
-          <div className="mt-6 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-            <h3 className="mb-4 text-lg font-semibold text-zinc-900">Update Payment</h3>
+          <div className="mt-6 rounded-lg border border-border bg-paper p-4">
+            <h3 className="mb-4 text-lg font-semibold text-ink">Update Payment</h3>
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-zinc-700">
+                <label className="mb-2 block text-sm font-medium text-muted">
                   Payment Type
                 </label>
                 <select
                   value={localPaymentType}
                   onChange={(e) => setLocalPaymentType(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                 >
                   <option value="cash">Cash</option>
                   <option value="UPI">UPI</option>
@@ -403,9 +403,9 @@ export default function SaleDetailPage() {
                     type="checkbox"
                     checked={localIsPaid}
                     onChange={(e) => setLocalIsPaid(e.target.checked)}
-                    className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-2 focus:ring-zinc-200"
+                    className="h-4 w-4 rounded border-border text-ink focus:ring-2 focus:ring-accent/25"
                   />
-                  <span className="text-sm font-medium text-zinc-700">
+                  <span className="text-sm font-medium text-muted">
                     Mark payment as completed
                   </span>
                 </label>
@@ -413,32 +413,32 @@ export default function SaleDetailPage() {
               <button
                 onClick={handleUpdatePayment}
                 disabled={updating || (localPaymentType === sale.paymentType && localIsPaid === sale.isPaid)}
-                className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-ink-light disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {updating ? 'Updating...' : 'Update Payment'}
               </button>
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded border border-zinc-200">
-            <table className="min-w-full divide-y divide-zinc-200">
-              <thead className="bg-zinc-50">
+          <div className="overflow-x-auto rounded border border-border">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-paper">
                 <tr>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
+                  <th className="px-4 py-2 text-left text-sm font-medium text-muted">
                     Product
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
+                  <th className="px-4 py-2 text-left text-sm font-medium text-muted">
                     Qty
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
+                  <th className="px-4 py-2 text-left text-sm font-medium text-muted">
                     Price
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
+                  <th className="px-4 py-2 text-left text-sm font-medium text-muted">
                     Subtotal
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-200 bg-white">
+              <tbody className="divide-y divide-border bg-surface">
                 {sale.items.map((it) => {
                   const product = productMap.get(it.productId);
                   return (
@@ -455,10 +455,10 @@ export default function SaleDetailPage() {
               </tbody>
             </table>
             {sale.loyaltyDiscountAmount && sale.loyaltyDiscountAmount > 0 && (
-              <div className="border-t border-zinc-200 bg-zinc-50 px-4 py-3">
+              <div className="border-t border-border bg-paper px-4 py-3">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-zinc-700">Subtotal</span>
-                  <span className="font-medium text-zinc-900">
+                  <span className="text-muted">Subtotal</span>
+                  <span className="font-medium text-ink">
                     ₹{sale.items.reduce((sum, item) => sum + Number(item.subtotal), 0).toFixed(2)}
                   </span>
                 </div>
@@ -473,9 +473,9 @@ export default function SaleDetailPage() {
                   </span>
                   <span className="font-medium">-₹{Number(sale.loyaltyDiscountAmount).toFixed(2)}</span>
                 </div>
-                <div className="mt-2 flex items-center justify-between border-t border-zinc-200 pt-2 text-base font-semibold">
-                  <span className="text-zinc-900">Total</span>
-                  <span className="text-zinc-900">₹{Number(sale.totalAmount).toFixed(2)}</span>
+                <div className="mt-2 flex items-center justify-between border-t border-border pt-2 text-base font-semibold">
+                  <span className="text-ink">Total</span>
+                  <span className="text-ink">₹{Number(sale.totalAmount).toFixed(2)}</span>
                 </div>
               </div>
             )}

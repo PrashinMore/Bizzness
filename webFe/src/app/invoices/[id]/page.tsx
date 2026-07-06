@@ -152,7 +152,7 @@ export default function InvoiceDetailPage() {
               </button>
               <button
                 onClick={handlePrint}
-                className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700"
+                className="rounded bg-ink px-4 py-2 text-white hover:bg-ink-light"
                 style={{padding: '5px 10px'}}
               >
                 Print
@@ -168,7 +168,7 @@ export default function InvoiceDetailPage() {
               {pdfStatus === 'generating' ? 'Generating...' : 'Generate PDF'}
             </button>
           )}
-          <Link href="/sales" className="text-zinc-900 underline">
+          <Link href="/sales" className="text-ink underline">
             Back to Sales
           </Link>
         </div>
@@ -176,37 +176,37 @@ export default function InvoiceDetailPage() {
 
       {loading && <div>Loading...</div>}
       {error && (
-        <div className="rounded border border-red-300 bg-red-50 p-3 text-red-700">
+        <div className="rounded border border-red-300 bg-red-50 p-3 text-danger">
           {error}
         </div>
       )}
       {invoice && (
         <div className="space-y-8">
           {/* Invoice Info */}
-          <section className="rounded border border-zinc-200 bg-white p-8">
+          <section className="rounded border border-border bg-surface p-8">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div className="space-y-2">
-                <div className="text-sm font-medium text-zinc-600">Invoice Number</div>
-                <div className="text-lg font-semibold text-zinc-900">{invoice.invoiceNumber}</div>
+                <div className="text-sm font-medium text-muted">Invoice Number</div>
+                <div className="text-lg font-semibold text-ink">{invoice.invoiceNumber}</div>
               </div>
               <div className="space-y-2">
-                <div className="text-sm font-medium text-zinc-600">Date</div>
-                <div className="text-zinc-900">{formatDate(invoice.createdAt)}</div>
+                <div className="text-sm font-medium text-muted">Date</div>
+                <div className="text-ink">{formatDate(invoice.createdAt)}</div>
               </div>
               {invoice.customerName && (
                 <div className="space-y-2">
-                  <div className="text-sm font-medium text-zinc-600">Customer</div>
-                  <div className="text-zinc-900">{invoice.customerName}</div>
+                  <div className="text-sm font-medium text-muted">Customer</div>
+                  <div className="text-ink">{invoice.customerName}</div>
                   {invoice.customerPhone && (
-                    <div className="text-sm text-zinc-700">{invoice.customerPhone}</div>
+                    <div className="text-sm text-muted">{invoice.customerPhone}</div>
                   )}
                   {invoice.customerGstin && (
-                    <div className="text-sm text-zinc-700">GSTIN: {invoice.customerGstin}</div>
+                    <div className="text-sm text-muted">GSTIN: {invoice.customerGstin}</div>
                   )}
                 </div>
               )}
               <div className="space-y-2">
-                <div className="text-sm font-medium text-zinc-600">Status</div>
+                <div className="text-sm font-medium text-muted">Status</div>
                 <div>
                   {pdfStatus === 'ready' ? (
                     <span className="text-green-600 font-medium">Ready</span>
@@ -221,33 +221,33 @@ export default function InvoiceDetailPage() {
           </section>
 
           {/* Items Table */}
-          <section className="overflow-x-auto rounded border border-zinc-200 bg-white">
-            <table className="min-w-full divide-y divide-zinc-200">
-              <thead className="bg-zinc-50">
+          <section className="overflow-x-auto rounded border border-border bg-surface">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-paper">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-zinc-600">#</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-zinc-600">Item</th>
-                  <th className="px-6 py-4 text-center text-sm font-medium text-zinc-600">Qty</th>
-                  <th className="px-6 py-4 text-right text-sm font-medium text-zinc-600">Rate</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-muted">#</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-muted">Item</th>
+                  <th className="px-6 py-4 text-center text-sm font-medium text-muted">Qty</th>
+                  <th className="px-6 py-4 text-right text-sm font-medium text-muted">Rate</th>
                   {invoice.taxAmount > 0 && (
-                    <th className="px-6 py-4 text-right text-sm font-medium text-zinc-600">Tax</th>
+                    <th className="px-6 py-4 text-right text-sm font-medium text-muted">Tax</th>
                   )}
-                  <th className="px-6 py-4 text-right text-sm font-medium text-zinc-600">Total</th>
+                  <th className="px-6 py-4 text-right text-sm font-medium text-muted">Total</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-200 bg-white">
+              <tbody className="divide-y divide-border bg-surface">
                 {invoice.items.map((item, index) => (
-                  <tr key={index} className="hover:bg-zinc-50">
-                    <td className="px-6 py-4 text-sm text-zinc-900">{index + 1}</td>
-                    <td className="px-6 py-4 text-sm text-zinc-900">{item.name}</td>
-                    <td className="px-6 py-4 text-center text-sm text-zinc-900">{item.quantity}</td>
-                    <td className="px-6 py-4 text-right text-sm text-zinc-900">{formatCurrency(item.rate)}</td>
+                  <tr key={index} className="hover:bg-paper">
+                    <td className="px-6 py-4 text-sm text-ink">{index + 1}</td>
+                    <td className="px-6 py-4 text-sm text-ink">{item.name}</td>
+                    <td className="px-6 py-4 text-center text-sm text-ink">{item.quantity}</td>
+                    <td className="px-6 py-4 text-right text-sm text-ink">{formatCurrency(item.rate)}</td>
                     {invoice.taxAmount > 0 && (
-                      <td className="px-6 py-4 text-right text-sm text-zinc-900">
+                      <td className="px-6 py-4 text-right text-sm text-ink">
                         {formatCurrency(item.tax || 0)}
                       </td>
                     )}
-                    <td className="px-6 py-4 text-right text-sm font-medium text-zinc-900">
+                    <td className="px-6 py-4 text-right text-sm font-medium text-ink">
                       {formatCurrency(item.total)}
                     </td>
                   </tr>
@@ -257,35 +257,35 @@ export default function InvoiceDetailPage() {
           </section>
 
           {/* Totals */}
-          <section className="ml-auto w-full max-w-md rounded border border-zinc-200 bg-white p-8">
+          <section className="ml-auto w-full max-w-md rounded border border-border bg-surface p-8">
             <div className="space-y-4">
               <div className="flex justify-between text-sm py-1">
-                <span className="text-zinc-600">Subtotal:</span>
-                <span className="text-zinc-900 font-medium">{formatCurrency(parseFloat(invoice.subtotal.toString()))}</span>
+                <span className="text-muted">Subtotal:</span>
+                <span className="text-ink font-medium">{formatCurrency(parseFloat(invoice.subtotal.toString()))}</span>
               </div>
               {invoice.discountAmount > 0 && (
                 <div className="flex justify-between text-sm py-1">
-                  <span className="text-zinc-600">Discount:</span>
-                  <span className="text-zinc-900 font-medium">-{formatCurrency(parseFloat(invoice.discountAmount.toString()))}</span>
+                  <span className="text-muted">Discount:</span>
+                  <span className="text-ink font-medium">-{formatCurrency(parseFloat(invoice.discountAmount.toString()))}</span>
                 </div>
               )}
               {invoice.taxAmount > 0 && (
                 <div className="flex justify-between text-sm py-1">
-                  <span className="text-zinc-600">Tax:</span>
-                  <span className="text-zinc-900 font-medium">{formatCurrency(parseFloat(invoice.taxAmount.toString()))}</span>
+                  <span className="text-muted">Tax:</span>
+                  <span className="text-ink font-medium">{formatCurrency(parseFloat(invoice.taxAmount.toString()))}</span>
                 </div>
               )}
-              <div className="flex justify-between border-t-2 border-zinc-300 pt-4 mt-2 text-lg font-semibold">
-                <span className="text-zinc-900">Total:</span>
-                <span className="text-zinc-900">{formatCurrency(parseFloat(invoice.total.toString()))}</span>
+              <div className="flex justify-between border-t-2 border-border pt-4 mt-2 text-lg font-semibold">
+                <span className="text-ink">Total:</span>
+                <span className="text-ink">{formatCurrency(parseFloat(invoice.total.toString()))}</span>
               </div>
             </div>
           </section>
 
           {/* HTML Preview */}
           {invoice.htmlSnapshot && (
-            <section className="rounded border border-zinc-200 bg-white p-8">
-              <h3 className="mb-6 text-lg font-semibold text-center text-zinc-900">Invoice Preview</h3>
+            <section className="rounded border border-border bg-surface p-8">
+              <h3 className="mb-6 text-lg font-semibold text-center text-ink">Invoice Preview</h3>
               <style dangerouslySetInnerHTML={{
                 __html: `
                   .invoice-preview-wrapper {

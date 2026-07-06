@@ -7,7 +7,7 @@ export function Card({ className, ...props }: CardProps) {
   return (
     <section
       className={cn(
-        'rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-soft',
+        'rounded-panel border border-border bg-surface p-5 shadow-soft',
         className,
       )}
       {...props}
@@ -20,6 +20,9 @@ export function CardTitle({
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h2 className={cn('text-base font-semibold text-zinc-900', className)} {...props} />
+    <h2
+      className={cn('font-sans text-base font-semibold text-ink', className)}
+      {...props}
+    />
   );
 }

@@ -71,10 +71,10 @@ export default function InvoicesListPage() {
         <h1 className="text-2xl font-semibold">Invoices</h1>
       </header>
 
-      <section className="rounded border border-zinc-200 p-4">
+      <section className="rounded border border-border p-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-600">From</label>
+            <label className="text-sm text-muted">From</label>
             <input
               type="date"
               value={from}
@@ -82,11 +82,11 @@ export default function InvoicesListPage() {
                 setFrom(e.target.value);
                 setPage(1);
               }}
-              className="rounded border border-zinc-300 px-3 py-2"
+              className="rounded border border-border px-3 py-2"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-600">To</label>
+            <label className="text-sm text-muted">To</label>
             <input
               type="date"
               value={to}
@@ -94,11 +94,11 @@ export default function InvoicesListPage() {
                 setTo(e.target.value);
                 setPage(1);
               }}
-              className="rounded border border-zinc-300 px-3 py-2"
+              className="rounded border border-border px-3 py-2"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-600">Customer</label>
+            <label className="text-sm text-muted">Customer</label>
             <input
               type="text"
               value={customer}
@@ -107,7 +107,7 @@ export default function InvoicesListPage() {
                 setPage(1);
               }}
               placeholder="Customer name"
-              className="rounded border border-zinc-300 px-3 py-2"
+              className="rounded border border-border px-3 py-2"
             />
           </div>
         </div>
@@ -119,7 +119,7 @@ export default function InvoicesListPage() {
               setCustomer('');
               setPage(1);
             }}
-            className="rounded border border-zinc-300 px-4 py-2 hover:bg-zinc-50"
+            className="rounded border border-border px-4 py-2 hover:bg-paper"
           >
             Reset
           </button>
@@ -127,43 +127,43 @@ export default function InvoicesListPage() {
       </section>
 
       {error && (
-        <div className="rounded border border-red-300 bg-red-50 p-3 text-red-700">
+        <div className="rounded border border-red-300 bg-red-50 p-3 text-danger">
           {error}
         </div>
       )}
 
-      <section className="overflow-x-auto rounded border border-zinc-200">
-        <table className="min-w-full divide-y divide-zinc-200">
-          <thead className="bg-zinc-50">
+      <section className="overflow-x-auto rounded border border-border">
+        <table className="min-w-full divide-y divide-border">
+          <thead className="bg-paper">
             <tr>
-              <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
+              <th className="px-4 py-2 text-left text-sm font-medium text-muted">
                 Invoice Number
               </th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
+              <th className="px-4 py-2 text-left text-sm font-medium text-muted">
                 Date
               </th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
+              <th className="px-4 py-2 text-left text-sm font-medium text-muted">
                 Customer
               </th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
+              <th className="px-4 py-2 text-left text-sm font-medium text-muted">
                 Items
               </th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
+              <th className="px-4 py-2 text-left text-sm font-medium text-muted">
                 Total
               </th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-zinc-600">
+              <th className="px-4 py-2 text-left text-sm font-medium text-muted">
                 Status
               </th>
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-200 bg-white">
+          <tbody className="divide-y divide-border bg-surface">
             {(loading ? [] : invoices).map((invoice) => (
               <tr key={invoice.id}>
                 <td className="px-4 py-2 text-sm font-mono">{invoice.invoiceNumber}</td>
                 <td className="px-4 py-2 text-sm">{formatDate(invoice.createdAt)}</td>
                 <td className="px-4 py-2 text-sm">
-                  {invoice.customerName || <span className="text-zinc-400">—</span>}
+                  {invoice.customerName || <span className="text-muted/60">—</span>}
                 </td>
                 <td className="px-4 py-2 text-sm">
                   {invoice.items.length} item{invoice.items.length !== 1 ? 's' : ''}
@@ -214,7 +214,7 @@ export default function InvoicesListPage() {
                     </button>
                   ) : (
                     <Link
-                      className="text-zinc-900 underline hover:text-zinc-700"
+                      className="text-ink underline hover:text-muted"
                       href={`/invoices/${invoice.id}`}
                     >
                       View
@@ -225,14 +225,14 @@ export default function InvoicesListPage() {
             ))}
             {loading && (
               <tr>
-                <td className="px-4 py-6 text-center text-sm text-zinc-700" colSpan={7}>
+                <td className="px-4 py-6 text-center text-sm text-muted" colSpan={7}>
                   Loading...
                 </td>
               </tr>
             )}
             {!loading && invoices.length === 0 && (
               <tr>
-                <td className="px-4 py-6 text-center text-sm text-zinc-700" colSpan={7}>
+                <td className="px-4 py-6 text-center text-sm text-muted" colSpan={7}>
                   No invoices found
                 </td>
               </tr>
@@ -246,17 +246,17 @@ export default function InvoicesListPage() {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="rounded border border-zinc-300 px-4 py-2 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded border border-border px-4 py-2 hover:bg-paper disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
           </button>
-          <span className="text-sm text-zinc-600">
+          <span className="text-sm text-muted">
             Page {page} of {totalPages}
           </span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="rounded border border-zinc-300 px-4 py-2 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded border border-border px-4 py-2 hover:bg-paper disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next
           </button>

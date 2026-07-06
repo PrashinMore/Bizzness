@@ -334,10 +334,10 @@ export function RecipeEditor({
       className="max-w-lg"
     >
       {loading ? (
-        <p className="text-sm text-zinc-600">Loading recipe…</p>
+        <p className="text-sm text-muted">Loading recipe…</p>
       ) : (
         <div className="flex flex-col gap-4">
-          <p className="text-xs text-zinc-600">
+          <p className="text-xs text-muted">
             Selling this dish will deduct the listed raw materials from stock.
             Incomplete rows are ignored on save.
           </p>
@@ -345,15 +345,15 @@ export function RecipeEditor({
           {/* Duplicate-from-another-dish shortcut. Hidden when there's no other
               RECIPE dish to copy from. */}
           {recipeSources.length > 0 && (
-            <div className="rounded-lg border border-zinc-100 bg-zinc-50 p-3">
-              <label className="block text-xs font-semibold uppercase tracking-wide text-zinc-600">
+            <div className="rounded-lg border border-border bg-paper p-3">
+              <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
                 Duplicate from another dish
               </label>
               <div className="mt-2 flex gap-2">
                 <select
                   value={duplicateSource}
                   onChange={(e) => setDuplicateSource(e.target.value)}
-                  className="flex-1 rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm"
+                  className="flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-sm"
                 >
                   <option value="">Select dish…</option>
                   {recipeSources.map((p) => (
@@ -376,8 +376,8 @@ export function RecipeEditor({
           )}
 
           {suggestedIngredients.length > 0 && (
-            <div className="rounded-lg border border-brand-100 bg-brand-50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">
+            <div className="rounded-lg border border-brand-100 bg-accent-muted p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-accent-dark">
                 Suggested from dish name
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -386,7 +386,7 @@ export function RecipeEditor({
                     key={p.id}
                     type="button"
                     onClick={() => applySuggestion(p)}
-                    className="rounded-full border border-brand-200 bg-white px-3 py-1 text-xs text-brand-700 hover:bg-brand-100"
+                    className="rounded-full border border-brand-200 bg-surface px-3 py-1 text-xs text-accent-dark hover:bg-brand-100"
                   >
                     + {p.name}
                   </button>
@@ -410,7 +410,7 @@ export function RecipeEditor({
                   }}
                   value={row.ingredientProductId}
                   onChange={(e) => updateRow(index, 'ingredientProductId', e.target.value)}
-                  className="min-w-0 rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm"
+                  className="min-w-0 rounded-lg border border-border bg-surface px-2 py-2 text-sm"
                 >
                   <option value="">Ingredient…</option>
                   {ingredientOptions.map((p) => (
@@ -434,12 +434,12 @@ export function RecipeEditor({
                     updateRow(index, 'quantity', value === '' ? '' : Number(value));
                   }}
                   onKeyDown={(e) => handleQtyKeyDown(index, e)}
-                  className="w-full rounded-lg border border-zinc-200 px-2 py-2 text-sm"
+                  className="w-full rounded-lg border border-border px-2 py-2 text-sm"
                 />
                 <select
                   value={row.unit}
                   onChange={(e) => updateRow(index, 'unit', e.target.value as RecipeUnit)}
-                  className="rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm"
+                  className="rounded-lg border border-border bg-surface px-2 py-2 text-sm"
                 >
                   {RECIPE_UNITS.map((u) => (
                     <option key={u} value={u}>
@@ -450,7 +450,7 @@ export function RecipeEditor({
                 <button
                   type="button"
                   onClick={() => removeRow(index)}
-                  className="rounded-lg text-sm text-zinc-500 hover:bg-zinc-100"
+                  className="rounded-lg text-sm text-muted hover:bg-paper"
                   aria-label="Remove ingredient"
                   title="Remove"
                 >
@@ -464,7 +464,7 @@ export function RecipeEditor({
             + Add ingredient
           </Button>
 
-          <div className="mt-2 flex flex-col gap-2 border-t border-zinc-100 pt-4">
+          <div className="mt-2 flex flex-col gap-2 border-t border-border pt-4">
             <Button type="button" onClick={handleSave} disabled={saving}>
               {saving ? 'Saving…' : recipe ? 'Save changes' : 'Create recipe'}
             </Button>

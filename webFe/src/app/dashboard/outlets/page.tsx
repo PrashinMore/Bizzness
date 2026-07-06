@@ -215,26 +215,26 @@ export default function OutletsManagementPage() {
 
   if (loading || !user || !token) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-zinc-50">
-        <p className="text-sm text-zinc-700">Loading outlet management…</p>
+      <main className="flex min-h-screen items-center justify-center bg-paper">
+        <p className="text-sm text-muted">Loading outlet management…</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-6 py-12">
+    <main className="min-h-screen bg-paper px-6 py-12">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-        <header className="rounded-3xl bg-white p-6 shadow-sm">
-          <h1 className="text-2xl font-semibold text-zinc-900">
+        <header className="rounded-panel bg-surface p-6 shadow-sm">
+          <h1 className="text-2xl font-semibold text-ink">
             Outlet Management
           </h1>
-          <p className="mt-2 text-sm text-zinc-700">
+          <p className="mt-2 text-sm text-muted">
             Create and manage outlets for your organization.
           </p>
         </header>
 
         {error && (
-          <div className="rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+          <div className="rounded-md border border-danger/20 bg-danger-muted px-3 py-2 text-sm text-danger">
             {error}
           </div>
         )}
@@ -245,8 +245,8 @@ export default function OutletsManagementPage() {
           </div>
         )}
 
-        <section className="rounded-3xl bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-900">
+        <section className="rounded-panel bg-surface p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-ink">
             Create a new outlet
           </h2>
           <form
@@ -255,7 +255,7 @@ export default function OutletsManagementPage() {
           >
             <div className="space-y-2">
               <label
-                className="block text-sm font-medium text-zinc-700"
+                className="block text-sm font-medium text-muted"
                 htmlFor="create-name"
               >
                 Outlet Name
@@ -267,12 +267,12 @@ export default function OutletsManagementPage() {
                 onChange={(event) =>
                   setCreateState((prev) => ({ ...prev, name: event.target.value }))
                 }
-                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               />
             </div>
             <div className="space-y-2">
               <label
-                className="block text-sm font-medium text-zinc-700"
+                className="block text-sm font-medium text-muted"
                 htmlFor="create-contact"
               >
                 Contact Number (optional)
@@ -286,12 +286,12 @@ export default function OutletsManagementPage() {
                     contactNumber: event.target.value,
                   }))
                 }
-                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               />
             </div>
             <div className="space-y-2 md:col-span-2">
               <label
-                className="block text-sm font-medium text-zinc-700"
+                className="block text-sm font-medium text-muted"
                 htmlFor="create-address"
               >
                 Address (optional)
@@ -306,7 +306,7 @@ export default function OutletsManagementPage() {
                   }))
                 }
                 rows={2}
-                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               />
             </div>
             <div className="md:col-span-2">
@@ -320,9 +320,9 @@ export default function OutletsManagementPage() {
                       isPrimary: e.target.checked,
                     }))
                   }
-                  className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                  className="h-4 w-4 rounded border-border text-ink focus:ring-accent"
                 />
-                <span className="text-sm font-medium text-zinc-900">
+                <span className="text-sm font-medium text-ink">
                   Set as primary outlet
                 </span>
               </label>
@@ -331,7 +331,7 @@ export default function OutletsManagementPage() {
               <button
                 type="submit"
                 disabled={creating}
-                className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:opacity-50"
+                className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition hover:bg-ink-light disabled:opacity-50"
               >
                 {creating ? 'Creating…' : 'Create Outlet'}
               </button>
@@ -339,14 +339,14 @@ export default function OutletsManagementPage() {
           </form>
         </section>
 
-        <section className="rounded-3xl bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-900">
+        <section className="rounded-panel bg-surface p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-ink">
             Outlets ({outlets.length})
           </h2>
           {fetching ? (
-            <p className="mt-4 text-sm text-zinc-700">Loading outlets…</p>
+            <p className="mt-4 text-sm text-muted">Loading outlets…</p>
           ) : outlets.length === 0 ? (
-            <p className="mt-4 text-sm text-zinc-700">No outlets yet.</p>
+            <p className="mt-4 text-sm text-muted">No outlets yet.</p>
           ) : (
             <div className="mt-4 space-y-4">
               {outlets.map((outlet) => {
@@ -356,13 +356,13 @@ export default function OutletsManagementPage() {
                 return (
                   <div
                     key={outlet.id}
-                    className="rounded-lg border border-zinc-200 p-4"
+                    className="rounded-lg border border-border p-4"
                   >
                     {isEditing ? (
                       <div className="space-y-4">
                         <div className="grid gap-4 md:grid-cols-2">
                           <div className="space-y-2">
-                            <label className="block text-sm font-medium text-zinc-700">
+                            <label className="block text-sm font-medium text-muted">
                               Name
                             </label>
                             <input
@@ -370,11 +370,11 @@ export default function OutletsManagementPage() {
                               onChange={(event) =>
                                 handleEditChange(outlet.id, 'name', event.target.value)
                               }
-                              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="block text-sm font-medium text-zinc-700">
+                            <label className="block text-sm font-medium text-muted">
                               Contact Number
                             </label>
                             <input
@@ -386,11 +386,11 @@ export default function OutletsManagementPage() {
                                   event.target.value,
                                 )
                               }
-                              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                             />
                           </div>
                           <div className="space-y-2 md:col-span-2">
-                            <label className="block text-sm font-medium text-zinc-700">
+                            <label className="block text-sm font-medium text-muted">
                               Address
                             </label>
                             <textarea
@@ -399,7 +399,7 @@ export default function OutletsManagementPage() {
                                 handleEditChange(outlet.id, 'address', event.target.value)
                               }
                               rows={2}
-                              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                             />
                           </div>
                           <div className="space-y-2">
@@ -410,9 +410,9 @@ export default function OutletsManagementPage() {
                                 onChange={(e) =>
                                   handleEditChange(outlet.id, 'isActive', e.target.checked)
                                 }
-                                className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                                className="h-4 w-4 rounded border-border text-ink focus:ring-accent"
                               />
-                              <span className="text-sm font-medium text-zinc-900">
+                              <span className="text-sm font-medium text-ink">
                                 Active
                               </span>
                             </label>
@@ -425,9 +425,9 @@ export default function OutletsManagementPage() {
                                 onChange={(e) =>
                                   handleEditChange(outlet.id, 'isPrimary', e.target.checked)
                                 }
-                                className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                                className="h-4 w-4 rounded border-border text-ink focus:ring-accent"
                               />
-                              <span className="text-sm font-medium text-zinc-900">
+                              <span className="text-sm font-medium text-ink">
                                 Primary
                               </span>
                             </label>
@@ -437,13 +437,13 @@ export default function OutletsManagementPage() {
                           <button
                             onClick={() => handleUpdateOutlet(outlet.id)}
                             disabled={saving}
-                            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:opacity-50"
+                            className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition hover:bg-ink-light disabled:opacity-50"
                           >
                             {saving ? 'Saving…' : 'Save'}
                           </button>
                           <button
                             onClick={() => setSelectedOutletId(null)}
-                            className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                            className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted transition hover:bg-paper"
                           >
                             Cancel
                           </button>
@@ -454,44 +454,44 @@ export default function OutletsManagementPage() {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
-                              <h3 className="text-lg font-semibold text-zinc-900">
+                              <h3 className="text-lg font-semibold text-ink">
                                 {outlet.name}
                               </h3>
                               {outlet.isPrimary && (
-                                <span className="rounded-full bg-zinc-900 px-2 py-0.5 text-xs font-medium text-white">
+                                <span className="rounded-full bg-ink px-2 py-0.5 text-xs font-medium text-white">
                                   Primary
                                 </span>
                               )}
                               {!outlet.isActive && (
-                                <span className="rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-700">
+                                <span className="rounded-full bg-paper px-2 py-0.5 text-xs font-medium text-muted">
                                   Inactive
                                 </span>
                               )}
                             </div>
                             {outlet.address && (
-                              <p className="mt-1 text-sm text-zinc-600">
+                              <p className="mt-1 text-sm text-muted">
                                 {outlet.address}
                               </p>
                             )}
                             {outlet.contactNumber && (
-                              <p className="mt-1 text-sm text-zinc-600">
+                              <p className="mt-1 text-sm text-muted">
                                 {outlet.contactNumber}
                               </p>
                             )}
-                            <p className="mt-2 text-xs text-zinc-500">
+                            <p className="mt-2 text-xs text-muted">
                               Created: {new Date(outlet.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                           <div className="flex gap-2">
                             <button
                               onClick={() => setSelectedOutletId(outlet.id)}
-                              className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-50"
+                              className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted transition hover:bg-paper"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => handleDeleteOutlet(outlet.id)}
-                              className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                              className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-danger transition hover:bg-red-50"
                             >
                               Delete
                             </button>

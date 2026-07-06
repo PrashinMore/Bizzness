@@ -307,16 +307,16 @@ export default function OrganizationsManagementPage() {
 
   if (loading || !user || !token) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-zinc-50">
-        <p className="text-sm text-zinc-700">Loading organization management…</p>
+      <main className="flex min-h-screen items-center justify-center bg-paper">
+        <p className="text-sm text-muted">Loading organization management…</p>
       </main>
     );
   }
 
   if (needsOnboarding && user.role !== 'admin') {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-zinc-50 px-6">
-        <p className="max-w-md text-center text-sm text-zinc-600">
+      <main className="flex min-h-screen items-center justify-center bg-paper px-6">
+        <p className="max-w-md text-center text-sm text-muted">
           Your account is not assigned to an organization yet. Please ask an administrator to invite you.
         </p>
       </main>
@@ -326,16 +326,16 @@ export default function OrganizationsManagementPage() {
   if (needsOnboarding) {
     return (
       <main className="flex min-h-screen items-center justify-center px-6 py-12">
-        <div className="pointer-events-auto relative z-[202] w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl">
-          <h1 className="text-2xl font-semibold text-zinc-900">
+        <div className="pointer-events-auto relative z-[202] w-full max-w-lg rounded-panel bg-surface p-8 shadow-2xl">
+          <h1 className="text-2xl font-semibold text-ink">
             Create your organization
           </h1>
-          <p className="mt-2 text-sm text-zinc-600">
+          <p className="mt-2 text-sm text-muted">
             You need an organization before you can use the app. Complete this step to continue.
           </p>
 
           {error && (
-            <div className="mt-4 rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+            <div className="mt-4 rounded-md border border-danger/20 bg-danger-muted px-3 py-2 text-sm text-danger">
               {error}
             </div>
           )}
@@ -343,7 +343,7 @@ export default function OrganizationsManagementPage() {
           <form className="mt-6 space-y-4" onSubmit={handleCreateOrganization}>
             <div className="space-y-2">
               <label
-                className="block text-sm font-medium text-zinc-700"
+                className="block text-sm font-medium text-muted"
                 htmlFor="create-name"
               >
                 Organization name
@@ -356,12 +356,12 @@ export default function OrganizationsManagementPage() {
                 onChange={(event) =>
                   setCreateState((prev) => ({ ...prev, name: event.target.value }))
                 }
-                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               />
             </div>
             <div className="space-y-2">
               <label
-                className="block text-sm font-medium text-zinc-700"
+                className="block text-sm font-medium text-muted"
                 htmlFor="create-description"
               >
                 Description (optional)
@@ -375,13 +375,13 @@ export default function OrganizationsManagementPage() {
                     description: event.target.value,
                   }))
                 }
-                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               />
             </div>
             <button
               type="submit"
               disabled={creating}
-              className="w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:opacity-50"
+              className="w-full rounded-lg bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink-light disabled:opacity-50"
             >
               {creating ? 'Creating…' : 'Create organization and continue'}
             </button>
@@ -392,26 +392,26 @@ export default function OrganizationsManagementPage() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-6 py-12">
+    <main className="min-h-screen bg-paper px-6 py-12">
       {user.role !== 'admin' ? (
-        <div className="mx-auto max-w-lg rounded-3xl bg-white p-8 text-center shadow-sm">
-          <p className="text-sm text-zinc-600">
+        <div className="mx-auto max-w-lg rounded-panel bg-surface p-8 text-center shadow-sm">
+          <p className="text-sm text-muted">
             Only administrators can manage organizations.
           </p>
         </div>
       ) : (
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-        <header className="rounded-3xl bg-white p-6 shadow-sm">
-          <h1 className="text-2xl font-semibold text-zinc-900">
+        <header className="rounded-panel bg-surface p-6 shadow-sm">
+          <h1 className="text-2xl font-semibold text-ink">
             Organization management
           </h1>
-          <p className="mt-2 text-sm text-zinc-700">
+          <p className="mt-2 text-sm text-muted">
             Create organizations, assign users, and manage your organizational structure.
           </p>
         </header>
 
         {error && (
-          <div className="rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+          <div className="rounded-md border border-danger/20 bg-danger-muted px-3 py-2 text-sm text-danger">
             {error}
           </div>
         )}
@@ -422,8 +422,8 @@ export default function OrganizationsManagementPage() {
           </div>
         )}
 
-        <section className="rounded-3xl bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-900">
+        <section className="rounded-panel bg-surface p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-ink">
             Create a new organization
           </h2>
           <form
@@ -432,7 +432,7 @@ export default function OrganizationsManagementPage() {
           >
             <div className="space-y-2">
               <label
-                className="block text-sm font-medium text-zinc-700"
+                className="block text-sm font-medium text-muted"
                 htmlFor="create-name"
               >
                 Organization name
@@ -444,12 +444,12 @@ export default function OrganizationsManagementPage() {
                 onChange={(event) =>
                   setCreateState((prev) => ({ ...prev, name: event.target.value }))
                 }
-                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               />
             </div>
             <div className="space-y-2">
               <label
-                className="block text-sm font-medium text-zinc-700"
+                className="block text-sm font-medium text-muted"
                 htmlFor="create-description"
               >
                 Description (optional)
@@ -463,14 +463,14 @@ export default function OrganizationsManagementPage() {
                     description: event.target.value,
                   }))
                 }
-                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               />
             </div>
             <div className="md:col-span-2">
               <button
                 type="submit"
                 disabled={creating}
-                className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:opacity-50"
+                className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition hover:bg-ink-light disabled:opacity-50"
               >
                 {creating ? 'Creating…' : 'Create organization'}
               </button>
@@ -478,14 +478,14 @@ export default function OrganizationsManagementPage() {
           </form>
         </section>
 
-        <section className="rounded-3xl bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-900">
+        <section className="rounded-panel bg-surface p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-ink">
             Organizations ({sortedOrganizations.length})
           </h2>
           {fetching ? (
-            <p className="mt-4 text-sm text-zinc-700">Loading organizations…</p>
+            <p className="mt-4 text-sm text-muted">Loading organizations…</p>
           ) : sortedOrganizations.length === 0 ? (
-            <p className="mt-4 text-sm text-zinc-700">No organizations yet.</p>
+            <p className="mt-4 text-sm text-muted">No organizations yet.</p>
           ) : (
             <div className="mt-4 space-y-4">
               {sortedOrganizations.map((org) => {
@@ -497,13 +497,13 @@ export default function OrganizationsManagementPage() {
                 return (
                   <div
                     key={org.id}
-                    className="rounded-lg border border-zinc-200 p-4"
+                    className="rounded-lg border border-border p-4"
                   >
                     {isEditing ? (
                       <div className="space-y-4">
                         <div className="grid gap-4 md:grid-cols-2">
                           <div className="space-y-2">
-                            <label className="block text-sm font-medium text-zinc-700">
+                            <label className="block text-sm font-medium text-muted">
                               Name
                             </label>
                             <input
@@ -511,11 +511,11 @@ export default function OrganizationsManagementPage() {
                               onChange={(event) =>
                                 handleEditChange(org.id, 'name', event.target.value)
                               }
-                              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="block text-sm font-medium text-zinc-700">
+                            <label className="block text-sm font-medium text-muted">
                               Description
                             </label>
                             <input
@@ -527,7 +527,7 @@ export default function OrganizationsManagementPage() {
                                   event.target.value,
                                 )
                               }
-                              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                             />
                           </div>
                         </div>
@@ -535,13 +535,13 @@ export default function OrganizationsManagementPage() {
                           <button
                             onClick={() => handleUpdateOrganization(org.id)}
                             disabled={saving}
-                            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:opacity-50"
+                            className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition hover:bg-ink-light disabled:opacity-50"
                           >
                             {saving ? 'Saving…' : 'Save'}
                           </button>
                           <button
                             onClick={() => setSelectedOrgId(null)}
-                            className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                            className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted transition hover:bg-paper"
                           >
                             Cancel
                           </button>
@@ -551,37 +551,37 @@ export default function OrganizationsManagementPage() {
                       <div>
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-zinc-900">
+                            <h3 className="text-lg font-semibold text-ink">
                               {org.name}
                             </h3>
                             {org.description && (
-                              <p className="mt-1 text-sm text-zinc-600">
+                              <p className="mt-1 text-sm text-muted">
                                 {org.description}
                               </p>
                             )}
-                            <p className="mt-2 text-xs text-zinc-500">
+                            <p className="mt-2 text-xs text-muted">
                               Created: {new Date(org.createdAt).toLocaleDateString()}
                             </p>
-                            <p className="text-xs text-zinc-500">
+                            <p className="text-xs text-muted">
                               Users: {orgUsers.length}
                             </p>
                           </div>
                           <div className="flex gap-2">
                             <button
                               onClick={() => toggleExpand(org.id)}
-                              className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-50"
+                              className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted transition hover:bg-paper"
                             >
                               {isExpanded ? 'Hide' : 'View'} Users
                             </button>
                             <button
                               onClick={() => setSelectedOrgId(org.id)}
-                              className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-50"
+                              className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted transition hover:bg-paper"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => handleDeleteOrganization(org.id)}
-                              className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                              className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-danger transition hover:bg-red-50"
                             >
                               Delete
                             </button>
@@ -589,9 +589,9 @@ export default function OrganizationsManagementPage() {
                         </div>
 
                         {isExpanded && (
-                          <div className="mt-4 space-y-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+                          <div className="mt-4 space-y-4 rounded-lg border border-border bg-paper p-4">
                             <div className="flex items-center justify-between">
-                              <h4 className="text-sm font-semibold text-zinc-900">
+                              <h4 className="text-sm font-semibold text-ink">
                                 Assigned Users ({orgUsers.length})
                               </h4>
                             </div>
@@ -601,13 +601,13 @@ export default function OrganizationsManagementPage() {
                                 {orgUsers.map((user) => (
                                   <div
                                     key={user.id}
-                                    className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-3"
+                                    className="flex items-center justify-between rounded-lg border border-border bg-surface p-3"
                                   >
                                     <div>
-                                      <p className="text-sm font-medium text-zinc-900">
+                                      <p className="text-sm font-medium text-ink">
                                         {user.name}
                                       </p>
-                                      <p className="text-xs text-zinc-600">
+                                      <p className="text-xs text-muted">
                                         {user.email} • {user.role}
                                       </p>
                                     </div>
@@ -615,7 +615,7 @@ export default function OrganizationsManagementPage() {
                                       onClick={() =>
                                         handleRemoveUser(org.id, user.id)
                                       }
-                                      className="rounded-lg border border-red-200 px-3 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                                      className="rounded-lg border border-red-200 px-3 py-1 text-xs font-medium text-danger transition hover:bg-red-50"
                                     >
                                       Remove
                                     </button>
@@ -623,13 +623,13 @@ export default function OrganizationsManagementPage() {
                                 ))}
                               </div>
                             ) : (
-                              <p className="text-sm text-zinc-600">
+                              <p className="text-sm text-muted">
                                 No users assigned to this organization.
                               </p>
                             )}
 
-                            <div className="mt-4 rounded-lg border border-zinc-200 bg-white p-3">
-                              <h5 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-700">
+                            <div className="mt-4 rounded-lg border border-border bg-surface p-3">
+                              <h5 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
                                 Assign User
                               </h5>
                               <div className="space-y-2">
@@ -640,13 +640,13 @@ export default function OrganizationsManagementPage() {
                                   .map((user) => (
                                     <div
                                       key={user.id}
-                                      className="flex items-center justify-between rounded-lg border border-zinc-200 p-2"
+                                      className="flex items-center justify-between rounded-lg border border-border p-2"
                                     >
                                       <div>
-                                        <p className="text-sm font-medium text-zinc-900">
+                                        <p className="text-sm font-medium text-ink">
                                           {user.name}
                                         </p>
-                                        <p className="text-xs text-zinc-600">
+                                        <p className="text-xs text-muted">
                                           {user.email} • {user.role}
                                         </p>
                                       </div>
@@ -654,7 +654,7 @@ export default function OrganizationsManagementPage() {
                                         onClick={() =>
                                           handleAssignUser(org.id, user.id)
                                         }
-                                        className="rounded-lg bg-zinc-900 px-3 py-1 text-xs font-medium text-white transition hover:bg-zinc-700"
+                                        className="rounded-lg bg-ink px-3 py-1 text-xs font-medium text-white transition hover:bg-ink-light"
                                       >
                                         Assign
                                       </button>
@@ -663,7 +663,7 @@ export default function OrganizationsManagementPage() {
                                 {users.filter(
                                   (u) => !orgUsers.some((ou) => ou.id === u.id),
                                 ).length === 0 && (
-                                  <p className="text-xs text-zinc-600">
+                                  <p className="text-xs text-muted">
                                     All users are already assigned to this organization.
                                   </p>
                                 )}

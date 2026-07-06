@@ -308,32 +308,32 @@ export default function SettingsPage() {
 
   if (loading || !user || !token) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-zinc-50">
-        <p className="text-sm text-zinc-700">Loading…</p>
+      <main className="flex min-h-screen items-center justify-center bg-paper">
+        <p className="text-sm text-muted">Loading…</p>
       </main>
     );
   }
 
   if (user.role !== 'admin') {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-zinc-50">
-        <p className="text-sm text-red-600">Access denied. Admin only.</p>
+      <main className="flex min-h-screen items-center justify-center bg-paper">
+        <p className="text-sm text-danger">Access denied. Admin only.</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-6 py-12">
+    <main className="min-h-screen bg-paper px-6 py-12">
       <div className="mx-auto w-full max-w-4xl">
         <header className="mb-8">
-          <h1 className="text-3xl font-semibold text-zinc-900">Settings</h1>
-          <p className="mt-2 text-sm text-zinc-700">
+          <h1 className="text-3xl font-semibold text-ink">Settings</h1>
+          <p className="mt-2 text-sm text-muted">
             Manage your business configuration
           </p>
         </header>
 
         {error && (
-          <div className="mb-4 rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+          <div className="mb-4 rounded-md border border-danger/20 bg-danger-muted px-3 py-2 text-sm text-danger">
             {error}
           </div>
         )}
@@ -345,13 +345,13 @@ export default function SettingsPage() {
         )}
 
         {/* Tabs */}
-        <div className="mb-6 flex gap-2 border-b border-zinc-200">
+        <div className="mb-6 flex gap-2 border-b border-border">
           <button
             onClick={() => setActiveTab('business')}
             className={`px-4 py-2 text-sm font-medium transition ${
               activeTab === 'business'
-                ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-700 hover:text-zinc-900'
+                ? 'border-b-2 border-ink text-ink'
+                : 'text-muted hover:text-ink'
             }`}
           >
             Business
@@ -360,8 +360,8 @@ export default function SettingsPage() {
             onClick={() => setActiveTab('billing')}
             className={`px-4 py-2 text-sm font-medium transition ${
               activeTab === 'billing'
-                ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-700 hover:text-zinc-900'
+                ? 'border-b-2 border-ink text-ink'
+                : 'text-muted hover:text-ink'
             }`}
           >
             Billing
@@ -370,8 +370,8 @@ export default function SettingsPage() {
             onClick={() => setActiveTab('inventory')}
             className={`px-4 py-2 text-sm font-medium transition ${
               activeTab === 'inventory'
-                ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-700 hover:text-zinc-900'
+                ? 'border-b-2 border-ink text-ink'
+                : 'text-muted hover:text-ink'
             }`}
           >
             Inventory
@@ -380,8 +380,8 @@ export default function SettingsPage() {
             onClick={() => setActiveTab('invoices')}
             className={`px-4 py-2 text-sm font-medium transition ${
               activeTab === 'invoices'
-                ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-700 hover:text-zinc-900'
+                ? 'border-b-2 border-ink text-ink'
+                : 'text-muted hover:text-ink'
             }`}
           >
             Invoices
@@ -390,8 +390,8 @@ export default function SettingsPage() {
             onClick={() => setActiveTab('tables')}
             className={`px-4 py-2 text-sm font-medium transition ${
               activeTab === 'tables'
-                ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-700 hover:text-zinc-900'
+                ? 'border-b-2 border-ink text-ink'
+                : 'text-muted hover:text-ink'
             }`}
           >
             Tables
@@ -400,8 +400,8 @@ export default function SettingsPage() {
             onClick={() => setActiveTab('organization')}
             className={`px-4 py-2 text-sm font-medium transition ${
               activeTab === 'organization'
-                ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-700 hover:text-zinc-900'
+                ? 'border-b-2 border-ink text-ink'
+                : 'text-muted hover:text-ink'
             }`}
           >
             Features
@@ -410,8 +410,8 @@ export default function SettingsPage() {
             onClick={() => setActiveTab('support')}
             className={`px-4 py-2 text-sm font-medium transition ${
               activeTab === 'support'
-                ? 'border-b-2 border-zinc-900 text-zinc-900'
-                : 'text-zinc-700 hover:text-zinc-900'
+                ? 'border-b-2 border-ink text-ink'
+                : 'text-muted hover:text-ink'
             }`}
           >
             Support
@@ -420,28 +420,28 @@ export default function SettingsPage() {
 
         {loadingSettings ? (
           <div className="flex items-center justify-center py-12">
-            <p className="text-sm text-zinc-700">Loading settings…</p>
+            <p className="text-sm text-muted">Loading settings…</p>
           </div>
         ) : (
-          <div className="rounded-3xl bg-white p-6 shadow-sm">
+          <div className="rounded-panel bg-surface p-6 shadow-sm">
             {/* Business Settings */}
             {activeTab === 'business' && (
               <form onSubmit={handleBusinessSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-900">
+                  <label className="block text-sm font-medium text-ink">
                     Business Name
                   </label>
                   <input
                     type="text"
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                     placeholder="Your Business Name"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-zinc-900">
+                  <label className="block text-sm font-medium text-ink">
                     Business Logo
                   </label>
                   {logoPreview && (
@@ -455,58 +455,58 @@ export default function SettingsPage() {
                     type="file"
                     accept="image/*"
                     onChange={handleLogoChange}
-                    className="mt-1 block w-full text-sm text-zinc-700 file:mr-4 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-zinc-700 hover:file:bg-zinc-200"
+                    className="mt-1 block w-full text-sm text-muted file:mr-4 file:rounded-lg file:border-0 file:bg-paper file:px-4 file:py-2 file:text-sm file:font-medium file:text-muted hover:file:bg-paper"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-zinc-900">
+                  <label className="block text-sm font-medium text-ink">
                     Business Address
                   </label>
                   <textarea
                     value={businessAddress}
                     onChange={(e) => setBusinessAddress(e.target.value)}
                     rows={3}
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                     placeholder="Street, City, State, ZIP"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-zinc-900">
+                  <label className="block text-sm font-medium text-ink">
                     GST Number
                   </label>
                   <input
                     type="text"
                     value={gstNumber}
                     onChange={(e) => setGstNumber(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                     placeholder="GSTIN (optional)"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-900">
+                    <label className="block text-sm font-medium text-ink">
                       Contact Phone
                     </label>
                     <input
                       type="tel"
                       value={contactPhone}
                       onChange={(e) => setContactPhone(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                       placeholder="+91 1234567890"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-900">
+                    <label className="block text-sm font-medium text-ink">
                       Contact Email
                     </label>
                     <input
                       type="email"
                       value={contactEmail}
                       onChange={(e) => setContactEmail(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                       placeholder="contact@business.com"
                     />
                   </div>
@@ -515,7 +515,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50"
+                  className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition hover:bg-ink-light disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Save Business Settings'}
                 </button>
@@ -527,7 +527,7 @@ export default function SettingsPage() {
               <form onSubmit={handleBillingSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-900">
+                    <label className="block text-sm font-medium text-ink">
                       Tax Rate (%)
                     </label>
                     <input
@@ -537,18 +537,18 @@ export default function SettingsPage() {
                       step="0.01"
                       value={taxRate}
                       onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
-                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-900">
+                    <label className="block text-sm font-medium text-ink">
                       Currency
                     </label>
                     <input
                       type="text"
                       value={currency}
                       onChange={(e) => setCurrency(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                       placeholder="₹"
                       maxLength={10}
                     />
@@ -556,40 +556,40 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-zinc-900">
+                  <label className="block text-sm font-medium text-ink">
                     Invoice Prefix
                   </label>
                   <input
                     type="text"
                     value={invoicePrefix}
                     onChange={(e) => setInvoicePrefix(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                     placeholder="INV-"
                     maxLength={20}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-zinc-900">
+                  <label className="block text-sm font-medium text-ink">
                     Invoice Footer Text
                   </label>
                   <textarea
                     value={invoiceFooter}
                     onChange={(e) => setInvoiceFooter(e.target.value)}
                     rows={3}
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                     placeholder="Thank you for your business!"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-zinc-900">
+                  <label className="block text-sm font-medium text-ink">
                     Default Discount Type
                   </label>
                   <select
                     value={defaultDiscountType}
                     onChange={(e) => setDefaultDiscountType(e.target.value as 'percentage' | 'fixed')}
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   >
                     <option value="percentage">Percentage (%)</option>
                     <option value="fixed">Fixed Amount</option>
@@ -599,7 +599,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50"
+                  className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition hover:bg-ink-light disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Save Billing Settings'}
                 </button>
@@ -611,7 +611,7 @@ export default function SettingsPage() {
               <form onSubmit={handleInventorySubmit} className="space-y-6">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-900">
+                    <label className="block text-sm font-medium text-ink">
                       Default Low Stock Threshold
                     </label>
                     <input
@@ -619,18 +619,18 @@ export default function SettingsPage() {
                       min="0"
                       value={defaultLowStockThreshold}
                       onChange={(e) => setDefaultLowStockThreshold(parseInt(e.target.value, 10) || 0)}
-                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-900">
+                    <label className="block text-sm font-medium text-ink">
                       Default Unit
                     </label>
                     <input
                       type="text"
                       value={defaultUnit}
                       onChange={(e) => setDefaultUnit(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                       placeholder="unit"
                       maxLength={32}
                     />
@@ -643,13 +643,13 @@ export default function SettingsPage() {
                       type="checkbox"
                       checked={stockWarningAlerts}
                       onChange={(e) => setStockWarningAlerts(e.target.checked)}
-                      className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                      className="h-4 w-4 rounded border-border text-ink focus:ring-accent"
                     />
-                    <span className="text-sm font-medium text-zinc-900">
+                    <span className="text-sm font-medium text-ink">
                       Enable Stock Warning Alerts
                     </span>
                   </label>
-                  <p className="mt-1 text-xs text-zinc-700">
+                  <p className="mt-1 text-xs text-muted">
                     Show alerts when products fall below the low stock threshold
                   </p>
                 </div>
@@ -657,7 +657,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50"
+                  className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition hover:bg-ink-light disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Save Inventory Settings'}
                 </button>
@@ -673,9 +673,9 @@ export default function SettingsPage() {
                       type="checkbox"
                       checked={enableInvoices}
                       onChange={(e) => setEnableInvoices(e.target.checked)}
-                      className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                      className="h-4 w-4 rounded border-border text-ink focus:ring-accent"
                     />
-                    <span className="text-sm font-medium text-zinc-900">
+                    <span className="text-sm font-medium text-ink">
                       Enable Invoice Generation
                     </span>
                   </label>
@@ -687,9 +687,9 @@ export default function SettingsPage() {
                       type="checkbox"
                       checked={gstEnabled}
                       onChange={(e) => setGstEnabled(e.target.checked)}
-                      className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                      className="h-4 w-4 rounded border-border text-ink focus:ring-accent"
                     />
-                    <span className="text-sm font-medium text-zinc-900">
+                    <span className="text-sm font-medium text-ink">
                       Enable GST/Tax on Invoices
                     </span>
                   </label>
@@ -697,20 +697,20 @@ export default function SettingsPage() {
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-900">
+                    <label className="block text-sm font-medium text-ink">
                       Invoice Prefix
                     </label>
                     <input
                       type="text"
                       value={invoiceSettingsPrefix}
                       onChange={(e) => setInvoiceSettingsPrefix(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                       placeholder="INV"
                       maxLength={20}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-900">
+                    <label className="block text-sm font-medium text-ink">
                       Serial Number Padding
                     </label>
                     <input
@@ -719,19 +719,19 @@ export default function SettingsPage() {
                       max="10"
                       value={invoicePadding}
                       onChange={(e) => setInvoicePadding(parseInt(e.target.value, 10) || 5)}
-                      className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-zinc-900">
+                  <label className="block text-sm font-medium text-ink">
                     Invoice Reset Cycle
                   </label>
                   <select
                     value={invoiceResetCycle}
                     onChange={(e) => setInvoiceResetCycle(e.target.value as 'never' | 'monthly' | 'yearly')}
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   >
                     <option value="never">Never (Continuous)</option>
                     <option value="monthly">Monthly</option>
@@ -740,13 +740,13 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-zinc-900">
+                  <label className="block text-sm font-medium text-ink">
                     Invoice Display Format
                   </label>
                   <select
                     value={invoiceDisplayFormat}
                     onChange={(e) => setInvoiceDisplayFormat(e.target.value as 'A4' | 'thermal')}
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   >
                     <option value="A4">A4</option>
                     <option value="thermal">Thermal</option>
@@ -759,9 +759,9 @@ export default function SettingsPage() {
                       type="checkbox"
                       checked={invoiceBranchPrefix}
                       onChange={(e) => setInvoiceBranchPrefix(e.target.checked)}
-                      className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                      className="h-4 w-4 rounded border-border text-ink focus:ring-accent"
                     />
-                    <span className="text-sm font-medium text-zinc-900">
+                    <span className="text-sm font-medium text-ink">
                       Include Branch Prefix in Invoice Number
                     </span>
                   </label>
@@ -773,9 +773,9 @@ export default function SettingsPage() {
                       type="checkbox"
                       checked={includeLogo}
                       onChange={(e) => setIncludeLogo(e.target.checked)}
-                      className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                      className="h-4 w-4 rounded border-border text-ink focus:ring-accent"
                     />
-                    <span className="text-sm font-medium text-zinc-900">
+                    <span className="text-sm font-medium text-ink">
                       Include Business Logo on Invoices
                     </span>
                   </label>
@@ -784,7 +784,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50"
+                  className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition hover:bg-ink-light disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Save Invoice Settings'}
                 </button>
@@ -800,13 +800,13 @@ export default function SettingsPage() {
                       type="checkbox"
                       checked={enableTables}
                       onChange={(e) => setEnableTables(e.target.checked)}
-                      className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                      className="h-4 w-4 rounded border-border text-ink focus:ring-accent"
                     />
-                    <span className="text-sm font-medium text-zinc-900">
+                    <span className="text-sm font-medium text-ink">
                       Enable Table Management
                     </span>
                   </label>
-                  <p className="mt-1 text-xs text-zinc-700">
+                  <p className="mt-1 text-xs text-muted">
                     Enable table tracking and assignment for your restaurant or café. When enabled, you can manage tables, assign orders to tables, and track table status.
                   </p>
                 </div>
@@ -819,13 +819,13 @@ export default function SettingsPage() {
                           type="checkbox"
                           checked={enableReservations}
                           onChange={(e) => setEnableReservations(e.target.checked)}
-                          className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                          className="h-4 w-4 rounded border-border text-ink focus:ring-accent"
                         />
-                        <span className="text-sm font-medium text-zinc-900">
+                        <span className="text-sm font-medium text-ink">
                           Enable Reservations
                         </span>
                       </label>
-                      <p className="mt-1 text-xs text-zinc-700">
+                      <p className="mt-1 text-xs text-muted">
                         Allow staff to reserve tables for future bookings (feature coming soon)
                       </p>
                     </div>
@@ -836,13 +836,13 @@ export default function SettingsPage() {
                           type="checkbox"
                           checked={allowTableMerge}
                           onChange={(e) => setAllowTableMerge(e.target.checked)}
-                          className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                          className="h-4 w-4 rounded border-border text-ink focus:ring-accent"
                         />
-                        <span className="text-sm font-medium text-zinc-900">
+                        <span className="text-sm font-medium text-ink">
                           Allow Table Merging
                         </span>
                       </label>
-                      <p className="mt-1 text-xs text-zinc-700">
+                      <p className="mt-1 text-xs text-muted">
                         Allow staff to merge multiple tables together (e.g., when a large party needs adjacent tables)
                       </p>
                     </div>
@@ -853,13 +853,13 @@ export default function SettingsPage() {
                           type="checkbox"
                           checked={autoFreeTableOnPayment}
                           onChange={(e) => setAutoFreeTableOnPayment(e.target.checked)}
-                          className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                          className="h-4 w-4 rounded border-border text-ink focus:ring-accent"
                         />
-                        <span className="text-sm font-medium text-zinc-900">
+                        <span className="text-sm font-medium text-ink">
                           Auto-Free Table on Payment
                         </span>
                       </label>
-                      <p className="mt-1 text-xs text-zinc-700">
+                      <p className="mt-1 text-xs text-muted">
                         Automatically set table status to "Cleaning" when the order is paid, so staff can prepare it for the next customer
                       </p>
                     </div>
@@ -869,7 +869,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50"
+                  className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition hover:bg-ink-light disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Save Table Settings'}
                 </button>
@@ -885,13 +885,13 @@ export default function SettingsPage() {
                       type="checkbox"
                       checked={enableCRM}
                       onChange={(e) => setEnableCRM(e.target.checked)}
-                      className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                      className="h-4 w-4 rounded border-border text-ink focus:ring-accent"
                     />
-                    <span className="text-sm font-medium text-zinc-900">
+                    <span className="text-sm font-medium text-ink">
                       Enable CRM (Customer Relationship Management)
                     </span>
                   </label>
-                  <p className="mt-1 text-xs text-zinc-700">
+                  <p className="mt-1 text-xs text-muted">
                     Enable customer tracking, visit history, notes, and feedback. When enabled, you can capture customer information during checkout and manage customer relationships.
                   </p>
                 </div>
@@ -903,25 +903,25 @@ export default function SettingsPage() {
                         type="checkbox"
                         checked={enableLoyalty}
                         onChange={(e) => setEnableLoyalty(e.target.checked)}
-                        className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                        className="h-4 w-4 rounded border-border text-ink focus:ring-accent"
                       />
-                      <span className="text-sm font-medium text-zinc-900">
+                      <span className="text-sm font-medium text-ink">
                         Enable Loyalty Program
                       </span>
                     </label>
-                    <p className="mt-1 text-xs text-zinc-700">
+                    <p className="mt-1 text-xs text-muted">
                       Award loyalty points to customers based on their spending. Customers earn 1 point per ₹100 spent. Points can be used for future discounts and rewards.
                     </p>
-                    <p className="mt-2 text-xs text-zinc-600">
+                    <p className="mt-2 text-xs text-muted">
                       <strong>Tiers:</strong> Silver (0-499 points), Gold (500-999 points), Platinum (1000+ points)
                     </p>
                   </div>
                 )}
 
                 {enableCRM && enableLoyalty && (
-                  <div className="mt-6 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-                    <h3 className="text-sm font-semibold text-zinc-900 mb-3">Loyalty Program Rules</h3>
-                    <div className="space-y-2 text-xs text-zinc-700">
+                  <div className="mt-6 rounded-lg border border-border bg-paper p-4">
+                    <h3 className="text-sm font-semibold text-ink mb-3">Loyalty Program Rules</h3>
+                    <div className="space-y-2 text-xs text-muted">
                       <div className="flex justify-between">
                         <span className="font-medium">Points Earning Rate:</span>
                         <span>1 point per ₹100 spent</span>
@@ -938,8 +938,8 @@ export default function SettingsPage() {
                         <span className="font-medium">Maximum Redemption:</span>
                         <span>50% of bill amount</span>
                       </div>
-                      <div className="mt-3 pt-3 border-t border-zinc-200">
-                        <p className="text-zinc-600">
+                      <div className="mt-3 pt-3 border-t border-border">
+                        <p className="text-muted">
                           <strong>How it works:</strong> Customers automatically earn points when they make purchases. Points can be redeemed during checkout for discounts. Points are earned on the net bill amount (after any discounts).
                         </p>
                       </div>
@@ -948,8 +948,8 @@ export default function SettingsPage() {
                 )}
 
                 {!enableCRM && enableLoyalty && (
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                    <p className="text-sm text-amber-800">
+                  <div className="rounded-lg border border-warning/30 bg-warning-muted p-4">
+                    <p className="text-sm text-warning">
                       <strong>Note:</strong> Loyalty program requires CRM to be enabled. Please enable CRM first.
                     </p>
                   </div>
@@ -958,7 +958,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={saving || (!enableCRM && enableLoyalty)}
-                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition hover:bg-ink-light disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {saving ? 'Saving…' : 'Save Organization Settings'}
                 </button>
@@ -969,20 +969,20 @@ export default function SettingsPage() {
             {activeTab === 'support' && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-lg font-semibold text-zinc-900 mb-4">
+                  <h2 className="text-lg font-semibold text-ink mb-4">
                     Contact Support
                   </h2>
-                  <p className="text-sm text-zinc-700 mb-6">
+                  <p className="text-sm text-muted mb-6">
                     Need help? Reach out to our support team using the contact information below.
                   </p>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-6">
+                  <div className="rounded-lg border border-border bg-paper p-6">
                     <div className="flex items-start gap-4">
                       <div className="flex-shrink-0">
                         <svg
-                          className="h-6 w-6 text-zinc-600"
+                          className="h-6 w-6 text-muted"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -996,12 +996,12 @@ export default function SettingsPage() {
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-sm font-medium text-zinc-900 mb-1">
+                        <h3 className="text-sm font-medium text-ink mb-1">
                           Phone
                         </h3>
                         <a
                           href="tel:+919324115782"
-                          className="text-base text-zinc-700 hover:text-zinc-900 transition"
+                          className="text-base text-muted hover:text-ink transition"
                         >
                           +91 9324115782
                         </a>
@@ -1009,11 +1009,11 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-6">
+                  <div className="rounded-lg border border-border bg-paper p-6">
                     <div className="flex items-start gap-4">
                       <div className="flex-shrink-0">
                         <svg
-                          className="h-6 w-6 text-zinc-600"
+                          className="h-6 w-6 text-muted"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1027,12 +1027,12 @@ export default function SettingsPage() {
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-sm font-medium text-zinc-900 mb-1">
+                        <h3 className="text-sm font-medium text-ink mb-1">
                           Email
                         </h3>
                         <a
                           href="mailto:prashin@ecommerse.com"
-                          className="text-base text-zinc-700 hover:text-zinc-900 transition"
+                          className="text-base text-muted hover:text-ink transition"
                         >
                           prashin@ecommerse.com
                         </a>

@@ -152,7 +152,7 @@ export default function ReportsPage() {
   if (loading || !user || !token) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-app">
-        <p className="text-sm text-zinc-700">Loading…</p>
+        <p className="text-sm text-muted">Loading…</p>
       </main>
     );
   }
@@ -160,7 +160,7 @@ export default function ReportsPage() {
   if (user.role !== 'admin') {
     return (
       <main className="flex min-h-screen items-center justify-center bg-app">
-        <p className="text-sm text-red-600">Access denied. Admin only.</p>
+        <p className="text-sm text-danger">Access denied. Admin only.</p>
       </main>
     );
   }
@@ -170,9 +170,9 @@ export default function ReportsPage() {
       <div className="mx-auto w-full max-w-7xl">
         <PageHeader className="mb-8">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Reports</p>
-            <h1 className="text-3xl font-semibold text-zinc-900">Reports & Insights</h1>
-            <p className="mt-2 text-sm text-zinc-700">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Reports</p>
+            <h1 className="text-3xl font-semibold text-ink">Reports & Insights</h1>
+            <p className="mt-2 text-sm text-muted">
               Analyze your business performance and export data
             </p>
           </div>
@@ -185,13 +185,13 @@ export default function ReportsPage() {
         )}
 
         {/* Tabs */}
-        <div className="mb-6 flex flex-wrap gap-2 rounded-xl border border-zinc-200 bg-white p-2">
+        <div className="mb-6 flex flex-wrap gap-2 rounded-xl border border-border bg-surface p-2">
           <button
             onClick={() => setActiveTab('sales')}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
               activeTab === 'sales'
-                ? 'bg-brand-50 text-brand-700'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'
+                ? 'bg-accent-muted text-accent-dark'
+                : 'text-muted hover:bg-paper hover:text-ink'
             }`}
           >
             Sales Report
@@ -200,8 +200,8 @@ export default function ReportsPage() {
             onClick={() => setActiveTab('profit-loss')}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
               activeTab === 'profit-loss'
-                ? 'bg-brand-50 text-brand-700'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'
+                ? 'bg-accent-muted text-accent-dark'
+                : 'text-muted hover:bg-paper hover:text-ink'
             }`}
           >
             Profit & Loss
@@ -210,8 +210,8 @@ export default function ReportsPage() {
             onClick={() => setActiveTab('inventory')}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
               activeTab === 'inventory'
-                ? 'bg-brand-50 text-brand-700'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'
+                ? 'bg-accent-muted text-accent-dark'
+                : 'text-muted hover:bg-paper hover:text-ink'
             }`}
           >
             Inventory
@@ -220,8 +220,8 @@ export default function ReportsPage() {
             onClick={() => setActiveTab('expenses')}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
               activeTab === 'expenses'
-                ? 'bg-brand-50 text-brand-700'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'
+                ? 'bg-accent-muted text-accent-dark'
+                : 'text-muted hover:bg-paper hover:text-ink'
             }`}
           >
             Expenses
@@ -232,21 +232,21 @@ export default function ReportsPage() {
         {(activeTab === 'sales' || activeTab === 'profit-loss' || activeTab === 'expenses') && (
           <Card className="mb-6 flex gap-4">
             <div>
-              <label className="block text-xs font-medium text-zinc-700">From Date</label>
+              <label className="block text-xs font-medium text-muted">From Date</label>
               <input
                 type="date"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="mt-1 rounded border border-zinc-300 px-3 py-1.5 text-sm focus:border-zinc-900 focus:outline-none"
+                className="mt-1 rounded border border-border px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-zinc-700">To Date</label>
+              <label className="block text-xs font-medium text-muted">To Date</label>
               <input
                 type="date"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="mt-1 rounded border border-zinc-300 px-3 py-1.5 text-sm focus:border-zinc-900 focus:outline-none"
+                className="mt-1 rounded border border-border px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
               />
             </div>
             {activeTab === 'sales' && (
@@ -268,28 +268,28 @@ export default function ReportsPage() {
               {activeTab === 'sales' && salesReport && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-semibold text-zinc-900">Sales Report</h2>
-                    <p className="text-sm text-zinc-700">
+                    <h2 className="text-lg font-semibold text-ink">Sales Report</h2>
+                    <p className="text-sm text-muted">
                       {salesReport.period.from} to {salesReport.period.to}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-700">Total Sales</p>
-                      <p className="mt-1 text-2xl font-semibold text-zinc-900">
+                    <div className="rounded-lg border border-border p-4">
+                      <p className="text-xs text-muted">Total Sales</p>
+                      <p className="mt-1 text-2xl font-semibold text-ink">
                         ₹{Number(salesReport.summary?.totalSales || 0).toFixed(2)}
                       </p>
                     </div>
-                    <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-700">Total Orders</p>
-                      <p className="mt-1 text-2xl font-semibold text-zinc-900">
+                    <div className="rounded-lg border border-border p-4">
+                      <p className="text-xs text-muted">Total Orders</p>
+                      <p className="mt-1 text-2xl font-semibold text-ink">
                         {salesReport.summary?.totalOrders || 0}
                       </p>
                     </div>
-                    <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-700">Average Order Value</p>
-                      <p className="mt-1 text-2xl font-semibold text-zinc-900">
+                    <div className="rounded-lg border border-border p-4">
+                      <p className="text-xs text-muted">Average Order Value</p>
+                      <p className="mt-1 text-2xl font-semibold text-ink">
                         ₹{Number(salesReport.summary?.averageOrderValue || 0).toFixed(2)}
                       </p>
                     </div>
@@ -297,23 +297,23 @@ export default function ReportsPage() {
 
                   <div className="grid gap-6 lg:grid-cols-2">
                     <div>
-                      <h3 className="mb-3 text-sm font-semibold text-zinc-900">Product Breakdown</h3>
+                      <h3 className="mb-3 text-sm font-semibold text-ink">Product Breakdown</h3>
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
-                          <thead className="bg-zinc-50">
+                          <thead className="bg-paper">
                             <tr>
-                              <th className="px-3 py-2 text-left text-xs font-medium text-zinc-700">
+                              <th className="px-3 py-2 text-left text-xs font-medium text-muted">
                                 Product
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-zinc-700">
+                              <th className="px-3 py-2 text-right text-xs font-medium text-muted">
                                 Quantity
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-zinc-700">
+                              <th className="px-3 py-2 text-right text-xs font-medium text-muted">
                                 Revenue
                               </th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-zinc-200">
+                          <tbody className="divide-y divide-border">
                             {salesReport.productBreakdown?.map((product: any, idx: number) => (
                               <tr key={idx}>
                                 <td className="px-3 py-2">{product.name}</td>
@@ -327,23 +327,23 @@ export default function ReportsPage() {
                     </div>
 
                     <div>
-                      <h3 className="mb-3 text-sm font-semibold text-zinc-900">Staff Breakdown</h3>
+                      <h3 className="mb-3 text-sm font-semibold text-ink">Staff Breakdown</h3>
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
-                          <thead className="bg-zinc-50">
+                          <thead className="bg-paper">
                             <tr>
-                              <th className="px-3 py-2 text-left text-xs font-medium text-zinc-700">
+                              <th className="px-3 py-2 text-left text-xs font-medium text-muted">
                                 Staff
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-zinc-700">
+                              <th className="px-3 py-2 text-right text-xs font-medium text-muted">
                                 Sales
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-zinc-700">
+                              <th className="px-3 py-2 text-right text-xs font-medium text-muted">
                                 Orders
                               </th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-zinc-200">
+                          <tbody className="divide-y divide-border">
                             {salesReport.staffBreakdown?.map((staff: any, idx: number) => (
                               <tr key={idx}>
                                 <td className="px-3 py-2">{staff.name}</td>
@@ -363,46 +363,46 @@ export default function ReportsPage() {
               {activeTab === 'profit-loss' && profitLossReport && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-semibold text-zinc-900">Profit & Loss Report</h2>
-                    <p className="text-sm text-zinc-700">
+                    <h2 className="text-lg font-semibold text-ink">Profit & Loss Report</h2>
+                    <p className="text-sm text-muted">
                       {profitLossReport.period.from} to {profitLossReport.period.to}
                     </p>
                   </div>
 
                   <div className="space-y-4">
-                    <div className="flex justify-between border-b border-zinc-200 pb-2">
-                      <span className="text-sm text-zinc-700">Revenue</span>
-                      <span className="text-sm font-semibold text-zinc-900">
+                    <div className="flex justify-between border-b border-border pb-2">
+                      <span className="text-sm text-muted">Revenue</span>
+                      <span className="text-sm font-semibold text-ink">
                         ₹{Number(profitLossReport.revenue || 0).toFixed(2)}
                       </span>
                     </div>
-                    <div className="flex justify-between border-b border-zinc-200 pb-2">
-                      <span className="text-sm text-zinc-700">Cost of Goods Sold</span>
-                      <span className="text-sm font-semibold text-zinc-900">
+                    <div className="flex justify-between border-b border-border pb-2">
+                      <span className="text-sm text-muted">Cost of Goods Sold</span>
+                      <span className="text-sm font-semibold text-ink">
                         ₹{Number(profitLossReport.costOfGoodsSold || 0).toFixed(2)}
                       </span>
                     </div>
-                    <div className="flex justify-between border-b border-zinc-200 pb-2">
-                      <span className="text-sm font-medium text-zinc-900">Gross Profit</span>
+                    <div className="flex justify-between border-b border-border pb-2">
+                      <span className="text-sm font-medium text-ink">Gross Profit</span>
                       <span
                         className={`text-sm font-semibold ${
-                          (profitLossReport.grossProfit || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'
+                          (profitLossReport.grossProfit || 0) >= 0 ? 'text-emerald-600' : 'text-danger'
                         }`}
                       >
                         ₹{Number(profitLossReport.grossProfit || 0).toFixed(2)} ({profitLossReport.grossMargin || 0}%)
                       </span>
                     </div>
-                    <div className="flex justify-between border-b border-zinc-200 pb-2">
-                      <span className="text-sm text-zinc-700">Operating Expenses</span>
-                      <span className="text-sm font-semibold text-zinc-900">
+                    <div className="flex justify-between border-b border-border pb-2">
+                      <span className="text-sm text-muted">Operating Expenses</span>
+                      <span className="text-sm font-semibold text-ink">
                         ₹{Number(profitLossReport.operatingExpenses || 0).toFixed(2)}
                       </span>
                     </div>
                     <div className="flex justify-between pt-2">
-                      <span className="text-sm font-medium text-zinc-900">Net Profit</span>
+                      <span className="text-sm font-medium text-ink">Net Profit</span>
                       <span
                         className={`text-lg font-semibold ${
-                          (profitLossReport.netProfit || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'
+                          (profitLossReport.netProfit || 0) >= 0 ? 'text-emerald-600' : 'text-danger'
                         }`}
                       >
                         ₹{Number(profitLossReport.netProfit || 0).toFixed(2)} ({profitLossReport.netMargin || 0}%)
@@ -416,57 +416,57 @@ export default function ReportsPage() {
               {activeTab === 'inventory' && inventoryReport && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-semibold text-zinc-900">Inventory Report</h2>
+                    <h2 className="text-lg font-semibold text-ink">Inventory Report</h2>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-700">Total Products</p>
-                      <p className="mt-1 text-2xl font-semibold text-zinc-900">
+                    <div className="rounded-lg border border-border p-4">
+                      <p className="text-xs text-muted">Total Products</p>
+                      <p className="mt-1 text-2xl font-semibold text-ink">
                         {inventoryReport.summary.totalProducts}
                       </p>
                     </div>
-                    <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-700">Total Stock Value</p>
-                      <p className="mt-1 text-2xl font-semibold text-zinc-900">
+                    <div className="rounded-lg border border-border p-4">
+                      <p className="text-xs text-muted">Total Stock Value</p>
+                      <p className="mt-1 text-2xl font-semibold text-ink">
                         ₹{Number(inventoryReport.summary?.totalStockValue || 0).toFixed(2)}
                       </p>
                     </div>
-                    <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-700">Low Stock Items</p>
-                      <p className="mt-1 text-2xl font-semibold text-zinc-900">
+                    <div className="rounded-lg border border-border p-4">
+                      <p className="text-xs text-muted">Low Stock Items</p>
+                      <p className="mt-1 text-2xl font-semibold text-ink">
                         {inventoryReport.summary.lowStockItems}
                       </p>
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="mb-3 text-sm font-semibold text-zinc-900">Product Details</h3>
+                    <h3 className="mb-3 text-sm font-semibold text-ink">Product Details</h3>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
-                        <thead className="bg-zinc-50">
+                        <thead className="bg-paper">
                           <tr>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-zinc-700">
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted">
                               Product
                             </th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-zinc-700">
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted">
                               Category
                             </th>
-                            <th className="px-3 py-2 text-right text-xs font-medium text-zinc-700">
+                            <th className="px-3 py-2 text-right text-xs font-medium text-muted">
                               Stock
                             </th>
-                            <th className="px-3 py-2 text-right text-xs font-medium text-zinc-700">
+                            <th className="px-3 py-2 text-right text-xs font-medium text-muted">
                               Stock Value
                             </th>
-                            <th className="px-3 py-2 text-right text-xs font-medium text-zinc-700">
+                            <th className="px-3 py-2 text-right text-xs font-medium text-muted">
                               Sales (30d)
                             </th>
-                            <th className="px-3 py-2 text-center text-xs font-medium text-zinc-700">
+                            <th className="px-3 py-2 text-center text-xs font-medium text-muted">
                               Movement
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-zinc-200">
+                        <tbody className="divide-y divide-border">
                           {inventoryReport.products.map((product: any) => (
                             <tr key={product.id}>
                               <td className="px-3 py-2">{product.name}</td>
@@ -482,8 +482,8 @@ export default function ReportsPage() {
                                     product.movement === 'fast'
                                       ? 'bg-emerald-100 text-emerald-700'
                                       : product.movement === 'medium'
-                                        ? 'bg-amber-100 text-amber-700'
-                                        : 'bg-zinc-100 text-zinc-700'
+                                        ? 'bg-warning-muted text-amber-700'
+                                        : 'bg-paper text-muted'
                                   }`}
                                 >
                                   {product.movement}
@@ -502,28 +502,28 @@ export default function ReportsPage() {
               {activeTab === 'expenses' && expenseReport && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-semibold text-zinc-900">Expense Report</h2>
-                    <p className="text-sm text-zinc-700">
+                    <h2 className="text-lg font-semibold text-ink">Expense Report</h2>
+                    <p className="text-sm text-muted">
                       {expenseReport.period.from} to {expenseReport.period.to}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-700">Total Expenses</p>
-                      <p className="mt-1 text-2xl font-semibold text-zinc-900">
+                    <div className="rounded-lg border border-border p-4">
+                      <p className="text-xs text-muted">Total Expenses</p>
+                      <p className="mt-1 text-2xl font-semibold text-ink">
                         ₹{Number(expenseReport.summary?.totalExpenses || 0).toFixed(2)}
                       </p>
                     </div>
-                    <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-700">Total Transactions</p>
-                      <p className="mt-1 text-2xl font-semibold text-zinc-900">
+                    <div className="rounded-lg border border-border p-4">
+                      <p className="text-xs text-muted">Total Transactions</p>
+                      <p className="mt-1 text-2xl font-semibold text-ink">
                         {expenseReport.summary?.totalTransactions || 0}
                       </p>
                     </div>
-                    <div className="rounded-lg border border-zinc-200 p-4">
-                      <p className="text-xs text-zinc-700">Average Expense</p>
-                      <p className="mt-1 text-2xl font-semibold text-zinc-900">
+                    <div className="rounded-lg border border-border p-4">
+                      <p className="text-xs text-muted">Average Expense</p>
+                      <p className="mt-1 text-2xl font-semibold text-ink">
                         ₹{Number(expenseReport.summary?.averageExpense || 0).toFixed(2)}
                       </p>
                     </div>
@@ -531,23 +531,23 @@ export default function ReportsPage() {
 
                   <div className="grid gap-6 lg:grid-cols-2">
                     <div>
-                      <h3 className="mb-3 text-sm font-semibold text-zinc-900">Category Breakdown</h3>
+                      <h3 className="mb-3 text-sm font-semibold text-ink">Category Breakdown</h3>
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
-                          <thead className="bg-zinc-50">
+                          <thead className="bg-paper">
                             <tr>
-                              <th className="px-3 py-2 text-left text-xs font-medium text-zinc-700">
+                              <th className="px-3 py-2 text-left text-xs font-medium text-muted">
                                 Category
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-zinc-700">
+                              <th className="px-3 py-2 text-right text-xs font-medium text-muted">
                                 Amount
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-zinc-700">
+                              <th className="px-3 py-2 text-right text-xs font-medium text-muted">
                                 %
                               </th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-zinc-200">
+                          <tbody className="divide-y divide-border">
                             {expenseReport.categoryBreakdown?.map((cat: any, idx: number) => (
                               <tr key={idx}>
                                 <td className="px-3 py-2">{cat.category}</td>
@@ -561,20 +561,20 @@ export default function ReportsPage() {
                     </div>
 
                     <div>
-                      <h3 className="mb-3 text-sm font-semibold text-zinc-900">Monthly Breakdown</h3>
+                      <h3 className="mb-3 text-sm font-semibold text-ink">Monthly Breakdown</h3>
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
-                          <thead className="bg-zinc-50">
+                          <thead className="bg-paper">
                             <tr>
-                              <th className="px-3 py-2 text-left text-xs font-medium text-zinc-700">
+                              <th className="px-3 py-2 text-left text-xs font-medium text-muted">
                                 Month
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-zinc-700">
+                              <th className="px-3 py-2 text-right text-xs font-medium text-muted">
                                 Amount
                               </th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-zinc-200">
+                          <tbody className="divide-y divide-border">
                             {expenseReport.monthlyBreakdown?.map((month: any, idx: number) => (
                               <tr key={idx}>
                                 <td className="px-3 py-2">{month.month}</td>
