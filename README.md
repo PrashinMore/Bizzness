@@ -100,8 +100,16 @@ Thanks to everyone who helps improve EZCommerse!
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
-<!-- markdownlint-enable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/PrashinMore"><img src="https://avatars.githubusercontent.com/u/69347764?v=4" width="100px;" alt="Prashin More"/><br /><sub><b>Prashin More</b></sub></a><br /><a href="https://github.com/PrashinMore/Bizzness/commits?author=PrashinMore" title="Code">💻</a> <a href="https://github.com/PrashinMore/Bizzness/commits?author=PrashinMore" title="Documentation">📖</a> <a href="#maintenance-PrashinMore" title="Maintenance">🚧</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- markdownlint-restore -->
 <!-- prettier-ignore-end -->
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
-This project follows the [all-contributors](https://allcontributors.org) specification. Contributions of any kind are welcome!
+This project follows the [all-contributors](https://allcontributors.org) specification. Contributions of any kind are welcome! Maintainers can add someone via a PR comment: `@all-contributors please add @username for code`.

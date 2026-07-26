@@ -92,8 +92,9 @@ npm run test:e2e   # optional; needs a configured test environment
 ```bash
 cd webFe
 npm run lint
-npm run test
 ```
+
+> **Note:** `webFe` does not yet define an `npm test` script / unit test runner on `main`. Backend Jest coverage exists under `be/` (`npm run test`). Adding frontend tests is a priority gap — contributions welcome.
 
 Please run lint and relevant unit tests before opening a PR. CI will re-run them on every push to `main` and on pull requests.
 

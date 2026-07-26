@@ -1,0 +1,8 @@
+{
+  "name": "ezcommerse-scripts",
+  "private": true,
+  "description": "Optional helper scripts for maintainers (not required to run the app)",
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}
