@@ -15,6 +15,15 @@ import { AuthTokenResponse, SanitizedUser } from '../users/users.types';
 import { JWT_CONFIG } from './jwt.config';
 import { InvitesService } from '../organizations/invites.service';
 
+/**
+ * AuthService owns signup/login/token refresh/password reset.
+ *
+ * Orientation for contributors:
+ * - Signup assigns `admin` unless the email already has a pending org invite
+ *   (then `staff`), then consumes those invites so the user joins immediately.
+ * - Access tokens are JWTs; refresh tokens are opaque values stored on the user.
+ * - Controllers stay thin — keep credential and invite side-effects here.
+ */
 @Injectable()
 export class AuthService {
   constructor(

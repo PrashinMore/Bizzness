@@ -17,6 +17,17 @@ import {
   ListCustomersResponse,
 } from '@/types/crm';
 
+/**
+ * Browser-side HTTP facade for the NestJS API (`/api/...`).
+ *
+ * Orientation for contributors:
+ * - Base URL comes from `NEXT_PUBLIC_API_BASE_URL` (see `.env.example`).
+ * - When a Bearer token is passed, it is sent as `Authorization`.
+ * - If `localStorage['selected-outlet-id']` is set, requests include `X-Outlet-Id`
+ *   so the backend can scope outlet-aware resources.
+ * - Domain helpers below (`authApi`, `salesApi`, …) are thin wrappers over
+ *   the shared `request()` helper — prefer extending those over ad-hoc fetch.
+ */
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000';
 

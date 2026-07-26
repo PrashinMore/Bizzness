@@ -24,7 +24,16 @@ dist/
 
 # Env files
 .env
+.env.local
+.env.*.local
 
 # Database
 data/*.sqlite
+
+# Uploads & OS / IDE
+uploads/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
 

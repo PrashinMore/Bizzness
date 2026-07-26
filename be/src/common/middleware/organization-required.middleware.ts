@@ -8,6 +8,16 @@ import { NextFunction, Request, Response } from 'express';
 import { UsersService } from '../../users/users.service';
 import { JWT_CONFIG } from '../../auth/jwt.config';
 
+/**
+ * Global gate (wired in AppModule): authenticated users without an organization
+ * cannot hit most API routes until they create or join one.
+ *
+ * Orientation for contributors:
+ * - OPTIONS and an allow-list of auth/bootstrap paths skip the check.
+ * - Missing/invalid tokens do not hard-fail here (route guards still apply);
+ *   the middleware only enforces the "has an org" rule once identity is known.
+ * - When adding public endpoints, update `isAllowedWithoutOrganization`.
+ */
 @Injectable()
 export class OrganizationRequiredMiddleware implements NestMiddleware {
   constructor(

@@ -1,6 +1,17 @@
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
+/**
+ * Builds TypeORM options from env in a host-agnostic way.
+ *
+ * Resolution order for connection details:
+ *   1. DATABASE_URL / POSTGRES_URL_NON_POOLING / POSTGRES_URL / POSTGRES_PRISMA_URL
+ *   2. Individual DB_* (or POSTGRES_*) variables
+ *
+ * Also normalizes common Supabase misconfigurations (e.g. setting DB_HOST to
+ * the username `postgres.<ref>` instead of a real hostname) and tunes the
+ * connection pool for serverless vs long-running Node processes.
+ */
 type ParsedDatabaseConfig = {
   host: string;
   port: number;
