@@ -10,7 +10,9 @@ import { InvitesService } from './invites.service';
 import { InvitesController } from './invites.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Organization, OrganizationInvite, User, Outlet])],
+  imports: [
+    TypeOrmModule.forFeature([Organization, OrganizationInvite, User, Outlet]),
+  ],
   controllers: [OrganizationsController, InvitesController],
   providers: [OrganizationsService, InvitesService],
   exports: [TypeOrmModule, OrganizationsService, InvitesService],

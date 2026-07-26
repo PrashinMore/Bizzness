@@ -24,9 +24,11 @@ export class ReportsController {
 
   private getOrganizationIds(user: SanitizedUser): string[] {
     if (!user.organizations || user.organizations.length === 0) {
-      throw new ForbiddenException('You must be assigned to at least one organization');
+      throw new ForbiddenException(
+        'You must be assigned to at least one organization',
+      );
     }
-    return user.organizations.map(org => org.id);
+    return user.organizations.map((org) => org.id);
   }
 
   @Get('sales')
@@ -39,17 +41,28 @@ export class ReportsController {
   ) {
     const organizationIds = this.getOrganizationIds(req.user);
     if (exportType === 'csv') {
-      const csv = await this.reportsService.exportSalesReportCSV(from, to, organizationIds);
+      const csv = await this.reportsService.exportSalesReportCSV(
+        from,
+        to,
+        organizationIds,
+      );
       const filename = `sales-report-${from || 'all'}-${to || 'all'}.csv`;
       res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${filename}"`,
+      );
       return csv;
     }
     return this.reportsService.getSalesReport(from, to, organizationIds);
   }
 
   @Get('profit-loss')
-  getProfitLossReport(@Req() req: RequestWithUser, @Query('from') from?: string, @Query('to') to?: string) {
+  getProfitLossReport(
+    @Req() req: RequestWithUser,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
     const organizationIds = this.getOrganizationIds(req.user);
     return this.reportsService.getProfitLossReport(from, to, organizationIds);
   }
@@ -57,17 +70,22 @@ export class ReportsController {
   @Get('inventory')
   getInventoryReport(@Req() req: RequestWithUser) {
     const organizationIds = this.getOrganizationIds(req.user);
-    const outletId = (req.headers['x-outlet-id'] as string);
+    const outletId = req.headers['x-outlet-id'] as string;
     if (!outletId) {
-      throw new ForbiddenException('Outlet ID is required. Please select an outlet.');
+      throw new ForbiddenException(
+        'Outlet ID is required. Please select an outlet.',
+      );
     }
     return this.reportsService.getInventoryReport(organizationIds, outletId);
   }
 
   @Get('expenses')
-  getExpenseReport(@Req() req: RequestWithUser, @Query('from') from?: string, @Query('to') to?: string) {
+  getExpenseReport(
+    @Req() req: RequestWithUser,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
     const organizationIds = this.getOrganizationIds(req.user);
     return this.reportsService.getExpenseReport(from, to, organizationIds);
   }
 }
-

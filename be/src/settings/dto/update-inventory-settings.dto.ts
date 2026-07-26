@@ -1,4 +1,11 @@
-import { IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export class UpdateInventorySettingsDto {
   @IsInt()
@@ -15,4 +22,3 @@ export class UpdateInventorySettingsDto {
   @IsOptional()
   stockWarningAlerts?: boolean;
 }
-

@@ -1,4 +1,13 @@
-import { IsString, IsOptional, IsEmail, IsDateString, IsArray, IsEnum, MaxLength, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEmail,
+  IsDateString,
+  IsArray,
+  IsEnum,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class UpdateCustomerDto {
   @IsOptional()
@@ -24,4 +33,3 @@ export class UpdateCustomerDto {
   @IsString({ each: true })
   tags?: string[];
 }
-

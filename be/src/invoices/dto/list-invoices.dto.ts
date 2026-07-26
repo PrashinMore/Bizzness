@@ -30,4 +30,3 @@ export class ListInvoicesDto {
   @Min(1)
   size?: number;
 }
-

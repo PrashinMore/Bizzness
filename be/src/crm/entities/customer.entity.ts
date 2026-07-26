@@ -78,4 +78,3 @@ export class Customer {
   @UpdateDateColumn()
   updatedAt!: Date;
 }
-

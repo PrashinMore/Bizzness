@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, MaxLength, IsOptional, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  MaxLength,
+  IsOptional,
+  IsBoolean,
+} from 'class-validator';
 
 export class CreateCategoryDto {
   @IsString()
@@ -14,4 +20,3 @@ export class CreateCategoryDto {
   @IsOptional()
   isRawMaterial?: boolean;
 }
-

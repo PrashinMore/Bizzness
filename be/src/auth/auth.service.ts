@@ -93,7 +93,9 @@ export class AuthService {
     }
 
     const accessToken = await this.generateToken(refreshedUser);
-    const refreshToken = await this.generateAndSaveRefreshToken(refreshedUser.id);
+    const refreshToken = await this.generateAndSaveRefreshToken(
+      refreshedUser.id,
+    );
     return {
       user: refreshedUser,
       accessToken,
@@ -104,13 +106,16 @@ export class AuthService {
 
   async refreshToken(refreshToken: string): Promise<AuthTokenResponse> {
     const userEntity = await this.usersService.findByRefreshToken(refreshToken);
-    
+
     if (!userEntity) {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
     // Check if refresh token is expired
-    if (userEntity.refreshTokenExpiresAt && userEntity.refreshTokenExpiresAt < new Date()) {
+    if (
+      userEntity.refreshTokenExpiresAt &&
+      userEntity.refreshTokenExpiresAt < new Date()
+    ) {
       // Clear expired token
       await this.usersService.clearRefreshToken(userEntity.id);
       throw new UnauthorizedException('Refresh token expired');
@@ -123,7 +128,9 @@ export class AuthService {
 
     // Generate new tokens
     const accessToken = await this.generateToken(sanitized);
-    const newRefreshToken = await this.generateAndSaveRefreshToken(sanitized.id);
+    const newRefreshToken = await this.generateAndSaveRefreshToken(
+      sanitized.id,
+    );
 
     return {
       user: sanitized,
@@ -138,9 +145,8 @@ export class AuthService {
     dto: ResetPasswordDto,
   ): Promise<void> {
     const targetUserId = dto.userId ?? requester.id;
-    const targetUserEntity = await this.usersService.findEntityById(
-      targetUserId,
-    );
+    const targetUserEntity =
+      await this.usersService.findEntityById(targetUserId);
 
     if (!targetUserEntity) {
       throw new BadRequestException('User not found');
@@ -191,15 +197,14 @@ export class AuthService {
   private async generateAndSaveRefreshToken(userId: string): Promise<string> {
     // Generate a secure random token
     const token = randomBytes(64).toString('hex');
-    
+
     // Calculate expiration date (7 days from now)
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
-    
+
     // Save to database
     await this.usersService.saveRefreshToken(userId, token, expiresAt);
-    
+
     return token;
   }
 }
-

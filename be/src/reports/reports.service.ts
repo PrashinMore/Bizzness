@@ -46,7 +46,10 @@ export class ReportsService {
     const totalOrders = sales.length;
 
     // Product-wise breakdown
-    const productBreakdown = new Map<string, { name: string; quantity: number; revenue: number }>();
+    const productBreakdown = new Map<
+      string,
+      { name: string; quantity: number; revenue: number }
+    >();
     for (const sale of sales) {
       for (const item of sale.items) {
         const existing = productBreakdown.get(item.productId) || {
@@ -77,7 +80,10 @@ export class ReportsService {
     }
 
     // Staff-wise breakdown
-    const staffBreakdown = new Map<string, { name: string; sales: number; orders: number }>();
+    const staffBreakdown = new Map<
+      string,
+      { name: string; sales: number; orders: number }
+    >();
     for (const sale of sales) {
       const existing = staffBreakdown.get(sale.soldBy) || {
         name: 'Unknown',
@@ -109,16 +115,23 @@ export class ReportsService {
       summary: {
         totalSales: Number(totalSales.toFixed(2)),
         totalOrders,
-        averageOrderValue: totalOrders > 0 ? Number((totalSales / totalOrders).toFixed(2)) : 0,
+        averageOrderValue:
+          totalOrders > 0 ? Number((totalSales / totalOrders).toFixed(2)) : 0,
       },
       productBreakdown: Array.from(productBreakdown.values()).sort(
         (a, b) => b.revenue - a.revenue,
       ),
-      staffBreakdown: Array.from(staffBreakdown.values()).sort((a, b) => b.sales - a.sales),
+      staffBreakdown: Array.from(staffBreakdown.values()).sort(
+        (a, b) => b.sales - a.sales,
+      ),
     };
   }
 
-  async getProfitLossReport(from?: string, to?: string, organizationIds?: string[]) {
+  async getProfitLossReport(
+    from?: string,
+    to?: string,
+    organizationIds?: string[],
+  ) {
     const startDate = from ? new Date(from) : new Date();
     startDate.setHours(0, 0, 0, 0);
     const endDate = to ? new Date(to) : new Date();
@@ -152,7 +165,9 @@ export class ReportsService {
             endDate,
           });
         if (organizationIds && organizationIds.length > 0) {
-          qb.andWhere('sale.organizationId IN (:...organizationIds)', { organizationIds });
+          qb.andWhere('sale.organizationId IN (:...organizationIds)', {
+            organizationIds,
+          });
         }
         return qb
           .select('item.quantity', 'quantity')
@@ -166,7 +181,10 @@ export class ReportsService {
       (sum, item) => sum + Number(item.quantity) * Number(item.costPrice),
       0,
     );
-    const operatingExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+    const operatingExpenses = expenses.reduce(
+      (sum, e) => sum + Number(e.amount),
+      0,
+    );
 
     const grossProfit = revenue - costOfGoodsSold;
     const netProfit = grossProfit - operatingExpenses;
@@ -181,8 +199,10 @@ export class ReportsService {
       grossProfit: Number(grossProfit.toFixed(2)),
       operatingExpenses: Number(operatingExpenses.toFixed(2)),
       netProfit: Number(netProfit.toFixed(2)),
-      grossMargin: revenue > 0 ? Number(((grossProfit / revenue) * 100).toFixed(2)) : 0,
-      netMargin: revenue > 0 ? Number(((netProfit / revenue) * 100).toFixed(2)) : 0,
+      grossMargin:
+        revenue > 0 ? Number(((grossProfit / revenue) * 100).toFixed(2)) : 0,
+      netMargin:
+        revenue > 0 ? Number(((netProfit / revenue) * 100).toFixed(2)) : 0,
     };
   }
 
@@ -209,7 +229,10 @@ export class ReportsService {
     }
 
     const productIds = products.map((p) => p.id);
-    const stocks = await this.stockService.getStockForOutlet(outletId, productIds);
+    const stocks = await this.stockService.getStockForOutlet(
+      outletId,
+      productIds,
+    );
     const stockMap = new Map(stocks.map((s) => [s.productId, s]));
 
     // Calculate sales for last 30 days to determine fast/slow moving
@@ -223,11 +246,14 @@ export class ReportsService {
       .select('item.productId', 'productId')
       .addSelect('SUM(item.quantity)', 'totalQuantity')
       .where('sale.date >= :startDate', { startDate: thirtyDaysAgo });
-    
+
     if (organizationIds && organizationIds.length > 0) {
-      recentSalesQuery.andWhere('sale.organizationId IN (:...organizationIds)', { organizationIds });
+      recentSalesQuery.andWhere(
+        'sale.organizationId IN (:...organizationIds)',
+        { organizationIds },
+      );
     }
-    
+
     const recentSales = await recentSalesQuery
       .groupBy('item.productId')
       .getRawMany();
@@ -259,7 +285,8 @@ export class ReportsService {
         costPrice: Number(p.costPrice),
         stockValue: Number(stockValue.toFixed(2)),
         salesLast30Days: salesQuantity,
-        movement: salesQuantity > 10 ? 'fast' : salesQuantity > 0 ? 'medium' : 'slow',
+        movement:
+          salesQuantity > 10 ? 'fast' : salesQuantity > 0 ? 'medium' : 'slow',
       };
     });
 
@@ -273,7 +300,11 @@ export class ReportsService {
     };
   }
 
-  async getExpenseReport(from?: string, to?: string, organizationIds?: string[]) {
+  async getExpenseReport(
+    from?: string,
+    to?: string,
+    organizationIds?: string[],
+  ) {
     const startDate = from ? new Date(from) : new Date();
     startDate.setMonth(startDate.getMonth() - 1);
     startDate.setHours(0, 0, 0, 0);
@@ -291,7 +322,10 @@ export class ReportsService {
       where,
     });
 
-    const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+    const totalExpenses = expenses.reduce(
+      (sum, e) => sum + Number(e.amount),
+      0,
+    );
 
     // Category breakdown
     const categoryBreakdown = new Map<string, number>();
@@ -321,13 +355,19 @@ export class ReportsService {
       summary: {
         totalExpenses: Number(totalExpenses.toFixed(2)),
         totalTransactions: expenses.length,
-        averageExpense: expenses.length > 0 ? Number((totalExpenses / expenses.length).toFixed(2)) : 0,
+        averageExpense:
+          expenses.length > 0
+            ? Number((totalExpenses / expenses.length).toFixed(2))
+            : 0,
       },
       categoryBreakdown: Array.from(categoryBreakdown.entries())
         .map(([category, amount]) => ({
           category,
           amount: Number(amount.toFixed(2)),
-          percentage: totalExpenses > 0 ? Number(((amount / totalExpenses) * 100).toFixed(2)) : 0,
+          percentage:
+            totalExpenses > 0
+              ? Number(((amount / totalExpenses) * 100).toFixed(2))
+              : 0,
         }))
         .sort((a, b) => b.amount - a.amount),
       monthlyBreakdown: Array.from(monthlyBreakdown.entries())
@@ -339,7 +379,11 @@ export class ReportsService {
     };
   }
 
-  async exportSalesReportCSV(from?: string, to?: string, organizationIds?: string[]): Promise<string> {
+  async exportSalesReportCSV(
+    from?: string,
+    to?: string,
+    organizationIds?: string[],
+  ): Promise<string> {
     const report = await this.getSalesReport(from, to, organizationIds);
     const lines: string[] = [];
 
@@ -373,4 +417,3 @@ export class ReportsService {
     return lines.join('\n');
   }
 }
-

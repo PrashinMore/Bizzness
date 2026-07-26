@@ -1,4 +1,16 @@
-import { Body, Controller, Get, Param, Post, Patch, Query, ParseUUIDPipe, Req, UseGuards, ForbiddenException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Patch,
+  Query,
+  ParseUUIDPipe,
+  Req,
+  UseGuards,
+  ForbiddenException,
+} from '@nestjs/common';
 import { type Request } from 'express';
 import { SalesService } from './sales.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
@@ -13,98 +25,115 @@ type RequestWithUser = Request & { user: SanitizedUser };
 @UseGuards(JwtAuthGuard)
 @Controller('sales')
 export class SalesController {
-	constructor(private readonly salesService: SalesService) {}
+  constructor(private readonly salesService: SalesService) {}
 
-	private getOrganizationIds(user: SanitizedUser): string[] {
-		if (!user.organizations || user.organizations.length === 0) {
-			throw new ForbiddenException('You must be assigned to at least one organization');
-		}
-		return user.organizations.map(org => org.id);
-	}
+  private getOrganizationIds(user: SanitizedUser): string[] {
+    if (!user.organizations || user.organizations.length === 0) {
+      throw new ForbiddenException(
+        'You must be assigned to at least one organization',
+      );
+    }
+    return user.organizations.map((org) => org.id);
+  }
 
-	private getFirstOrganizationId(user: SanitizedUser): string {
-		if (!user.organizations || user.organizations.length === 0) {
-			throw new ForbiddenException('You must be assigned to at least one organization');
-		}
-		return user.organizations[0].id;
-	}
+  private getFirstOrganizationId(user: SanitizedUser): string {
+    if (!user.organizations || user.organizations.length === 0) {
+      throw new ForbiddenException(
+        'You must be assigned to at least one organization',
+      );
+    }
+    return user.organizations[0].id;
+  }
 
-	@Get()
-	findAll(@Req() req: RequestWithUser, @Query() query: ListSalesDto) {
-		const organizationIds = this.getOrganizationIds(req.user);
-		const outletId = (req.headers['x-outlet-id'] as string) || null;
-		return this.salesService.findAll({
-			from: query.from,
-			to: query.to,
-			productId: query.productId,
-			staff: query.staff,
-			paymentType: query.paymentType,
-			organizationIds,
-			outletId,
-			page: query.page,
-			size: query.size,
-		});
-	}
+  @Get()
+  findAll(@Req() req: RequestWithUser, @Query() query: ListSalesDto) {
+    const organizationIds = this.getOrganizationIds(req.user);
+    const outletId = (req.headers['x-outlet-id'] as string) || null;
+    return this.salesService.findAll({
+      from: query.from,
+      to: query.to,
+      productId: query.productId,
+      staff: query.staff,
+      paymentType: query.paymentType,
+      organizationIds,
+      outletId,
+      page: query.page,
+      size: query.size,
+    });
+  }
 
-	@Get('totals/daily')
-	dailyTotals(@Req() req: RequestWithUser, @Query('from') from?: string, @Query('to') to?: string) {
-		const organizationIds = this.getOrganizationIds(req.user);
-		const outletId = (req.headers['x-outlet-id'] as string) || null;
-		return this.salesService.dailyTotals(from, to, organizationIds, outletId);
-	}
+  @Get('totals/daily')
+  dailyTotals(
+    @Req() req: RequestWithUser,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    const organizationIds = this.getOrganizationIds(req.user);
+    const outletId = (req.headers['x-outlet-id'] as string) || null;
+    return this.salesService.dailyTotals(from, to, organizationIds, outletId);
+  }
 
-	@Get('totals/payment-type')
-	getPaymentTypeTotals(@Req() req: RequestWithUser, @Query() query: ListSalesDto) {
-		const organizationIds = this.getOrganizationIds(req.user);
-		const outletId = (req.headers['x-outlet-id'] as string) || null;
-		return this.salesService.getPaymentTypeTotals({
-			from: query.from,
-			to: query.to,
-			productId: query.productId,
-			staff: query.staff,
-			organizationIds,
-			outletId,
-			// Note: paymentType filter is intentionally excluded
-			// so we get totals for both cash and UPI
-		});
-	}
+  @Get('totals/payment-type')
+  getPaymentTypeTotals(
+    @Req() req: RequestWithUser,
+    @Query() query: ListSalesDto,
+  ) {
+    const organizationIds = this.getOrganizationIds(req.user);
+    const outletId = (req.headers['x-outlet-id'] as string) || null;
+    return this.salesService.getPaymentTypeTotals({
+      from: query.from,
+      to: query.to,
+      productId: query.productId,
+      staff: query.staff,
+      organizationIds,
+      outletId,
+      // Note: paymentType filter is intentionally excluded
+      // so we get totals for both cash and UPI
+    });
+  }
 
-	@Get(':id')
-	findOne(@Req() req: RequestWithUser, @Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-		const organizationIds = this.getOrganizationIds(req.user);
-		return this.salesService.findOne(id, organizationIds);
-	}
+  @Get(':id')
+  findOne(
+    @Req() req: RequestWithUser,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ) {
+    const organizationIds = this.getOrganizationIds(req.user);
+    return this.salesService.findOne(id, organizationIds);
+  }
 
-	@Post()
-	create(@Req() req: RequestWithUser, @Body() dto: CreateSaleDto) {
-		const organizationId = this.getFirstOrganizationId(req.user);
-		const organizationIds = this.getOrganizationIds(req.user);
-		const outletId = (req.headers['x-outlet-id'] as string);
-		if (!outletId) {
-			throw new ForbiddenException('Outlet ID is required. Please select an outlet.');
-		}
-		return this.salesService.create({ ...dto, organizationId, outletId }, organizationIds);
-	}
+  @Post()
+  create(@Req() req: RequestWithUser, @Body() dto: CreateSaleDto) {
+    const organizationId = this.getFirstOrganizationId(req.user);
+    const organizationIds = this.getOrganizationIds(req.user);
+    const outletId = req.headers['x-outlet-id'] as string;
+    if (!outletId) {
+      throw new ForbiddenException(
+        'Outlet ID is required. Please select an outlet.',
+      );
+    }
+    return this.salesService.create(
+      { ...dto, organizationId, outletId },
+      organizationIds,
+    );
+  }
 
-	@Patch(':id')
-	update(
-		@Req() req: RequestWithUser,
-		@Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-		@Body() dto: UpdateSaleDto,
-	) {
-		const organizationIds = this.getOrganizationIds(req.user);
-		return this.salesService.update(id, dto, organizationIds);
-	}
+  @Patch(':id')
+  update(
+    @Req() req: RequestWithUser,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: UpdateSaleDto,
+  ) {
+    const organizationIds = this.getOrganizationIds(req.user);
+    return this.salesService.update(id, dto, organizationIds);
+  }
 
-	@Patch(':id/items')
-	addItems(
-		@Req() req: RequestWithUser,
-		@Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-		@Body() dto: AddItemsToSaleDto,
-	) {
-		const organizationIds = this.getOrganizationIds(req.user);
-		return this.salesService.addItemsToSale(id, dto, organizationIds);
-	}
+  @Patch(':id/items')
+  addItems(
+    @Req() req: RequestWithUser,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: AddItemsToSaleDto,
+  ) {
+    const organizationIds = this.getOrganizationIds(req.user);
+    return this.salesService.addItemsToSale(id, dto, organizationIds);
+  }
 }
-
-

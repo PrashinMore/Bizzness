@@ -37,4 +37,3 @@ export class Organization {
   @ManyToMany(() => User, (user) => user.organizations)
   users!: User[];
 }
-

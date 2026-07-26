@@ -28,4 +28,3 @@ export class GlobalProduct {
   @UpdateDateColumn()
   updatedAt!: Date;
 }
-

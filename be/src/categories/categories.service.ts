@@ -51,10 +51,7 @@ export class CategoriesService {
     return category;
   }
 
-  async update(
-    id: string,
-    updateDto: UpdateCategoryDto,
-  ): Promise<Category> {
+  async update(id: string, updateDto: UpdateCategoryDto): Promise<Category> {
     const category = await this.categoriesRepository.findOne({
       where: { id },
     });
@@ -104,4 +101,3 @@ export class CategoriesService {
     await this.categoriesRepository.remove(category);
   }
 }
-

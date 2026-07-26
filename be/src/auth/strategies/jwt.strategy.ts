@@ -25,12 +25,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!payload || !payload.sub) {
       throw new UnauthorizedException('Invalid token payload');
     }
-    
+
     const user = await this.usersService.findById(payload.sub);
     if (!user) {
-      throw new UnauthorizedException('User not found. The user associated with this token may have been deleted.');
+      throw new UnauthorizedException(
+        'User not found. The user associated with this token may have been deleted.',
+      );
     }
     return user;
   }
 }
-

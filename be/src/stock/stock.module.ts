@@ -13,4 +13,3 @@ import { Outlet } from '../outlets/entities/outlet.entity';
   exports: [StockService],
 })
 export class StockModule {}
-

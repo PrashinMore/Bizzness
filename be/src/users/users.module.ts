@@ -12,4 +12,3 @@ import { RolesGuard } from '../common/guards/roles.guard';
   exports: [UsersService],
 })
 export class UsersModule {}
-

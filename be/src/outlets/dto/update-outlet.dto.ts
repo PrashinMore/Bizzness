@@ -7,4 +7,3 @@ export class UpdateOutletDto extends PartialType(CreateOutletDto) {
   @IsBoolean()
   isActive?: boolean;
 }
-

@@ -24,4 +24,3 @@ import { StockModule } from '../stock/stock.module';
   exports: [DashboardService],
 })
 export class DashboardModule {}
-

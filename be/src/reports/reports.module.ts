@@ -19,4 +19,3 @@ import { StockModule } from '../stock/stock.module';
   exports: [ReportsService],
 })
 export class ReportsModule {}
-

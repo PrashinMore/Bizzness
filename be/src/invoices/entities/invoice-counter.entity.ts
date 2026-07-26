@@ -1,9 +1,4 @@
-import {
-  Column,
-  Entity,
-  Index,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'invoice_counters' })
 @Index(['organizationId', 'branchId', 'period'], { unique: true })
@@ -23,4 +18,3 @@ export class InvoiceCounter {
   @Column({ type: 'int', default: 0, name: 'last_serial' })
   lastSerial!: number;
 }
-

@@ -25,7 +25,9 @@ export class StockController {
   private getOutletId(req: RequestWithUser): string {
     const outletId = (req.headers['x-outlet-id'] as string) || null;
     if (!outletId) {
-      throw new ForbiddenException('Outlet ID is required. Please select an outlet.');
+      throw new ForbiddenException(
+        'Outlet ID is required. Please select an outlet.',
+      );
     }
     return outletId;
   }
@@ -41,7 +43,10 @@ export class StockController {
   }
 
   @Get('product/:productId')
-  async getStockForProduct(@Req() req: RequestWithUser, @Param('productId') productId: string) {
+  async getStockForProduct(
+    @Req() req: RequestWithUser,
+    @Param('productId') productId: string,
+  ) {
     const outletId = this.getOutletId(req);
     return this.stockService.getStock(productId, outletId);
   }
@@ -52,9 +57,11 @@ export class StockController {
     @Query('outletId') outletId?: string,
   ) {
     const selectedOutletId = outletId || this.getOutletId(req);
-    
+
     if (!req.user.organizations || req.user.organizations.length === 0) {
-      throw new ForbiddenException('You must be assigned to at least one organization');
+      throw new ForbiddenException(
+        'You must be assigned to at least one organization',
+      );
     }
     const organizationId = req.user.organizations[0].id;
 
@@ -81,4 +88,3 @@ export class StockController {
     return this.stockService.setStock(productId, outletId, body.quantity);
   }
 }
-

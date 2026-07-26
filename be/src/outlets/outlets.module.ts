@@ -12,4 +12,3 @@ import { OutletGuard } from '../common/guards/outlet.guard';
   exports: [OutletsService, OutletGuard],
 })
 export class OutletsModule {}
-

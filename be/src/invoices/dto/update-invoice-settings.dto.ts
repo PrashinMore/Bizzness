@@ -47,4 +47,3 @@ export class UpdateInvoiceSettingsDto {
   @IsString()
   logoUrl?: string | null;
 }
-

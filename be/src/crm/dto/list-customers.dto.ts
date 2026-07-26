@@ -26,4 +26,3 @@ export class ListCustomersDto {
   @Min(1)
   size?: number;
 }
-

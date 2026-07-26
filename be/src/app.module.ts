@@ -37,7 +37,8 @@ import { buildTypeOrmConfig } from './database/database.config';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => buildTypeOrmConfig(configService),
+      useFactory: (configService: ConfigService) =>
+        buildTypeOrmConfig(configService),
       inject: [ConfigService],
     }),
     UsersModule,

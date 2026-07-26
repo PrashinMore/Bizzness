@@ -52,9 +52,13 @@ export class InvitesService {
       where: { email: createDto.email },
     });
     if (existingUser) {
-      const isAlreadyMember = organization.users.some(u => u.id === existingUser.id);
+      const isAlreadyMember = organization.users.some(
+        (u) => u.id === existingUser.id,
+      );
       if (isAlreadyMember) {
-        throw new ConflictException('User is already a member of this organization');
+        throw new ConflictException(
+          'User is already a member of this organization',
+        );
       }
     }
 
@@ -67,7 +71,9 @@ export class InvitesService {
       },
     });
     if (existingInvite) {
-      throw new ConflictException('There is already a pending invite for this email');
+      throw new ConflictException(
+        'There is already a pending invite for this email',
+      );
     }
 
     // Create invite with 7 day expiration
@@ -88,10 +94,12 @@ export class InvitesService {
     // TODO: Send email notification here (for now just return the invite)
     // In production, integrate with an email service like SendGrid, Mailgun, etc.
 
-    return await this.invitesRepository.findOne({
-      where: { id: saved.id },
-      relations: ['organization', 'inviter'],
-    }) || saved;
+    return (
+      (await this.invitesRepository.findOne({
+        where: { id: saved.id },
+        relations: ['organization', 'inviter'],
+      })) || saved
+    );
   }
 
   /**
@@ -128,7 +136,10 @@ export class InvitesService {
    * Automatically accept all valid pending invites for a user email.
    * Used during auth flow to attach invited users on first login/signup.
    */
-  async consumePendingInvitesForEmail(userEmail: string, userId: string): Promise<number> {
+  async consumePendingInvitesForEmail(
+    userEmail: string,
+    userId: string,
+  ): Promise<number> {
     const now = new Date();
     const pendingInvites = await this.invitesRepository
       .createQueryBuilder('invite')
@@ -158,7 +169,9 @@ export class InvitesService {
         continue;
       }
 
-      const alreadyMember = organization.users.some((member) => member.id === user.id);
+      const alreadyMember = organization.users.some(
+        (member) => member.id === user.id,
+      );
       if (!alreadyMember) {
         organization.users.push(user);
         await this.organizationsRepository.save(organization);
@@ -320,7 +333,9 @@ export class InvitesService {
     }
 
     if (invite.status !== 'pending') {
-      throw new BadRequestException(`Cannot cancel an invite that is already ${invite.status}`);
+      throw new BadRequestException(
+        `Cannot cancel an invite that is already ${invite.status}`,
+      );
     }
 
     invite.status = 'cancelled';
@@ -350,7 +365,9 @@ export class InvitesService {
     }
 
     if (invite.status !== 'pending') {
-      throw new BadRequestException(`Cannot resend an invite that is ${invite.status}`);
+      throw new BadRequestException(
+        `Cannot resend an invite that is ${invite.status}`,
+      );
     }
 
     // Extend expiration
@@ -368,4 +385,3 @@ export class InvitesService {
     return saved;
   }
 }
-

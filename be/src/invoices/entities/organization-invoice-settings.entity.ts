@@ -63,4 +63,3 @@ export class OrganizationInvoiceSettings {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 }
-

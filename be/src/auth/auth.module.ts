@@ -23,4 +23,3 @@ import { JWT_CONFIG } from './jwt.config';
   providers: [AuthService, JwtStrategy, JwtAuthGuard],
 })
 export class AuthModule {}
-

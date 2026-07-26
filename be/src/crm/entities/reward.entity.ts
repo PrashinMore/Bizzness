@@ -8,7 +8,11 @@ import {
 } from 'typeorm';
 import { Organization } from '../../organizations/entities/organization.entity';
 
-export type RewardType = 'DISCOUNT_PERCENTAGE' | 'DISCOUNT_FIXED' | 'FREE_ITEM' | 'CASHBACK';
+export type RewardType =
+  | 'DISCOUNT_PERCENTAGE'
+  | 'DISCOUNT_FIXED'
+  | 'FREE_ITEM'
+  | 'CASHBACK';
 
 @Entity({ name: 'rewards' })
 export class Reward {
@@ -66,4 +70,3 @@ export class Reward {
   @UpdateDateColumn()
   updatedAt!: Date;
 }
-

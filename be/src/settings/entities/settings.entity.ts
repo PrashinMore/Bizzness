@@ -90,4 +90,3 @@ export class Settings {
   @UpdateDateColumn()
   updatedAt: Date;
 }
-

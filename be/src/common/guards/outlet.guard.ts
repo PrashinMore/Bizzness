@@ -33,7 +33,9 @@ export class OutletGuard implements CanActivate {
     // Validate outlet exists and belongs to user's organization
     const user = request.user;
     if (!user.organizations || user.organizations.length === 0) {
-      throw new ForbiddenException('You must be assigned to at least one organization');
+      throw new ForbiddenException(
+        'You must be assigned to at least one organization',
+      );
     }
 
     const organizationIds = user.organizations.map((org) => org.id);
@@ -59,4 +61,3 @@ export class OutletGuard implements CanActivate {
     return true;
   }
 }
-

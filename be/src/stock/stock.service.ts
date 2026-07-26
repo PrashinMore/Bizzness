@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, In, Repository } from 'typeorm';
 import { Stock } from './entities/stock.entity';
@@ -68,12 +72,16 @@ export class StockService {
     });
 
     if (!stock) {
-      const product = await this.products(manager).findOne({ where: { id: productId } });
+      const product = await this.products(manager).findOne({
+        where: { id: productId },
+      });
       if (!product) {
         throw new NotFoundException(`Product ${productId} not found`);
       }
 
-      const outlet = await this.outlets(manager).findOne({ where: { id: outletId } });
+      const outlet = await this.outlets(manager).findOne({
+        where: { id: outletId },
+      });
       if (!outlet) {
         throw new NotFoundException(`Outlet ${outletId} not found`);
       }
@@ -192,7 +200,11 @@ export class StockService {
     }
 
     const productIds = products.map((p) => p.id);
-    const existingStocks = await this.getStockForOutlet(outletId, productIds, manager);
+    const existingStocks = await this.getStockForOutlet(
+      outletId,
+      productIds,
+      manager,
+    );
 
     const stockMap = new Map<string, Stock>();
     existingStocks.forEach((stock) => stockMap.set(stock.productId, stock));
@@ -221,7 +233,11 @@ export class StockService {
 
       if (stock.quantity < product.lowStockThreshold) {
         if (!existingStock) {
-          const createdStock = await this.getOrCreateStock(product.id, outletId, manager);
+          const createdStock = await this.getOrCreateStock(
+            product.id,
+            outletId,
+            manager,
+          );
           const stockWithProduct = await this.stocks(manager).findOne({
             where: { id: createdStock.id },
             relations: ['product'],

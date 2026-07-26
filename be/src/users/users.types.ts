@@ -8,4 +8,3 @@ export interface AuthTokenResponse {
   user: SanitizedUser;
   needsOrganization: boolean;
 }
-

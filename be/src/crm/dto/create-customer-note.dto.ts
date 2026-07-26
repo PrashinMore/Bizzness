@@ -5,4 +5,3 @@ export class CreateCustomerNoteDto {
   @MinLength(1)
   note!: string;
 }
-

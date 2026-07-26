@@ -105,14 +105,18 @@ export class OutletsService {
     });
 
     if (count === 1) {
-      throw new ConflictException('Cannot delete the last outlet in an organization');
+      throw new ConflictException(
+        'Cannot delete the last outlet in an organization',
+      );
     }
 
     // If it's primary, make another outlet primary
     if (outlet.isPrimary) {
       const otherOutlet = await this.outletsRepository
         .createQueryBuilder('outlet')
-        .where('outlet.organizationId = :orgId', { orgId: outlet.organizationId })
+        .where('outlet.organizationId = :orgId', {
+          orgId: outlet.organizationId,
+        })
         .andWhere('outlet.id != :id', { id })
         .andWhere('outlet.isActive = :isActive', { isActive: true })
         .getOne();
@@ -134,4 +138,3 @@ export class OutletsService {
     });
   }
 }
-

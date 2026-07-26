@@ -56,7 +56,12 @@ export class OrganizationsController {
     @Body() updateDto: UpdateOrganizationDto,
     @Req() req: RequestWithUser,
   ): Promise<Organization> {
-    return this.organizationsService.update(id, updateDto, req.user.id, req.user.role);
+    return this.organizationsService.update(
+      id,
+      updateDto,
+      req.user.id,
+      req.user.role,
+    );
   }
 
   @Roles('admin')
@@ -82,4 +87,3 @@ export class OrganizationsController {
     return this.organizationsService.removeUser(id, userId, req.user.role);
   }
 }
-

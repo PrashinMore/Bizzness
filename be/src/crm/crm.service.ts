@@ -11,7 +11,10 @@ import { CustomerVisit } from './entities/customer-visit.entity';
 import { CustomerNote } from './entities/customer-note.entity';
 import { CustomerFeedback } from './entities/customer-feedback.entity';
 import { LoyaltyAccount } from './entities/loyalty-account.entity';
-import { LoyaltyTransaction, LoyaltyTransactionType } from './entities/loyalty-transaction.entity';
+import {
+  LoyaltyTransaction,
+  LoyaltyTransactionType,
+} from './entities/loyalty-transaction.entity';
 import { Reward } from './entities/reward.entity';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
@@ -72,7 +75,9 @@ export class CrmService {
         organizationId,
         name: createData?.name || 'Guest',
         email: createData?.email,
-        birthday: createData?.birthday ? new Date(createData.birthday) : undefined,
+        birthday: createData?.birthday
+          ? new Date(createData.birthday)
+          : undefined,
         gender: createData?.gender,
         tags: createData?.tags || [],
         totalVisits: 0,
@@ -114,7 +119,9 @@ export class CrmService {
     });
 
     if (existing) {
-      throw new BadRequestException('Customer with this phone number already exists');
+      throw new BadRequestException(
+        'Customer with this phone number already exists',
+      );
     }
 
     const customer = this.customerRepo.create({
@@ -277,7 +284,9 @@ export class CrmService {
     await this.customerRepo.save(customer);
 
     // Update loyalty points if enabled
-    const settings = await this.settingsService.getSettings(customer.organizationId);
+    const settings = await this.settingsService.getSettings(
+      customer.organizationId,
+    );
     if (settings.enableLoyalty) {
       await this.updateLoyaltyPoints(customerId, billAmount, orderId);
     }
@@ -489,7 +498,9 @@ export class CrmService {
     const minRedemptionPoints = 10; // Can be made configurable
     const maxRedemptionPercentage = 50; // 50% of bill (can be made configurable)
 
-    const maxDiscountAmount = Math.floor((billAmount * maxRedemptionPercentage) / 100);
+    const maxDiscountAmount = Math.floor(
+      (billAmount * maxRedemptionPercentage) / 100,
+    );
     const maxRedeemablePoints = Math.min(
       availablePoints,
       Math.floor(maxDiscountAmount / redemptionRate),
@@ -553,7 +564,9 @@ export class CrmService {
     }
 
     // Calculate discount
-    const maxDiscountAmount = Math.floor((billAmount * maxRedemptionPercentage) / 100);
+    const maxDiscountAmount = Math.floor(
+      (billAmount * maxRedemptionPercentage) / 100,
+    );
     const discountAmount = Math.min(
       pointsToRedeem * redemptionRate,
       maxDiscountAmount,
@@ -607,16 +620,17 @@ export class CrmService {
   ): Promise<{ transactions: LoyaltyTransaction[]; total: number }> {
     const customer = await this.findOne(customerId, organizationIds);
 
-    const [transactions, total] = await this.loyaltyTransactionRepo.findAndCount({
-      where: {
-        customerId: customer.id,
-        organizationId: In(organizationIds),
-      },
-      order: { createdAt: 'DESC' },
-      take: limit,
-      skip: offset,
-      relations: ['sale'],
-    });
+    const [transactions, total] =
+      await this.loyaltyTransactionRepo.findAndCount({
+        where: {
+          customerId: customer.id,
+          organizationId: In(organizationIds),
+        },
+        order: { createdAt: 'DESC' },
+        take: limit,
+        skip: offset,
+        relations: ['sale'],
+      });
 
     return { transactions, total };
   }
@@ -656,7 +670,9 @@ export class CrmService {
     const pointsAfter = pointsBefore + points;
 
     if (pointsAfter < 0) {
-      throw new BadRequestException('Insufficient points. Cannot adjust below zero.');
+      throw new BadRequestException(
+        'Insufficient points. Cannot adjust below zero.',
+      );
     }
 
     loyaltyAccount.points = pointsAfter;
@@ -681,7 +697,11 @@ export class CrmService {
       points,
       pointsBefore,
       pointsAfter: savedAccount.points,
-      description: description || (points > 0 ? `Added ${points} points` : `Deducted ${Math.abs(points)} points`),
+      description:
+        description ||
+        (points > 0
+          ? `Added ${points} points`
+          : `Deducted ${Math.abs(points)} points`),
     });
     await this.loyaltyTransactionRepo.save(transaction);
 
@@ -692,7 +712,10 @@ export class CrmService {
     };
   }
 
-  async createReward(dto: CreateRewardDto, organizationId: string): Promise<Reward> {
+  async createReward(
+    dto: CreateRewardDto,
+    organizationId: string,
+  ): Promise<Reward> {
     await this.ensureCrmEnabled(organizationId);
 
     const settings = await this.settingsService.getSettings(organizationId);
@@ -705,7 +728,9 @@ export class CrmService {
       (dto.type === 'DISCOUNT_PERCENTAGE' || dto.type === 'DISCOUNT_FIXED') &&
       !dto.maxDiscountAmount
     ) {
-      throw new BadRequestException('maxDiscountAmount is required for discount rewards');
+      throw new BadRequestException(
+        'maxDiscountAmount is required for discount rewards',
+      );
     }
 
     const reward = this.rewardRepo.create({
@@ -718,7 +743,10 @@ export class CrmService {
     return this.rewardRepo.save(reward);
   }
 
-  async findAllRewards(organizationIds: string[], activeOnly?: boolean): Promise<Reward[]> {
+  async findAllRewards(
+    organizationIds: string[],
+    activeOnly?: boolean,
+  ): Promise<Reward[]> {
     const where: any = {
       organizationId: In(organizationIds),
     };
@@ -773,13 +801,17 @@ export class CrmService {
       }
 
       // Check max redemptions
-      if (reward.maxRedemptions && reward.totalRedemptions >= reward.maxRedemptions) {
+      if (
+        reward.maxRedemptions &&
+        reward.totalRedemptions >= reward.maxRedemptions
+      ) {
         return false;
       }
 
       // For discount rewards, check minimum order value
       if (
-        (reward.type === 'DISCOUNT_PERCENTAGE' || reward.type === 'DISCOUNT_FIXED') &&
+        (reward.type === 'DISCOUNT_PERCENTAGE' ||
+          reward.type === 'DISCOUNT_FIXED') &&
         reward.minOrderValue &&
         billAmount < reward.minOrderValue
       ) {
@@ -887,8 +919,13 @@ export class CrmService {
       throw new BadRequestException('This reward is not active');
     }
 
-    if (reward.maxRedemptions && reward.totalRedemptions >= reward.maxRedemptions) {
-      throw new BadRequestException('This reward has reached its maximum redemptions');
+    if (
+      reward.maxRedemptions &&
+      reward.totalRedemptions >= reward.maxRedemptions
+    ) {
+      throw new BadRequestException(
+        'This reward has reached its maximum redemptions',
+      );
     }
 
     const loyaltyAccount = customer.loyaltyAccount;
@@ -901,7 +938,8 @@ export class CrmService {
 
     // For discount rewards, check minimum order value
     if (
-      (reward.type === 'DISCOUNT_PERCENTAGE' || reward.type === 'DISCOUNT_FIXED') &&
+      (reward.type === 'DISCOUNT_PERCENTAGE' ||
+        reward.type === 'DISCOUNT_FIXED') &&
       reward.minOrderValue &&
       billAmount < reward.minOrderValue
     ) {
@@ -912,7 +950,10 @@ export class CrmService {
 
     // Calculate discount amount
     let discountAmount = 0;
-    if (reward.type === 'DISCOUNT_PERCENTAGE' || reward.type === 'DISCOUNT_FIXED') {
+    if (
+      reward.type === 'DISCOUNT_PERCENTAGE' ||
+      reward.type === 'DISCOUNT_FIXED'
+    ) {
       discountAmount = await this.calculateRewardDiscount(reward, billAmount);
     }
 
@@ -945,7 +986,9 @@ export class CrmService {
       discountAmount: discountAmount > 0 ? discountAmount : undefined,
       pointsBefore,
       pointsAfter: savedAccount.points,
-      description: description || `Redeemed reward: ${reward.name}${discountAmount > 0 ? ` (₹${discountAmount} discount)` : ''}`,
+      description:
+        description ||
+        `Redeemed reward: ${reward.name}${discountAmount > 0 ? ` (₹${discountAmount} discount)` : ''}`,
     });
     await this.loyaltyTransactionRepo.save(transaction);
 
@@ -996,9 +1039,7 @@ export class CrmService {
       .getRawOne<{ total: string }>();
 
     const avgVisitsPerCustomer =
-      totalCustomers > 0
-        ? Number(totalVisits?.total || 0) / totalCustomers
-        : 0;
+      totalCustomers > 0 ? Number(totalVisits?.total || 0) / totalCustomers : 0;
 
     return {
       totalCustomers,
@@ -1008,4 +1049,3 @@ export class CrmService {
     };
   }
 }
-

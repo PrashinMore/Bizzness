@@ -1,8 +1,4 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NestMiddleware,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable, NestMiddleware } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { NextFunction, Request, Response } from 'express';
 import { UsersService } from '../../users/users.service';
@@ -44,9 +40,12 @@ export class OrganizationRequiredMiddleware implements NestMiddleware {
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync<{ sub: string }>(token, {
-        secret: JWT_CONFIG.secret,
-      });
+      const payload = await this.jwtService.verifyAsync<{ sub: string }>(
+        token,
+        {
+          secret: JWT_CONFIG.secret,
+        },
+      );
 
       const user = await this.usersService.findById(payload.sub);
       if (!user) {

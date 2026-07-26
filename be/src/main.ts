@@ -8,7 +8,7 @@ let cachedApp: NestExpressApplication | null = null;
 
 async function bootstrap() {
   // Detect serverless environment
-  const isServerless = 
+  const isServerless =
     !!process.env.AWS_LAMBDA_FUNCTION_NAME ||
     !!process.env.VERCEL ||
     !!process.env.IS_SERVERLESS ||
@@ -26,10 +26,10 @@ async function bootstrap() {
 
   // Serve static files from uploads directory
   // In serverless, use /tmp; otherwise use process.cwd()
-  const uploadsPath = isServerless 
+  const uploadsPath = isServerless
     ? join('/tmp', 'uploads')
     : join(process.cwd(), 'uploads');
-  
+
   try {
     app.useStaticAssets(uploadsPath, {
       prefix: '/uploads',
@@ -71,7 +71,12 @@ async function bootstrap() {
 }
 
 // Traditional bootstrap for non-serverless environments
-if (!process.env.AWS_LAMBDA_FUNCTION_NAME && !process.env.VERCEL && !process.env.IS_SERVERLESS && !process.cwd().startsWith('/var/task')) {
+if (
+  !process.env.AWS_LAMBDA_FUNCTION_NAME &&
+  !process.env.VERCEL &&
+  !process.env.IS_SERVERLESS &&
+  !process.cwd().startsWith('/var/task')
+) {
   bootstrap();
 }
 

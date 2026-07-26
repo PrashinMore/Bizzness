@@ -40,4 +40,3 @@ export class Outlet {
   @UpdateDateColumn()
   updatedAt!: Date;
 }
-

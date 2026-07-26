@@ -1,10 +1,10 @@
 import {
-	Column,
-	CreateDateColumn,
-	Entity,
-	ManyToOne,
-	OneToMany,
-	PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { SaleItem } from './sale-item.entity';
 import { Organization } from '../../organizations/entities/organization.entity';
@@ -13,75 +13,85 @@ import { Outlet } from '../../outlets/entities/outlet.entity';
 
 @Entity()
 export class Sale {
-	@PrimaryGeneratedColumn('uuid')
-	id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-	@Column({ type: 'timestamptz' })
-	date: Date;
+  @Column({ type: 'timestamptz' })
+  date: Date;
 
-	@OneToMany(() => SaleItem, (item) => item.sale, {
-		cascade: true,
-		eager: true,
-	})
-	items: SaleItem[];
+  @OneToMany(() => SaleItem, (item) => item.sale, {
+    cascade: true,
+    eager: true,
+  })
+  items: SaleItem[];
 
-	@Column({ type: 'decimal', precision: 14, scale: 2 })
-	totalAmount: number;
+  @Column({ type: 'decimal', precision: 14, scale: 2 })
+  totalAmount: number;
 
-	@Column({ length: 120 })
-	soldBy: string;
+  @Column({ length: 120 })
+  soldBy: string;
 
-	@Column({ type: 'varchar', length: 20, default: 'cash' })
-	paymentType: string;
+  @Column({ type: 'varchar', length: 20, default: 'cash' })
+  paymentType: string;
 
-	@Column({ type: 'decimal', precision: 14, scale: 2, default: 0, nullable: true })
-	cashAmount?: number;
+  @Column({
+    type: 'decimal',
+    precision: 14,
+    scale: 2,
+    default: 0,
+    nullable: true,
+  })
+  cashAmount?: number;
 
-	@Column({ type: 'decimal', precision: 14, scale: 2, default: 0, nullable: true })
-	upiAmount?: number;
+  @Column({
+    type: 'decimal',
+    precision: 14,
+    scale: 2,
+    default: 0,
+    nullable: true,
+  })
+  upiAmount?: number;
 
-	@Column({ type: 'boolean', default: false })
-	isPaid: boolean;
+  @Column({ type: 'boolean', default: false })
+  isPaid: boolean;
 
-	@Column({ type: 'uuid', nullable: true })
-	tableId?: string | null;
+  @Column({ type: 'uuid', nullable: true })
+  tableId?: string | null;
 
-	@ManyToOne(() => DiningTable, { nullable: true, onDelete: 'SET NULL' })
-	table?: DiningTable | null;
+  @ManyToOne(() => DiningTable, { nullable: true, onDelete: 'SET NULL' })
+  table?: DiningTable | null;
 
-	@ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
-	organization!: Organization;
+  @ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
+  organization!: Organization;
 
-	@Column({ type: 'uuid' })
-	organizationId!: string;
+  @Column({ type: 'uuid' })
+  organizationId!: string;
 
-	@ManyToOne(() => Outlet, { nullable: true, onDelete: 'CASCADE' })
-	outlet?: Outlet | null;
+  @ManyToOne(() => Outlet, { nullable: true, onDelete: 'CASCADE' })
+  outlet?: Outlet | null;
 
-	@Column({ type: 'uuid', nullable: true })
-	outletId?: string | null;
+  @Column({ type: 'uuid', nullable: true })
+  outletId?: string | null;
 
-	@Column({ type: 'timestamptz', nullable: true })
-	openedAt?: Date | null;
+  @Column({ type: 'timestamptz', nullable: true })
+  openedAt?: Date | null;
 
-	@Column({ type: 'timestamptz', nullable: true })
-	closedAt?: Date | null;
+  @Column({ type: 'timestamptz', nullable: true })
+  closedAt?: Date | null;
 
-	@Column({ type: 'uuid', nullable: true })
-	customerId?: string | null;
+  @Column({ type: 'uuid', nullable: true })
+  customerId?: string | null;
 
-	@Column({ type: 'int', nullable: true })
-	loyaltyPointsRedeemed?: number | null;
+  @Column({ type: 'int', nullable: true })
+  loyaltyPointsRedeemed?: number | null;
 
-	@Column({ type: 'decimal', precision: 14, scale: 2, nullable: true })
-	loyaltyDiscountAmount?: number | null;
+  @Column({ type: 'decimal', precision: 14, scale: 2, nullable: true })
+  loyaltyDiscountAmount?: number | null;
 
-	/** Client-generated key; duplicate POSTs with the same key return the original sale */
-	@Column({ type: 'varchar', length: 36, nullable: true, unique: true })
-	idempotencyKey?: string | null;
+  /** Client-generated key; duplicate POSTs with the same key return the original sale */
+  @Column({ type: 'varchar', length: 36, nullable: true, unique: true })
+  idempotencyKey?: string | null;
 
-	@CreateDateColumn()
-	createdAt: Date;
+  @CreateDateColumn()
+  createdAt: Date;
 }
-
-
