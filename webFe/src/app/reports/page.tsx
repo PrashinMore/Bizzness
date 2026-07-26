@@ -11,24 +11,10 @@ import { Card } from '@/components/ui/card';
 
 type Tab = 'sales' | 'profit-loss' | 'inventory' | 'expenses';
 
-type ReportRow = Record<string, unknown>;
-
-type SalesReportData = {
-  productBreakdown?: ReportRow[];
-  staffBreakdown?: ReportRow[];
-  [key: string]: unknown;
-};
-
-type ProfitLossReportData = Record<string, unknown>;
-type InventoryReportData = {
-  products: ReportRow[];
-  [key: string]: unknown;
-};
-type ExpenseReportData = {
-  categoryBreakdown?: ReportRow[];
-  monthlyBreakdown?: ReportRow[];
-  [key: string]: unknown;
-};
+type SalesReportData = Awaited<ReturnType<typeof reportsApi.getSalesReport>>;
+type ProfitLossReportData = Awaited<ReturnType<typeof reportsApi.getProfitLossReport>>;
+type InventoryReportData = Awaited<ReturnType<typeof reportsApi.getInventoryReport>>;
+type ExpenseReportData = Awaited<ReturnType<typeof reportsApi.getExpenseReport>>;
 
 export default function ReportsPage() {
   const { user, loading } = useRequireAuth();
@@ -333,7 +319,7 @@ export default function ReportsPage() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border">
-                            {salesReport.productBreakdown?.map((product: ReportRow, idx: number) => (
+                            {salesReport.productBreakdown?.map((product, idx) => (
                               <tr key={idx}>
                                 <td className="px-3 py-2">{product.name}</td>
                                 <td className="px-3 py-2 text-right">{product.quantity || 0}</td>
@@ -363,7 +349,7 @@ export default function ReportsPage() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border">
-                            {salesReport.staffBreakdown?.map((staff: ReportRow, idx: number) => (
+                            {salesReport.staffBreakdown?.map((staff, idx) => (
                               <tr key={idx}>
                                 <td className="px-3 py-2">{staff.name}</td>
                                 <td className="px-3 py-2 text-right">₹{Number(staff.sales || 0).toFixed(2)}</td>
@@ -486,7 +472,7 @@ export default function ReportsPage() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
-                          {inventoryReport.products.map((product: ReportRow) => (
+                          {inventoryReport.products.map((product) => (
                             <tr key={product.id}>
                               <td className="px-3 py-2">{product.name}</td>
                               <td className="px-3 py-2">{product.category}</td>
@@ -567,7 +553,7 @@ export default function ReportsPage() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border">
-                            {expenseReport.categoryBreakdown?.map((cat: ReportRow, idx: number) => (
+                            {expenseReport.categoryBreakdown?.map((cat, idx) => (
                               <tr key={idx}>
                                 <td className="px-3 py-2">{cat.category}</td>
                                 <td className="px-3 py-2 text-right">₹{Number(cat.amount || 0).toFixed(2)}</td>
@@ -594,7 +580,7 @@ export default function ReportsPage() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border">
-                            {expenseReport.monthlyBreakdown?.map((month: ReportRow, idx: number) => (
+                            {expenseReport.monthlyBreakdown?.map((month, idx) => (
                               <tr key={idx}>
                                 <td className="px-3 py-2">{month.month}</td>
                                 <td className="px-3 py-2 text-right">₹{Number(month.amount || 0).toFixed(2)}</td>
