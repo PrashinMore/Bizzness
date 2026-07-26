@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & discussions
+    url: https://github.com/PrashinMore/Bizzness/discussions
+    about: Please ask usage questions and open-ended ideas in GitHub Discussions (enable Discussions on the repo if this link 404s).
+  - name: Live demo
+    url: https://www.ezcommerse.com/
+    about: Try EZCommerse in the browser before filing an issue.
