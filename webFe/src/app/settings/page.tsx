@@ -860,7 +860,7 @@ export default function SettingsPage() {
                         </span>
                       </label>
                       <p className="mt-1 text-xs text-muted">
-                        Automatically set table status to "Cleaning" when the order is paid, so staff can prepare it for the next customer
+                        Automatically set table status to &ldquo;Cleaning&rdquo; when the order is paid, so staff can prepare it for the next customer
                       </p>
                     </div>
                   </>

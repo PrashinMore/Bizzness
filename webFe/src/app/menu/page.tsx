@@ -1065,7 +1065,7 @@ export default function MenuPage() {
                       className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                     />
                     <p className="mt-1 text-xs text-muted">
-                      Leave empty to create customer as "Guest"
+                      Leave empty to create customer as &ldquo;Guest&rdquo;
                     </p>
                   </div>
                 )}

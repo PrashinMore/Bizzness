@@ -59,7 +59,9 @@ export class InventoryService {
     // 1. Preload recipes for any RECIPE-typed dish in one query.
     const recipeProductIds = lines
       .map((l) => productMap.get(l.productId))
-      .filter((p): p is Product => !!p && p.inventoryType === InventoryType.RECIPE)
+      .filter(
+        (p): p is Product => !!p && p.inventoryType === InventoryType.RECIPE,
+      )
       .map((p) => p.id);
 
     const recipeMap = await this.recipesService.resolveRecipesForProducts(
@@ -106,7 +108,10 @@ export class InventoryService {
             );
           }
           for (const ing of recipe.items) {
-            const perDishBase = this.toBaseUnits(Number(ing.quantity), ing.unit);
+            const perDishBase = this.toBaseUnits(
+              Number(ing.quantity),
+              ing.unit,
+            );
             bump(ing.ingredientProductId, perDishBase * line.quantity);
           }
           break;
@@ -240,7 +245,9 @@ export class InventoryService {
         }
         return quantity;
       default:
-        throw new BadRequestException(`Unsupported recipe unit: ${unit}`);
+        throw new BadRequestException(
+          `Unsupported recipe unit: ${String(unit)}`,
+        );
     }
   }
 }
