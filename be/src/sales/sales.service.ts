@@ -13,6 +13,18 @@ import { CrmService } from '../crm/crm.service';
 import { StockService } from '../stock/stock.service';
 import { InventoryService } from '../inventory/inventory.service';
 
+/**
+ * SalesService is the POS core: create/update sales, attach items, and
+ * coordinate table status, CRM loyalty, and inventory deduction.
+ *
+ * Orientation for contributors:
+ * - Every sale is outlet-scoped (`outletId` required on create).
+ * - Totals must match line items (minus optional loyalty discount); cash + UPI
+ *   can split payment (legacy `paymentType` still accepted).
+ * - Stock changes go through InventoryService inside a DB transaction so
+ *   recipe explosion + stock writes stay atomic with the sale row.
+ * - Table assignment/merge logic lives alongside sale lifecycle helpers below.
+ */
 @Injectable()
 export class SalesService {
 	constructor(

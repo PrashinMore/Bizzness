@@ -12,6 +12,14 @@ import {
 import { authApi, usersApi } from '@/lib/api-client';
 import { AuthResponse, User } from '@/types/user';
 
+/**
+ * Client auth state for the Next.js app.
+ *
+ * Persists `{ user, accessToken, refreshToken }` under `bizzness-auth` in
+ * localStorage, restores on mount, and refreshes the access token when API
+ * calls start failing auth. `setAuthState` is the single write path used by
+ * login/signup and invite-accept flows.
+ */
 type AuthContextValue = {
   user: User | null;
   token: string | null;

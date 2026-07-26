@@ -1,0 +1,65 @@
+name: Bug report
+description: Report a problem with EZCommerse
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve EZCommerse. Please search existing issues first.
+        For security vulnerabilities, email us privately — see [SECURITY.md](../../SECURITY.md).
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear summary of what went wrong.
+      placeholder: When I try to create a sale with recipe items, inventory is not deducted…
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps another contributor can follow.
+      placeholder: |
+        1. Sign in as …
+        2. Open …
+        3. Click …
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment / version
+      description: Browser/OS, self-hosted vs demo, commit/tag if known.
+      placeholder: |
+        - App: web / API / mobile
+        - Browser: Chrome 126
+        - OS: Windows 11
+        - Deploy: local Docker / https://www.ezcommerse.com/
+        - Version/commit: 0.1.0 / abc1234
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Paste relevant API/browser console logs (redact secrets).
+      render: shell
+    validations:
+      required: false
