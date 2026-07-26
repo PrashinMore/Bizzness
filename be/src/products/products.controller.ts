@@ -42,14 +42,18 @@ export class ProductsController {
 
   private getOrganizationIds(user: SanitizedUser): string[] {
     if (!user.organizations || user.organizations.length === 0) {
-      throw new ForbiddenException('You must be assigned to at least one organization');
+      throw new ForbiddenException(
+        'You must be assigned to at least one organization',
+      );
     }
-    return user.organizations.map(org => org.id);
+    return user.organizations.map((org) => org.id);
   }
 
   private getFirstOrganizationId(user: SanitizedUser): string {
     if (!user.organizations || user.organizations.length === 0) {
-      throw new ForbiddenException('You must be assigned to at least one organization');
+      throw new ForbiddenException(
+        'You must be assigned to at least one organization',
+      );
     }
     return user.organizations[0].id;
   }
@@ -78,8 +82,13 @@ export class ProductsController {
   ) {
     const organizationIds = this.getOrganizationIds(req.user);
     const limitNum = limit ? parseInt(limit, 10) : 10;
-    const validLimit = isNaN(limitNum) || limitNum < 1 || limitNum > 50 ? 10 : limitNum;
-    return this.productsService.getSuggestions(query || '', organizationIds, validLimit);
+    const validLimit =
+      isNaN(limitNum) || limitNum < 1 || limitNum > 50 ? 10 : limitNum;
+    return this.productsService.getSuggestions(
+      query || '',
+      organizationIds,
+      validLimit,
+    );
   }
 
   @Get('check-duplicate')
@@ -114,27 +123,39 @@ export class ProductsController {
   }
 
   @Post()
-  @UseInterceptors(FileInterceptor('image', {
-    storage: new StorageService().getStorageConfig(),
-    fileFilter: (req, file, cb) => {
-      if (!file) {
-        cb(null, true);
-        return;
-      }
-      const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-      if (allowedMimes.includes(file.mimetype)) {
-        cb(null, true);
-      } else {
-        cb(new Error('Invalid file type. Only images are allowed.'), false);
-      }
-    },
-    limits: {
-      fileSize: 5 * 1024 * 1024, // 5MB limit
-    },
-  }))
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: new StorageService().getStorageConfig(),
+      fileFilter: (req, file, cb) => {
+        if (!file) {
+          cb(null, true);
+          return;
+        }
+        const allowedMimes = [
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/gif',
+          'image/webp',
+        ];
+        if (allowedMimes.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new Error('Invalid file type. Only images are allowed.'), false);
+        }
+      },
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB limit
+      },
+    }),
+  )
   @UsePipes(
     TransformMultipartPipe,
-    new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }),
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
   )
   async create(
     @Req() req: RequestWithUser,
@@ -143,44 +164,63 @@ export class ProductsController {
   ) {
     const organizationId = this.getFirstOrganizationId(req.user);
     // Use outletId from header, or fall back to body
-    let outletId = (req.headers['x-outlet-id'] as string) || dto.outletId || undefined;
-    
+    let outletId =
+      (req.headers['x-outlet-id'] as string) || dto.outletId || undefined;
+
     // If no outletId provided and stock is being set, try to use the only outlet
     if (!outletId && dto.stock !== undefined && dto.stock !== null) {
-      const outlets = await this.outletsService.getOrganizationOutlets(organizationId);
+      const outlets =
+        await this.outletsService.getOrganizationOutlets(organizationId);
       if (outlets.length === 1) {
         outletId = outlets[0].id;
       }
     }
-    
+
     const imageUrl = file
       ? this.storageService.getImageUrl(file.filename)
       : null;
-    return this.productsService.create({ ...dto, imageUrl, organizationId, outletId });
+    return this.productsService.create({
+      ...dto,
+      imageUrl,
+      organizationId,
+      outletId,
+    });
   }
 
   @Patch(':id')
-  @UseInterceptors(FileInterceptor('image', {
-    storage: new StorageService().getStorageConfig(),
-    fileFilter: (req, file, cb) => {
-      if (!file) {
-        cb(null, true);
-        return;
-      }
-      const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-      if (allowedMimes.includes(file.mimetype)) {
-        cb(null, true);
-      } else {
-        cb(new Error('Invalid file type. Only images are allowed.'), false);
-      }
-    },
-    limits: {
-      fileSize: 5 * 1024 * 1024, // 5MB limit
-    },
-  }))
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: new StorageService().getStorageConfig(),
+      fileFilter: (req, file, cb) => {
+        if (!file) {
+          cb(null, true);
+          return;
+        }
+        const allowedMimes = [
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/gif',
+          'image/webp',
+        ];
+        if (allowedMimes.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new Error('Invalid file type. Only images are allowed.'), false);
+        }
+      },
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB limit
+      },
+    }),
+  )
   @UsePipes(
     TransformMultipartPipe,
-    new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }),
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
   )
   async update(
     @Req() req: RequestWithUser,
@@ -207,24 +247,32 @@ export class ProductsController {
   async downloadTemplate(@Res() res: Response) {
     const csvContent = await this.productsService.generateCsvTemplate();
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="products-template.csv"');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="products-template.csv"',
+    );
     res.send(csvContent);
   }
 
   @Roles('admin')
   @Post('bulk-import')
-  @UseInterceptors(FileInterceptor('file', {
-    limits: {
-      fileSize: 10 * 1024 * 1024, // 10MB limit
-    },
-    fileFilter: (req, file, cb) => {
-      if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
-        cb(null, true);
-      } else {
-        cb(new Error('Only CSV files are allowed'), false);
-      }
-    },
-  }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+      },
+      fileFilter: (req, file, cb) => {
+        if (
+          file.mimetype === 'text/csv' ||
+          file.originalname.endsWith('.csv')
+        ) {
+          cb(null, true);
+        } else {
+          cb(new Error('Only CSV files are allowed'), false);
+        }
+      },
+    }),
+  )
   async bulkImport(
     @Req() req: RequestWithUser,
     @UploadedFile() file: Express.Multer.File,
@@ -252,4 +300,3 @@ export class ProductsController {
     };
   }
 }
-

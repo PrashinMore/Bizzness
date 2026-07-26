@@ -1,27 +1,26 @@
 import {
-	IsIn,
-	IsOptional,
-	IsBoolean,
-	IsString,
-	IsNumber,
+  IsIn,
+  IsOptional,
+  IsBoolean,
+  IsString,
+  IsNumber,
 } from 'class-validator';
 
 export class UpdateSaleDto {
-	@IsString()
-	@IsIn(['cash', 'UPI', 'mixed'])
-	@IsOptional()
-	paymentType?: string;
+  @IsString()
+  @IsIn(['cash', 'UPI', 'mixed'])
+  @IsOptional()
+  paymentType?: string;
 
-	@IsNumber()
-	@IsOptional()
-	cashAmount?: number;
+  @IsNumber()
+  @IsOptional()
+  cashAmount?: number;
 
-	@IsNumber()
-	@IsOptional()
-	upiAmount?: number;
+  @IsNumber()
+  @IsOptional()
+  upiAmount?: number;
 
-	@IsBoolean()
-	@IsOptional()
-	isPaid?: boolean;
+  @IsBoolean()
+  @IsOptional()
+  isPaid?: boolean;
 }
-

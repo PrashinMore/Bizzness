@@ -18,11 +18,28 @@ interface Reward {
   discountAmount?: number;
   freeItemName?: string;
   cashbackAmount?: number;
+  minOrderValue?: number;
+  maxDiscountAmount?: number;
   isActive: boolean;
   maxRedemptions?: number;
   totalRedemptions: number;
   createdAt: string;
 }
+
+type RewardFormPayload = {
+  name: string;
+  description?: string;
+  type: RewardType;
+  pointsRequired: number;
+  discountPercentage?: number;
+  discountAmount?: number;
+  freeItemName?: string;
+  cashbackAmount?: number;
+  minOrderValue?: number;
+  maxDiscountAmount?: number;
+  isActive?: boolean;
+  maxRedemptions?: number;
+};
 
 export default function RewardsPage() {
   const { user, loading } = useRequireAuth();
@@ -105,8 +122,8 @@ export default function RewardsPage() {
       discountAmount: reward.discountAmount || undefined,
       freeItemName: reward.freeItemName || '',
       cashbackAmount: reward.cashbackAmount || undefined,
-      minOrderValue: (reward as any).minOrderValue || undefined,
-      maxDiscountAmount: (reward as any).maxDiscountAmount || undefined,
+      minOrderValue: reward.minOrderValue || undefined,
+      maxDiscountAmount: reward.maxDiscountAmount || undefined,
       isActive: reward.isActive,
       maxRedemptions: reward.maxRedemptions || undefined,
     });
@@ -118,7 +135,7 @@ export default function RewardsPage() {
     if (!token) return;
 
     try {
-      const payload: any = {
+      const payload: RewardFormPayload = {
         name: formData.name,
         description: formData.description || undefined,
         type: formData.type,

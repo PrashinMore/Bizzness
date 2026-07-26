@@ -46,11 +46,14 @@ export class UsersController {
     @Req() req: RequestWithUser,
     @Body() deleteAccountDto: DeleteAccountDto,
   ): Promise<{ message: string; scheduledHardDeleteOn: string }> {
-    await this.usersService.deleteAccount(req.user.id, deleteAccountDto.password);
-    
+    await this.usersService.deleteAccount(
+      req.user.id,
+      deleteAccountDto.password,
+    );
+
     const hardDeleteDate = new Date();
     hardDeleteDate.setDate(hardDeleteDate.getDate() + 30);
-    
+
     return {
       message: 'Account deletion initiated',
       scheduledHardDeleteOn: hardDeleteDate.toISOString(),
@@ -80,4 +83,3 @@ export class UsersController {
     return this.usersService.remove(id);
   }
 }
-

@@ -12,4 +12,3 @@ export class AdjustPointsDto {
   @IsOptional()
   description?: string;
 }
-

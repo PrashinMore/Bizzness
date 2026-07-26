@@ -15,4 +15,3 @@ export class CreateUserDto {
   @IsString()
   role?: UserRole;
 }
-

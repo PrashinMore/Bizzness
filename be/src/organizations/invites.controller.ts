@@ -15,7 +15,10 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { InvitesService } from './invites.service';
 import { CreateInviteDto } from './dto/create-invite.dto';
-import { RespondInviteDto, RespondInviteByTokenDto } from './dto/respond-invite.dto';
+import {
+  RespondInviteDto,
+  RespondInviteByTokenDto,
+} from './dto/respond-invite.dto';
 import { OrganizationInvite } from './entities/organization-invite.entity';
 import type { SanitizedUser } from '../users/users.types';
 
@@ -42,7 +45,8 @@ export class InvitesController {
   @Roles('admin')
   @Get('organization/:organizationId')
   getOrganizationInvites(
-    @Param('organizationId', new ParseUUIDPipe({ version: '4' })) organizationId: string,
+    @Param('organizationId', new ParseUUIDPipe({ version: '4' }))
+    organizationId: string,
     @Req() req: RequestWithUser,
   ): Promise<OrganizationInvite[]> {
     return this.invitesService.getOrganizationInvites(
@@ -59,7 +63,8 @@ export class InvitesController {
   @Roles('admin')
   @Post('organization/:organizationId')
   createInvite(
-    @Param('organizationId', new ParseUUIDPipe({ version: '4' })) organizationId: string,
+    @Param('organizationId', new ParseUUIDPipe({ version: '4' }))
+    organizationId: string,
     @Body() createDto: CreateInviteDto,
     @Req() req: RequestWithUser,
   ): Promise<OrganizationInvite> {
@@ -132,4 +137,3 @@ export class InvitesController {
     return this.invitesService.resendInvite(id, req.user.id, req.user.role);
   }
 }
-

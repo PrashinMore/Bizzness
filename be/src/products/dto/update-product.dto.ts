@@ -9,4 +9,3 @@ export class UpdateProductDto extends PartialType(CreateProductDto) {
   @IsOptional()
   imageUrl?: string | null;
 }
-

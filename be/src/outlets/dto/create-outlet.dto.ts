@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, MaxLength, IsOptional, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  MaxLength,
+  IsOptional,
+  IsBoolean,
+} from 'class-validator';
 
 export class CreateOutletDto {
   @IsString()
@@ -19,4 +25,3 @@ export class CreateOutletDto {
   @IsBoolean()
   isPrimary?: boolean;
 }
-

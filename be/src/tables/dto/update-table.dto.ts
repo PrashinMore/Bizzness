@@ -1,4 +1,11 @@
-import { IsInt, IsOptional, IsString, MaxLength, Min, IsBoolean } from 'class-validator';
+import {
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+  IsBoolean,
+} from 'class-validator';
 
 export class UpdateTableDto {
   @IsString()

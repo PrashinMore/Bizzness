@@ -151,10 +151,12 @@ export class RecipesService {
       // Flip the dish to RECIPE so SalesService takes the new code path.
       // We do NOT touch trackInventory — operators may still want "NONE" for
       // promo items, which is a higher-priority override.
-      await manager.getRepository(Product).update(
-        { id: dto.productId, organizationId },
-        { inventoryType: InventoryType.RECIPE },
-      );
+      await manager
+        .getRepository(Product)
+        .update(
+          { id: dto.productId, organizationId },
+          { inventoryType: InventoryType.RECIPE },
+        );
 
       return manager.getRepository(Recipe).findOneOrFail({
         where: { id: saved.id },
@@ -218,10 +220,12 @@ export class RecipesService {
         .getRepository(Recipe)
         .count({ where: { productId: recipe.productId, organizationId } });
       if (stillHasRecipe === 0) {
-        await manager.getRepository(Product).update(
-          { id: recipe.productId, organizationId },
-          { inventoryType: InventoryType.SIMPLE },
-        );
+        await manager
+          .getRepository(Product)
+          .update(
+            { id: recipe.productId, organizationId },
+            { inventoryType: InventoryType.SIMPLE },
+          );
       }
     });
   }
@@ -285,7 +289,9 @@ export class RecipesService {
     //    unbounded recursion at checkout. This deliberately keeps the
     //    inventory engine flat (one level of explosion). If nested recipes
     //    are needed later, this rule is the single place to change.
-    const nested = products.find((p) => p.inventoryType === InventoryType.RECIPE);
+    const nested = products.find(
+      (p) => p.inventoryType === InventoryType.RECIPE,
+    );
     if (nested) {
       throw new BadRequestException(
         `Ingredient "${nested.name}" is itself a RECIPE product. Nested recipes are not supported.`,

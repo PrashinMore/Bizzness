@@ -57,8 +57,11 @@ export class DashboardService {
     ]);
 
     const totalSales = sales.reduce((sum, s) => sum + Number(s.totalAmount), 0);
-    const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
-    
+    const totalExpenses = expenses.reduce(
+      (sum, e) => sum + Number(e.amount),
+      0,
+    );
+
     // Calculate Cost of Goods Sold (COGS)
     const costOfGoodsSold = saleItems.reduce(
       (sum, item) => sum + Number(item.quantity) * Number(item.costPrice),
@@ -67,7 +70,7 @@ export class DashboardService {
 
     // Gross Profit = Sales - COGS
     const grossProfit = totalSales - costOfGoodsSold;
-    
+
     // Net Profit = Gross Profit - Operating Expenses
     const netProfit = grossProfit - totalExpenses;
     const totalOrders = sales.length;
@@ -82,7 +85,10 @@ export class DashboardService {
     };
   }
 
-  async getSalesTrend(range: '7days' | '30days' = '7days', organizationIds: string[]) {
+  async getSalesTrend(
+    range: '7days' | '30days' = '7days',
+    organizationIds: string[],
+  ) {
     const days = range === '7days' ? 7 : 30;
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
@@ -92,10 +98,13 @@ export class DashboardService {
       .createQueryBuilder('sale')
       .select("DATE_TRUNC('day', sale.date)", 'date')
       .addSelect('SUM(sale.totalAmount)', 'totalSales')
-      .where('sale.date >= :startDate AND sale.organizationId IN (:...organizationIds)', { 
-        startDate,
-        organizationIds,
-      })
+      .where(
+        'sale.date >= :startDate AND sale.organizationId IN (:...organizationIds)',
+        {
+          startDate,
+          organizationIds,
+        },
+      )
       .groupBy("DATE_TRUNC('day', sale.date)")
       .orderBy('date', 'ASC')
       .getRawMany();
@@ -116,10 +125,13 @@ export class DashboardService {
       .select('item.productId', 'productId')
       .addSelect('SUM(item.quantity)', 'totalQuantity')
       .addSelect('SUM(item.subtotal)', 'totalRevenue')
-      .where('sale.date >= :startDate AND sale.organizationId IN (:...organizationIds)', { 
-        startDate,
-        organizationIds,
-      })
+      .where(
+        'sale.date >= :startDate AND sale.organizationId IN (:...organizationIds)',
+        {
+          startDate,
+          organizationIds,
+        },
+      )
       .groupBy('item.productId')
       .orderBy('SUM(item.quantity)', 'DESC')
       .limit(limit)
@@ -127,7 +139,7 @@ export class DashboardService {
 
     const productIds = topProducts.map((p) => p.productId);
     const products = await this.productRepo.find({
-      where: { 
+      where: {
         id: In(productIds),
         organizationId: In(organizationIds),
       },
@@ -147,17 +159,21 @@ export class DashboardService {
   }
 
   async getLowStockAlerts(organizationIds: string[], outletId: string) {
-    const lowStockItems = await this.stockService.getLowStockItems(outletId, organizationIds[0]);
-    return lowStockItems.map((stock) => ({
-      id: stock.productId,
-      name: stock.product?.name || 'Unknown Product',
-      category: stock.product?.category || '',
-      stock: stock.quantity,
-      lowStockThreshold: stock.product?.lowStockThreshold || 0,
-      unit: stock.product?.unit || '',
-      imageUrl: stock.product?.imageUrl || null,
-    }))
-    .sort((a, b) => a.stock - b.stock); // Sort by stock (lowest first)
+    const lowStockItems = await this.stockService.getLowStockItems(
+      outletId,
+      organizationIds[0],
+    );
+    return lowStockItems
+      .map((stock) => ({
+        id: stock.productId,
+        name: stock.product?.name || 'Unknown Product',
+        category: stock.product?.category || '',
+        stock: stock.quantity,
+        lowStockThreshold: stock.product?.lowStockThreshold || 0,
+        unit: stock.product?.unit || '',
+        imageUrl: stock.product?.imageUrl || null,
+      }))
+      .sort((a, b) => a.stock - b.stock); // Sort by stock (lowest first)
   }
 
   async getExpensesSummary(organizationIds: string[]) {
@@ -177,17 +193,21 @@ export class DashboardService {
     expenses.forEach((expense) => {
       const category = expense.category || 'Uncategorized';
       const amount = Number(expense.amount);
-      categoryTotals.set(category, (categoryTotals.get(category) || 0) + amount);
+      categoryTotals.set(
+        category,
+        (categoryTotals.get(category) || 0) + amount,
+      );
       total += amount;
     });
 
-    const summary = Array.from(categoryTotals.entries()).map(([category, amount]) => ({
-      category,
-      amount: Number(amount.toFixed(2)),
-      percentage: total > 0 ? Number(((amount / total) * 100).toFixed(1)) : 0,
-    }));
+    const summary = Array.from(categoryTotals.entries()).map(
+      ([category, amount]) => ({
+        category,
+        amount: Number(amount.toFixed(2)),
+        percentage: total > 0 ? Number(((amount / total) * 100).toFixed(1)) : 0,
+      }),
+    );
 
     return summary.sort((a, b) => b.amount - a.amount);
   }
 }
-

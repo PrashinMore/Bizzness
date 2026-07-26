@@ -15,4 +15,3 @@ export class RedeemRewardDto {
   @IsOptional()
   description?: string;
 }
-

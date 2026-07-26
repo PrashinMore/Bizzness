@@ -10,4 +10,3 @@ export class CreateInviteParamsDto {
   @IsUUID('4')
   organizationId!: string;
 }
-

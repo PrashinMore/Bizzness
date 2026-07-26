@@ -74,4 +74,3 @@ export class SettingsService {
     return this.settingsRepository.save(settings);
   }
 }
-

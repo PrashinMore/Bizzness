@@ -38,4 +38,3 @@ export class UpdateBillingSettingsDto {
   @IsOptional()
   defaultDiscountType?: DiscountType;
 }
-

@@ -30,4 +30,3 @@ export class UpdateBusinessSettingsDto {
   @MaxLength(100)
   contactEmail?: string | null;
 }
-

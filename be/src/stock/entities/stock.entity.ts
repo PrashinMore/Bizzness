@@ -37,4 +37,3 @@ export class Stock {
   @UpdateDateColumn()
   updatedAt!: Date;
 }
-

@@ -11,17 +11,15 @@ import { StockModule } from '../stock/stock.module';
 import { InventoryModule } from '../inventory/inventory.module';
 
 @Module({
-	imports: [
-		TypeOrmModule.forFeature([Sale, SaleItem, DiningTable]),
-		forwardRef(() => SettingsModule),
-		forwardRef(() => CrmModule),
-		forwardRef(() => StockModule),
-		forwardRef(() => InventoryModule),
-	],
-	controllers: [SalesController],
-	providers: [SalesService],
-	exports: [SalesService],
+  imports: [
+    TypeOrmModule.forFeature([Sale, SaleItem, DiningTable]),
+    forwardRef(() => SettingsModule),
+    forwardRef(() => CrmModule),
+    forwardRef(() => StockModule),
+    forwardRef(() => InventoryModule),
+  ],
+  controllers: [SalesController],
+  providers: [SalesService],
+  exports: [SalesService],
 })
 export class SalesModule {}
-
-

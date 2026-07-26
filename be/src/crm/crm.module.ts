@@ -29,4 +29,3 @@ import { SettingsModule } from '../settings/settings.module';
   exports: [CrmService],
 })
 export class CrmModule {}
-

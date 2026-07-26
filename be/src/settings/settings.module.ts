@@ -12,4 +12,3 @@ import { StorageService } from '../products/storage.service';
   exports: [SettingsService],
 })
 export class SettingsModule {}
-

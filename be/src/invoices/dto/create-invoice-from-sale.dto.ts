@@ -17,4 +17,3 @@ export class CreateInvoiceFromSaleDto {
   @IsBoolean()
   forceSyncPdf?: boolean;
 }
-

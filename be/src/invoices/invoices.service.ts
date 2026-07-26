@@ -139,10 +139,13 @@ export class InvoicesService {
     }
 
     // 3. Get invoice settings
-    const invoiceSettings = await this.getOrCreateInvoiceSettings(organizationId);
+    const invoiceSettings =
+      await this.getOrCreateInvoiceSettings(organizationId);
 
     if (!invoiceSettings.enableInvoices) {
-      throw new BadRequestException('Invoices are disabled for this organization');
+      throw new BadRequestException(
+        'Invoices are disabled for this organization',
+      );
     }
 
     // 4. Get business settings
@@ -228,7 +231,10 @@ export class InvoicesService {
         };
       });
 
-      const subtotal = items.reduce((sum, item) => sum + item.rate * item.quantity, 0);
+      const subtotal = items.reduce(
+        (sum, item) => sum + item.rate * item.quantity,
+        0,
+      );
       const taxAmount = items.reduce((sum, item) => sum + (item.tax || 0), 0);
       const total = subtotal + taxAmount;
 
@@ -303,7 +309,8 @@ export class InvoicesService {
       return; // Already generated
     }
 
-    const invoiceSettings = await this.getOrCreateInvoiceSettings(organizationId);
+    const invoiceSettings =
+      await this.getOrCreateInvoiceSettings(organizationId);
     const businessSettings = await this.businessSettingsRepo.findOne({
       where: { organizationId },
     });
@@ -344,15 +351,15 @@ export class InvoicesService {
       invoice.pdfUrl = pdfUrl;
       await this.invoiceRepo.save(invoice);
     } catch (error) {
-      this.logger.error(`Failed to generate PDF for invoice ${invoiceId}`, error);
+      this.logger.error(
+        `Failed to generate PDF for invoice ${invoiceId}`,
+        error,
+      );
       throw error;
     }
   }
 
-  async findOne(
-    invoiceId: string,
-    organizationId: string,
-  ): Promise<Invoice> {
+  async findOne(invoiceId: string, organizationId: string): Promise<Invoice> {
     const invoice = await this.invoiceRepo.findOne({
       where: { id: invoiceId, organizationId },
     });
@@ -398,4 +405,3 @@ export class InvoicesService {
     return { invoices, total };
   }
 }
-

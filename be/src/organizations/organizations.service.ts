@@ -23,7 +23,10 @@ export class OrganizationsService {
     private readonly outletsRepository: Repository<Outlet>,
   ) {}
 
-  async create(createDto: CreateOrganizationDto, creatorId: string): Promise<Organization> {
+  async create(
+    createDto: CreateOrganizationDto,
+    creatorId: string,
+  ): Promise<Organization> {
     // Check if organization with same name already exists
     const existing = await this.organizationsRepository.findOne({
       where: { name: createDto.name },
@@ -49,7 +52,7 @@ export class OrganizationsService {
     });
 
     const saved = await this.organizationsRepository.save(organization);
-    
+
     // Create default outlet for the organization
     const defaultOutlet = this.outletsRepository.create({
       organizationId: saved.id,
@@ -58,12 +61,13 @@ export class OrganizationsService {
       isActive: true,
     });
     const savedDefaultOutlet = await this.outletsRepository.save(defaultOutlet);
-    
+
     // Reload with users relation to return complete data
-    const createdOrganization = await this.organizationsRepository.findOne({
-      where: { id: saved.id },
-      relations: ['users'],
-    }) || saved;
+    const createdOrganization =
+      (await this.organizationsRepository.findOne({
+        where: { id: saved.id },
+        relations: ['users'],
+      })) || saved;
 
     // Keep response backward-compatible while exposing default outlet for immediate app hydration.
     return Object.assign(createdOrganization, {
@@ -77,12 +81,18 @@ export class OrganizationsService {
       .createQueryBuilder('organization')
       .leftJoinAndSelect('organization.users', 'users')
       .leftJoinAndSelect('organization.creator', 'creator')
-      .where('users.id = :userId OR organization.createdBy = :userId', { userId })
+      .where('users.id = :userId OR organization.createdBy = :userId', {
+        userId,
+      })
       .orderBy('organization.createdAt', 'DESC')
       .getMany();
   }
 
-  async findOne(id: string, userId: string, userRole: string): Promise<Organization> {
+  async findOne(
+    id: string,
+    userId: string,
+    userRole: string,
+  ): Promise<Organization> {
     const organization = await this.organizationsRepository.findOne({
       where: { id },
       relations: ['users', 'creator'],
@@ -92,10 +102,12 @@ export class OrganizationsService {
     }
 
     // All users can only see organizations they created or are a member of
-    const isMember = organization.users.some(u => u.id === userId);
+    const isMember = organization.users.some((u) => u.id === userId);
     const isCreator = organization.createdBy === userId;
     if (!isMember && !isCreator) {
-      throw new ForbiddenException('You do not have access to this organization');
+      throw new ForbiddenException(
+        'You do not have access to this organization',
+      );
     }
 
     return organization;
@@ -126,7 +138,9 @@ export class OrganizationsService {
         where: { name: updateDto.name },
       });
       if (existing) {
-        throw new ConflictException('Organization with this name already exists');
+        throw new ConflictException(
+          'Organization with this name already exists',
+        );
       }
     }
 
@@ -158,10 +172,16 @@ export class OrganizationsService {
     await this.organizationsRepository.remove(organization);
   }
 
-  async removeUser(organizationId: string, userId: string, requesterRole: string): Promise<Organization> {
+  async removeUser(
+    organizationId: string,
+    userId: string,
+    requesterRole: string,
+  ): Promise<Organization> {
     // Only admins can remove users
     if (requesterRole !== 'admin') {
-      throw new ForbiddenException('Only admins can remove users from organizations');
+      throw new ForbiddenException(
+        'Only admins can remove users from organizations',
+      );
     }
     const organization = await this.organizationsRepository.findOne({
       where: { id: organizationId },
@@ -171,7 +191,7 @@ export class OrganizationsService {
       throw new NotFoundException('Organization not found');
     }
 
-    const userIndex = organization.users.findIndex(u => u.id === userId);
+    const userIndex = organization.users.findIndex((u) => u.id === userId);
     if (userIndex === -1) {
       throw new NotFoundException('User is not assigned to this organization');
     }
@@ -180,4 +200,3 @@ export class OrganizationsService {
     return await this.organizationsRepository.save(organization);
   }
 }
-

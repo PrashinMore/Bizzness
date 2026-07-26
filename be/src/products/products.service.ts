@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Like, Repository, DataSource } from 'typeorm';
 import { Product } from './entities/product.entity';
@@ -34,9 +38,9 @@ function levenshteinDistance(str1: string, str2: string): number {
         matrix[i][j] = matrix[i - 1][j - 1];
       } else {
         matrix[i][j] = Math.min(
-          matrix[i - 1][j] + 1,     // deletion
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j - 1] + 1,  // substitution
+          matrix[i - 1][j] + 1, // deletion
+          matrix[i][j - 1] + 1, // insertion
+          matrix[i - 1][j - 1] + 1, // substitution
         );
       }
     }
@@ -88,7 +92,9 @@ export class ProductsService {
     private readonly stockService: StockService,
   ) {}
 
-  async create(dto: CreateProductDto & { organizationId: string; outletId?: string }) {
+  async create(
+    dto: CreateProductDto & { organizationId: string; outletId?: string },
+  ) {
     const { stock, outletId, ...productData } = dto;
     const product = this.productRepo.create(productData);
     const savedProduct = await this.productRepo.save(product);
@@ -108,7 +114,10 @@ export class ProductsService {
       qb.andWhere('product.organizationId IN (:...organizationIds)', {
         organizationIds: options.organizationIds,
       });
-    } else if (options.organizationIds && options.organizationIds.length === 0) {
+    } else if (
+      options.organizationIds &&
+      options.organizationIds.length === 0
+    ) {
       // User has no organizations, return empty
       qb.andWhere('1 = 0');
     }
@@ -152,7 +161,11 @@ export class ProductsService {
       throw new NotFoundException(`Product ${id} not found`);
     }
     // Double check organization access
-    if (organizationIds && organizationIds.length > 0 && !organizationIds.includes(product.organizationId)) {
+    if (
+      organizationIds &&
+      organizationIds.length > 0 &&
+      !organizationIds.includes(product.organizationId)
+    ) {
       throw new NotFoundException(`Product ${id} not found`);
     }
     return product;
@@ -173,13 +186,25 @@ export class ProductsService {
     query: string,
     organizationIds?: string[],
     limit: number = 10,
-  ): Promise<Array<{ name: string; type: 'existing' | 'global'; score: number; category?: string }>> {
+  ): Promise<
+    Array<{
+      name: string;
+      type: 'existing' | 'global';
+      score: number;
+      category?: string;
+    }>
+  > {
     if (!query || query.trim().length < 2) {
       return [];
     }
 
     const escapedQuery = query.trim();
-    const results: Array<{ name: string; type: 'existing' | 'global'; score: number; category?: string }> = [];
+    const results: Array<{
+      name: string;
+      type: 'existing' | 'global';
+      score: number;
+      category?: string;
+    }> = [];
 
     // 1. Query existing products from user's organizations using pg_trgm
     if (organizationIds && organizationIds.length > 0) {
@@ -188,9 +213,11 @@ export class ProductsService {
         const extensionCheck = await this.dataSource.query(
           `SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'pg_trgm') as enabled`,
         );
-        
+
         if (!extensionCheck[0]?.enabled) {
-          throw new Error('pg_trgm extension is not enabled. Please run the migration SQL file.');
+          throw new Error(
+            'pg_trgm extension is not enabled. Please run the migration SQL file.',
+          );
         }
 
         // Get the actual table name from TypeORM metadata
@@ -214,8 +241,12 @@ export class ProductsService {
         results.push(...existingProducts);
       } catch (err) {
         // If pg_trgm is not enabled, fall back to ILIKE
-        console.warn('pg_trgm not available, falling back to ILIKE search:', err);
-        const qb = this.productRepo.createQueryBuilder('product')
+        console.warn(
+          'pg_trgm not available, falling back to ILIKE search:',
+          err,
+        );
+        const qb = this.productRepo
+          .createQueryBuilder('product')
           .select('product.name', 'name')
           .addSelect('product.category', 'category')
           .where('product.name ILIKE :query', { query: `%${escapedQuery}%` })
@@ -227,7 +258,10 @@ export class ProductsService {
           .orderBy('product.name', 'ASC')
           .limit(limit);
 
-        const fallbackResults = await qb.getRawMany<{ name: string; category: string }>();
+        const fallbackResults = await qb.getRawMany<{
+          name: string;
+          category: string;
+        }>();
         results.push(
           ...fallbackResults.map((r) => ({
             name: r.name,
@@ -245,9 +279,11 @@ export class ProductsService {
       const extensionCheck = await this.dataSource.query(
         `SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'pg_trgm') as enabled`,
       );
-      
+
       if (!extensionCheck[0]?.enabled) {
-        throw new Error('pg_trgm extension is not enabled. Please run the migration SQL file.');
+        throw new Error(
+          'pg_trgm extension is not enabled. Please run the migration SQL file.',
+        );
       }
 
       const globalProducts = await this.dataSource.query(
@@ -268,15 +304,22 @@ export class ProductsService {
       results.push(...globalProducts);
     } catch (err) {
       // If pg_trgm is not enabled, fall back to ILIKE
-      console.warn('pg_trgm not available for global products, falling back to ILIKE search:', err);
-      const qb = this.globalProductRepo.createQueryBuilder('gp')
+      console.warn(
+        'pg_trgm not available for global products, falling back to ILIKE search:',
+        err,
+      );
+      const qb = this.globalProductRepo
+        .createQueryBuilder('gp')
         .select('gp.name', 'name')
         .addSelect('gp.category', 'category')
         .where('gp.name ILIKE :query', { query: `%${escapedQuery}%` })
         .orderBy('gp.name', 'ASC')
         .limit(limit);
 
-      const fallbackResults = await qb.getRawMany<{ name: string; category: string }>();
+      const fallbackResults = await qb.getRawMany<{
+        name: string;
+        category: string;
+      }>();
       results.push(
         ...fallbackResults.map((r) => ({
           name: r.name,
@@ -288,7 +331,15 @@ export class ProductsService {
     }
 
     // 3. Merge and deduplicate by name (keep highest score)
-    const uniqueMap = new Map<string, { name: string; type: 'existing' | 'global'; score: number; category?: string }>();
+    const uniqueMap = new Map<
+      string,
+      {
+        name: string;
+        type: 'existing' | 'global';
+        score: number;
+        category?: string;
+      }
+    >();
     results.forEach((item) => {
       const existing = uniqueMap.get(item.name.toLowerCase());
       if (!existing || item.score > existing.score) {
@@ -311,7 +362,10 @@ export class ProductsService {
     productName: string,
     organizationIds?: string[],
     excludeProductId?: string,
-  ): Promise<{ isDuplicate: boolean; similarProduct?: { id: string; name: string } }> {
+  ): Promise<{
+    isDuplicate: boolean;
+    similarProduct?: { id: string; name: string };
+  }> {
     if (!productName || !productName.trim()) {
       return { isDuplicate: false };
     }
@@ -319,7 +373,8 @@ export class ProductsService {
     const normalizedInput = productName.trim().toLowerCase();
 
     // Get all products from user's organizations
-    const qb = this.productRepo.createQueryBuilder('product')
+    const qb = this.productRepo
+      .createQueryBuilder('product')
       .select(['product.id', 'product.name']);
 
     if (organizationIds && organizationIds.length > 0) {
@@ -374,8 +429,22 @@ export class ProductsService {
 
   async generateCsvTemplate(): Promise<string> {
     const rows = [
-      { name: 'Example Product', category: 'Beverages', costPrice: '10.50', sellingPrice: '15.99', unit: 'pieces', lowStockThreshold: '10' },
-      { name: 'Another Product', category: 'Snacks', costPrice: '5.00', sellingPrice: '8.50', unit: 'pieces', lowStockThreshold: '5' },
+      {
+        name: 'Example Product',
+        category: 'Beverages',
+        costPrice: '10.50',
+        sellingPrice: '15.99',
+        unit: 'pieces',
+        lowStockThreshold: '10',
+      },
+      {
+        name: 'Another Product',
+        category: 'Snacks',
+        costPrice: '5.00',
+        sellingPrice: '8.50',
+        unit: 'pieces',
+        lowStockThreshold: '5',
+      },
     ];
 
     return stringify(rows, { header: true });
@@ -401,7 +470,7 @@ export class ProductsService {
 
     return new Promise((resolve, reject) => {
       const stream = Readable.from(file.buffer);
-      
+
       stream
         .pipe(csv())
         .on('data', (row) => {
@@ -413,10 +482,12 @@ export class ProductsService {
             // Process all rows in a transaction
             await this.dataSource.transaction(async (manager) => {
               // Get all existing products for this organization to check for duplicates
-              const existingProducts = await manager.getRepository(Product).find({
-                where: { organizationId: In(organizationIds) },
-              });
-              
+              const existingProducts = await manager
+                .getRepository(Product)
+                .find({
+                  where: { organizationId: In(organizationIds) },
+                });
+
               const productMap = new Map<string, Product>();
               existingProducts.forEach((p) => {
                 productMap.set(p.name.toLowerCase().trim(), p);
@@ -427,23 +498,41 @@ export class ProductsService {
                 try {
                   // Validate required fields
                   if (!row.name || !row.name.trim()) {
-                    results.errors.push({ row: rowNum, error: 'Name is required' });
+                    results.errors.push({
+                      row: rowNum,
+                      error: 'Name is required',
+                    });
                     continue;
                   }
                   if (!row.category || !row.category.trim()) {
-                    results.errors.push({ row: rowNum, error: 'Category is required' });
+                    results.errors.push({
+                      row: rowNum,
+                      error: 'Category is required',
+                    });
                     continue;
                   }
                   if (!row.costPrice || isNaN(parseFloat(row.costPrice))) {
-                    results.errors.push({ row: rowNum, error: 'Cost price must be a valid number' });
+                    results.errors.push({
+                      row: rowNum,
+                      error: 'Cost price must be a valid number',
+                    });
                     continue;
                   }
-                  if (!row.sellingPrice || isNaN(parseFloat(row.sellingPrice))) {
-                    results.errors.push({ row: rowNum, error: 'Selling price must be a valid number' });
+                  if (
+                    !row.sellingPrice ||
+                    isNaN(parseFloat(row.sellingPrice))
+                  ) {
+                    results.errors.push({
+                      row: rowNum,
+                      error: 'Selling price must be a valid number',
+                    });
                     continue;
                   }
                   if (!row.unit || !row.unit.trim()) {
-                    results.errors.push({ row: rowNum, error: 'Unit is required' });
+                    results.errors.push({
+                      row: rowNum,
+                      error: 'Unit is required',
+                    });
                     continue;
                   }
 
@@ -476,7 +565,9 @@ export class ProductsService {
                     results.updated++;
                   } else {
                     // Create new product
-                    const newProduct = manager.getRepository(Product).create(productData);
+                    const newProduct = manager
+                      .getRepository(Product)
+                      .create(productData);
                     await manager.getRepository(Product).save(newProduct);
                     productMap.set(normalizedName, newProduct);
                     results.created++;
@@ -492,13 +583,16 @@ export class ProductsService {
 
             resolve(results);
           } catch (err: any) {
-            reject(new BadRequestException(`Failed to import CSV: ${err.message}`));
+            reject(
+              new BadRequestException(`Failed to import CSV: ${err.message}`),
+            );
           }
         })
         .on('error', (err) => {
-          reject(new BadRequestException(`Failed to parse CSV: ${err.message}`));
+          reject(
+            new BadRequestException(`Failed to parse CSV: ${err.message}`),
+          );
         });
     });
   }
 }
-

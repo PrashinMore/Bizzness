@@ -5,4 +5,3 @@ export class DeleteAccountDto {
   @IsNotEmpty()
   password!: string;
 }
-

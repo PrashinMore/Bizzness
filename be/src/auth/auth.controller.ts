@@ -25,7 +25,9 @@ export class AuthController {
   }
 
   @Post('refresh')
-  refresh(@Body() refreshTokenDto: RefreshTokenDto): Promise<AuthTokenResponse> {
+  refresh(
+    @Body() refreshTokenDto: RefreshTokenDto,
+  ): Promise<AuthTokenResponse> {
     return this.authService.refreshToken(refreshTokenDto.refreshToken);
   }
 
@@ -38,4 +40,3 @@ export class AuthController {
     return this.authService.resetPassword(req.user, resetPasswordDto);
   }
 }
-

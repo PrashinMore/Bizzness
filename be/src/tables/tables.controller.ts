@@ -31,14 +31,18 @@ export class TablesController {
 
   private getOrganizationIds(user: SanitizedUser): string[] {
     if (!user.organizations || user.organizations.length === 0) {
-      throw new ForbiddenException('You must be assigned to at least one organization');
+      throw new ForbiddenException(
+        'You must be assigned to at least one organization',
+      );
     }
     return user.organizations.map((org) => org.id);
   }
 
   private getFirstOrganizationId(user: SanitizedUser): string {
     if (!user.organizations || user.organizations.length === 0) {
-      throw new ForbiddenException('You must be assigned to at least one organization');
+      throw new ForbiddenException(
+        'You must be assigned to at least one organization',
+      );
     }
     return user.organizations[0].id;
   }
@@ -62,7 +66,10 @@ export class TablesController {
   }
 
   @Get(':id/active-sale')
-  getActiveSale(@Req() req: RequestWithUser, @Param('id', ParseUUIDPipe) id: string) {
+  getActiveSale(
+    @Req() req: RequestWithUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     const organizationIds = this.getOrganizationIds(req.user);
     return this.tablesService.getActiveSaleForTable(id, organizationIds);
   }
@@ -84,7 +91,11 @@ export class TablesController {
     @Body() updateStatusDto: UpdateTableStatusDto,
   ) {
     const organizationIds = this.getOrganizationIds(req.user);
-    return this.tablesService.updateStatus(id, updateStatusDto, organizationIds);
+    return this.tablesService.updateStatus(
+      id,
+      updateStatusDto,
+      organizationIds,
+    );
   }
 
   @Delete(':id')
@@ -100,7 +111,11 @@ export class TablesController {
     @Body() assignTableDto: AssignTableDto,
   ) {
     const organizationIds = this.getOrganizationIds(req.user);
-    return this.tablesService.assignTableToSale(saleId, assignTableDto.tableId, organizationIds);
+    return this.tablesService.assignTableToSale(
+      saleId,
+      assignTableDto.tableId,
+      organizationIds,
+    );
   }
 
   @Post('sales/:saleId/switch')
@@ -110,11 +125,18 @@ export class TablesController {
     @Body() switchTableDto: SwitchTableDto,
   ) {
     const organizationIds = this.getOrganizationIds(req.user);
-    return this.tablesService.switchTable(saleId, switchTableDto.toTableId, organizationIds);
+    return this.tablesService.switchTable(
+      saleId,
+      switchTableDto.toTableId,
+      organizationIds,
+    );
   }
 
   @Post('merge')
-  mergeTables(@Req() req: RequestWithUser, @Body() mergeTablesDto: MergeTablesDto) {
+  mergeTables(
+    @Req() req: RequestWithUser,
+    @Body() mergeTablesDto: MergeTablesDto,
+  ) {
     const organizationIds = this.getOrganizationIds(req.user);
     return this.tablesService.mergeTables(
       mergeTablesDto.sourceTableIds,

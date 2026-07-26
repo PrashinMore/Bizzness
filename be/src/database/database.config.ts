@@ -36,7 +36,9 @@ function parseDatabaseUrl(connectionUrl: string): ParsedDatabaseConfig {
   };
 }
 
-function extractSupabaseProjectRef(configService: ConfigService): string | null {
+function extractSupabaseProjectRef(
+  configService: ConfigService,
+): string | null {
   const supabaseUrl = configService.get<string>('SUPABASE_URL');
   if (!supabaseUrl) {
     return null;
@@ -83,7 +85,9 @@ function resolveHost(configService: ConfigService): string {
   return dbHost;
 }
 
-function resolveFromEnvVars(configService: ConfigService): ParsedDatabaseConfig {
+function resolveFromEnvVars(
+  configService: ConfigService,
+): ParsedDatabaseConfig {
   const host = resolveHost(configService);
   const port = parseInt(configService.get<string>('DB_PORT') ?? '5432', 10);
   const username =

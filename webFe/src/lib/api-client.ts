@@ -1332,7 +1332,7 @@ export const crmApi = {
       isActive?: boolean;
       maxRedemptions?: number;
     },
-  ): Promise<any> =>
+  ): Promise<unknown> =>
     request('/crm/rewards', {
       method: 'POST',
       body: payload,
@@ -1354,7 +1354,7 @@ export const crmApi = {
       isActive?: boolean;
       maxRedemptions?: number;
     },
-  ): Promise<any> =>
+  ): Promise<unknown> =>
     request(`/crm/rewards/${id}`, {
       method: 'PATCH',
       body: payload,
@@ -1376,7 +1376,7 @@ export const crmApi = {
       description?: string;
     },
   ): Promise<{
-    reward: any;
+    reward: unknown;
     loyaltyAccount: {
       id: string;
       points: number;

@@ -9,4 +9,3 @@ export class UpdateOrganizationSettingsDto {
   @IsBoolean()
   enableLoyalty?: boolean;
 }
-

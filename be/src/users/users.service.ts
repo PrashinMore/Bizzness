@@ -66,7 +66,10 @@ export class UsersService {
     return users.map((user) => this.sanitizeUser(user));
   }
 
-  async searchByEmail(query: string, limit: number = 10): Promise<SanitizedUser[]> {
+  async searchByEmail(
+    query: string,
+    limit: number = 10,
+  ): Promise<SanitizedUser[]> {
     const users = await this.usersRepository.find({
       where: {
         email: Like(`%${query}%`),
@@ -87,7 +90,7 @@ export class UsersService {
   }
 
   async findEntityById(id: string): Promise<User | null> {
-    return this.usersRepository.findOne({ 
+    return this.usersRepository.findOne({
       where: { id, status: 'ACTIVE' },
     });
   }
@@ -97,13 +100,13 @@ export class UsersService {
     updateDto: UpdateUserDto,
     options?: { allowRoleChange?: boolean },
   ): Promise<SanitizedUser> {
-    const user = await this.usersRepository.findOne({ 
+    const user = await this.usersRepository.findOne({
       where: { id, status: 'ACTIVE' },
     });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    
+
     // Prevent updating deleted accounts
     if (user.status === 'DELETED' || user.deletedAt) {
       throw new BadRequestException('Cannot update a deleted account');
@@ -140,13 +143,13 @@ export class UsersService {
 
   async remove(id: string): Promise<void> {
     // Check if user exists and is active
-    const user = await this.usersRepository.findOne({ 
+    const user = await this.usersRepository.findOne({
       where: { id, status: 'ACTIVE' },
     });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    
+
     const result = await this.usersRepository.delete(id);
     if (!result.affected) {
       throw new NotFoundException('User not found');
@@ -157,7 +160,7 @@ export class UsersService {
     email: string,
     password: string,
   ): Promise<User | null> {
-    const user = await this.usersRepository.findOne({ 
+    const user = await this.usersRepository.findOne({
       where: { email, status: 'ACTIVE' },
     });
     if (!user) {
@@ -239,7 +242,7 @@ export class UsersService {
         .createQueryBuilder()
         .relation(User, 'organizations')
         .of(userId)
-        .remove(user.organizations.map(org => org.id));
+        .remove(user.organizations.map((org) => org.id));
     }
   }
 
@@ -263,4 +266,3 @@ export class UsersService {
     return role;
   }
 }
-

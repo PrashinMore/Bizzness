@@ -13,13 +13,21 @@ export class PdfGeneratorService {
     invoiceSettings: OrganizationInvoiceSettings,
     businessSettings: Settings,
   ): Promise<Buffer> {
-    const html = this.generateInvoiceHtml(invoice, invoiceSettings, businessSettings);
+    const html = this.generateInvoiceHtml(
+      invoice,
+      invoiceSettings,
+      businessSettings,
+    );
 
     let browser;
     try {
       browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+        ],
       });
 
       const page = await browser.newPage();
@@ -52,7 +60,10 @@ export class PdfGeneratorService {
     invoiceSettings: OrganizationInvoiceSettings,
     businessSettings: Settings,
   ): string {
-    const gstRate = invoiceSettings.gstEnabled && businessSettings.taxRate ? businessSettings.taxRate : 0;
+    const gstRate =
+      invoiceSettings.gstEnabled && businessSettings.taxRate
+        ? businessSettings.taxRate
+        : 0;
     const subtotal = parseFloat(invoice.subtotal.toString());
     const taxAmount = parseFloat(invoice.taxAmount.toString());
     const discountAmount = parseFloat(invoice.discountAmount.toString());
@@ -72,11 +83,15 @@ export class PdfGeneratorService {
 
     // Build logo URL - handle leading slashes properly
     // Use NEXT_PUBLIC_API_BASE_URL for consistency with frontend, or fallback to localhost
-    const baseUrl = process.env.BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || process.env.API_BASE_URL || 'http://localhost:4000';
+    const baseUrl =
+      process.env.BASE_URL ||
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.API_BASE_URL ||
+      'http://localhost:4000';
     let logoUrl: string | null = null;
     if (invoiceSettings.includeLogo && businessSettings.businessLogo) {
       const logoPath = businessSettings.businessLogo;
-      
+
       // Check if logoPath is already a full URL
       if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
         logoUrl = logoPath;
@@ -86,9 +101,11 @@ export class PdfGeneratorService {
         const cleanLogoPath = logoPath.replace(/^\/+/, '');
         logoUrl = `${cleanBaseUrl}/${cleanLogoPath}`;
       }
-      this.logger.log(`Logo URL constructed: ${logoUrl} (from path: ${logoPath})`);
+      this.logger.log(
+        `Logo URL constructed: ${logoUrl} (from path: ${logoPath})`,
+      );
     }
-      
+
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -269,8 +286,9 @@ export class PdfGeneratorService {
       </div>
     </div>
 
-    ${invoice.customerName || invoice.customerPhone
-      ? `
+    ${
+      invoice.customerName || invoice.customerPhone
+        ? `
     <div class="customer-section">
       <div class="section-title">Bill To:</div>
       <div class="customer-details">
@@ -280,7 +298,8 @@ export class PdfGeneratorService {
       </div>
     </div>
     `
-      : ''}
+        : ''
+    }
 
     <table class="items-table">
       <thead>
@@ -302,9 +321,11 @@ export class PdfGeneratorService {
           <td>${item.name}</td>
           <td class="text-center">${item.quantity}</td>
           <td class="text-right">${formatCurrency(item.rate)}</td>
-          ${invoiceSettings.gstEnabled
-            ? `<td class="text-right">${formatCurrency(item.tax || 0)}</td>`
-            : ''}
+          ${
+            invoiceSettings.gstEnabled
+              ? `<td class="text-right">${formatCurrency(item.tax || 0)}</td>`
+              : ''
+          }
           <td class="text-right">${formatCurrency(item.total)}</td>
         </tr>
         `,
@@ -318,39 +339,44 @@ export class PdfGeneratorService {
         <span>Subtotal:</span>
         <span>${formatCurrency(subtotal)}</span>
       </div>
-      ${discountAmount > 0
-        ? `
+      ${
+        discountAmount > 0
+          ? `
       <div class="totals-row">
         <span>Discount:</span>
         <span>-${formatCurrency(discountAmount)}</span>
       </div>
       `
-        : ''}
-      ${invoiceSettings.gstEnabled && taxAmount > 0
-        ? `
+          : ''
+      }
+      ${
+        invoiceSettings.gstEnabled && taxAmount > 0
+          ? `
       <div class="totals-row">
         <span>GST (${gstRate}%):</span>
         <span>${formatCurrency(taxAmount)}</span>
       </div>
       `
-        : ''}
+          : ''
+      }
       <div class="totals-row total">
         <span>Total:</span>
         <span>${formatCurrency(total)}</span>
       </div>
     </div>
 
-    ${businessSettings.invoiceFooter
-      ? `
+    ${
+      businessSettings.invoiceFooter
+        ? `
     <div class="footer">
       ${businessSettings.invoiceFooter}
     </div>
     `
-      : ''}
+        : ''
+    }
   </div>
 </body>
 </html>
     `;
   }
 }
-

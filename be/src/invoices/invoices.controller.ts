@@ -32,7 +32,9 @@ export class InvoicesController {
 
   private getOrganizationId(user: SanitizedUser, orgId: string): string {
     if (!user.organizations || user.organizations.length === 0) {
-      throw new NotFoundException('You must be assigned to at least one organization');
+      throw new NotFoundException(
+        'You must be assigned to at least one organization',
+      );
     }
 
     const hasAccess = user.organizations.some((org) => org.id === orgId);
@@ -103,7 +105,10 @@ export class InvoicesController {
     @Param('invoiceId', new ParseUUIDPipe({ version: '4' })) invoiceId: string,
   ) {
     const organizationId = this.getOrganizationId(req.user, orgId);
-    const invoice = await this.invoicesService.findOne(invoiceId, organizationId);
+    const invoice = await this.invoicesService.findOne(
+      invoiceId,
+      organizationId,
+    );
     return {
       invoice,
       status: invoice.pdfUrl ? 'ready' : 'queued',
@@ -119,13 +124,22 @@ export class InvoicesController {
     @Param('invoiceId', new ParseUUIDPipe({ version: '4' })) invoiceId: string,
   ) {
     const organizationId = this.getOrganizationId(req.user, orgId);
-    const invoice = await this.invoicesService.findOne(invoiceId, organizationId);
+    const invoice = await this.invoicesService.findOne(
+      invoiceId,
+      organizationId,
+    );
 
     if (!invoice.pdfUrl) {
       // Generate PDF if not exists
-      await this.invoicesService.generatePdfForInvoice(invoiceId, organizationId);
-      const updatedInvoice = await this.invoicesService.findOne(invoiceId, organizationId);
-      
+      await this.invoicesService.generatePdfForInvoice(
+        invoiceId,
+        organizationId,
+      );
+      const updatedInvoice = await this.invoicesService.findOne(
+        invoiceId,
+        organizationId,
+      );
+
       if (!updatedInvoice.pdfUrl) {
         throw new NotFoundException('PDF not available');
       }
@@ -159,8 +173,15 @@ export class InvoicesController {
   ) {
     const organizationId = this.getOrganizationId(req.user, orgId);
     const forceRegenerate = force === 'true';
-    await this.invoicesService.generatePdfForInvoice(invoiceId, organizationId, forceRegenerate);
-    const invoice = await this.invoicesService.findOne(invoiceId, organizationId);
+    await this.invoicesService.generatePdfForInvoice(
+      invoiceId,
+      organizationId,
+      forceRegenerate,
+    );
+    const invoice = await this.invoicesService.findOne(
+      invoiceId,
+      organizationId,
+    );
     return {
       invoice,
       status: invoice.pdfUrl ? 'ready' : 'queued',
@@ -168,4 +189,3 @@ export class InvoicesController {
     };
   }
 }
-

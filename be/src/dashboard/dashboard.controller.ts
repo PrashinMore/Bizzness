@@ -1,4 +1,11 @@
-import { Controller, Get, Query, Req, UseGuards, ForbiddenException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Req,
+  UseGuards,
+  ForbiddenException,
+} from '@nestjs/common';
 import { type Request } from 'express';
 import { DashboardService } from './dashboard.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -13,9 +20,11 @@ export class DashboardController {
 
   private getOrganizationIds(user: SanitizedUser): string[] {
     if (!user.organizations || user.organizations.length === 0) {
-      throw new ForbiddenException('You must be assigned to at least one organization');
+      throw new ForbiddenException(
+        'You must be assigned to at least one organization',
+      );
     }
-    return user.organizations.map(org => org.id);
+    return user.organizations.map((org) => org.id);
   }
 
   @Get('summary')
@@ -25,9 +34,15 @@ export class DashboardController {
   }
 
   @Get('sales-trend')
-  getSalesTrend(@Req() req: RequestWithUser, @Query('range') range?: '7days' | '30days') {
+  getSalesTrend(
+    @Req() req: RequestWithUser,
+    @Query('range') range?: '7days' | '30days',
+  ) {
     const organizationIds = this.getOrganizationIds(req.user);
-    return this.dashboardService.getSalesTrend(range || '7days', organizationIds);
+    return this.dashboardService.getSalesTrend(
+      range || '7days',
+      organizationIds,
+    );
   }
 
   @Get('top-products')
@@ -42,9 +57,11 @@ export class DashboardController {
   @Get('low-stock')
   getLowStockAlerts(@Req() req: RequestWithUser) {
     const organizationIds = this.getOrganizationIds(req.user);
-    const outletId = (req.headers['x-outlet-id'] as string);
+    const outletId = req.headers['x-outlet-id'] as string;
     if (!outletId) {
-      throw new ForbiddenException('Outlet ID is required. Please select an outlet.');
+      throw new ForbiddenException(
+        'Outlet ID is required. Please select an outlet.',
+      );
     }
     return this.dashboardService.getLowStockAlerts(organizationIds, outletId);
   }
@@ -55,4 +72,3 @@ export class DashboardController {
     return this.dashboardService.getExpensesSummary(organizationIds);
   }
 }
-

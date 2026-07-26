@@ -20,4 +20,3 @@ import { OutletsModule } from '../outlets/outlets.module';
   exports: [ProductsService],
 })
 export class ProductsModule {}
-

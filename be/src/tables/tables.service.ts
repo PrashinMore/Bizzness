@@ -44,7 +44,9 @@ export class TablesService {
     // Check if tables are enabled
     const settings = await this.settingsService.getSettings(organizationId);
     if (!settings.enableTables) {
-      throw new ForbiddenException('Table management is not enabled for this organization');
+      throw new ForbiddenException(
+        'Table management is not enabled for this organization',
+      );
     }
 
     // Check for duplicate name in the same organization
@@ -176,7 +178,10 @@ export class TablesService {
       const table = await this.validateTableAccess(tableId, organizationIds);
 
       // If table is not available, check if it's already assigned to this sale
-      if (table.status !== TableStatus.AVAILABLE && table.status !== TableStatus.RESERVED) {
+      if (
+        table.status !== TableStatus.AVAILABLE &&
+        table.status !== TableStatus.RESERVED
+      ) {
         if (table.id !== sale.tableId) {
           throw new BadRequestException(
             `Table is currently ${table.status.toLowerCase()}`,
@@ -218,7 +223,11 @@ export class TablesService {
     saleId: string,
     toTableId: string,
     organizationIds: string[],
-  ): Promise<{ sale: Sale; fromTable: DiningTable | null; toTable: DiningTable }> {
+  ): Promise<{
+    sale: Sale;
+    fromTable: DiningTable | null;
+    toTable: DiningTable;
+  }> {
     return this.dataSource.transaction(async (manager) => {
       const sale = await manager.getRepository(Sale).findOne({
         where: { id: saleId, organizationId: In(organizationIds) },
@@ -232,10 +241,18 @@ export class TablesService {
         throw new BadRequestException('Cannot switch table for a paid sale');
       }
 
-      const toTable = await this.validateTableAccess(toTableId, organizationIds);
+      const toTable = await this.validateTableAccess(
+        toTableId,
+        organizationIds,
+      );
 
-      if (toTable.status !== TableStatus.AVAILABLE && toTable.status !== TableStatus.RESERVED) {
-        throw new BadRequestException(`Target table is currently ${toTable.status.toLowerCase()}`);
+      if (
+        toTable.status !== TableStatus.AVAILABLE &&
+        toTable.status !== TableStatus.RESERVED
+      ) {
+        throw new BadRequestException(
+          `Target table is currently ${toTable.status.toLowerCase()}`,
+        );
       }
 
       let fromTable: DiningTable | null = null;
@@ -276,14 +293,24 @@ export class TablesService {
   ): Promise<{ targetTable: DiningTable; sourceTables: DiningTable[] }> {
     const settings = await this.settingsService.getSettings(organizationIds[0]);
     if (!settings.allowTableMerge) {
-      throw new ForbiddenException('Table merging is not enabled for this organization');
+      throw new ForbiddenException(
+        'Table merging is not enabled for this organization',
+      );
     }
 
     return this.dataSource.transaction(async (manager) => {
-      const targetTable = await this.validateTableAccess(targetTableId, organizationIds);
+      const targetTable = await this.validateTableAccess(
+        targetTableId,
+        organizationIds,
+      );
 
-      if (targetTable.status !== TableStatus.AVAILABLE && targetTable.status !== TableStatus.RESERVED) {
-        throw new BadRequestException('Target table must be available for merging');
+      if (
+        targetTable.status !== TableStatus.AVAILABLE &&
+        targetTable.status !== TableStatus.RESERVED
+      ) {
+        throw new BadRequestException(
+          'Target table must be available for merging',
+        );
       }
 
       const sourceTables: DiningTable[] = [];
@@ -291,16 +318,21 @@ export class TablesService {
         if (sourceId === targetTableId) {
           continue; // Skip if source is same as target
         }
-        const sourceTable = await this.validateTableAccess(sourceId, organizationIds);
+        const sourceTable = await this.validateTableAccess(
+          sourceId,
+          organizationIds,
+        );
         sourceTables.push(sourceTable);
       }
 
       // Move all active orders from source tables to target table
       for (const sourceTable of sourceTables) {
-        await manager.getRepository(Sale).update(
-          { tableId: sourceTable.id, isPaid: false },
-          { tableId: targetTableId },
-        );
+        await manager
+          .getRepository(Sale)
+          .update(
+            { tableId: sourceTable.id, isPaid: false },
+            { tableId: targetTableId },
+          );
         sourceTable.status = TableStatus.BLOCKED;
         await manager.getRepository(DiningTable).save(sourceTable);
       }
@@ -355,7 +387,7 @@ export class TablesService {
     organizationIds: string[],
   ): Promise<Sale | null> {
     const table = await this.validateTableAccess(id, organizationIds);
-    
+
     const activeSale = await this.salesRepository.findOne({
       where: { tableId: id, isPaid: false },
       relations: ['items'],

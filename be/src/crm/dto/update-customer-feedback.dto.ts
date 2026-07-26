@@ -5,4 +5,3 @@ export class UpdateCustomerFeedbackDto {
   @IsEnum(['OPEN', 'RESOLVED'])
   status?: 'OPEN' | 'RESOLVED';
 }
-

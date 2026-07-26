@@ -49,4 +49,3 @@ export class CustomerVisit {
   @CreateDateColumn()
   createdAt!: Date;
 }
-

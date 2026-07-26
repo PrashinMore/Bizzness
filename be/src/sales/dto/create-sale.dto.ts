@@ -1,103 +1,101 @@
 import {
-	ArrayMinSize,
-	IsArray,
-	IsBoolean,
-	IsIn,
-	IsNotEmpty,
-	IsNumber,
-	IsOptional,
-	IsPositive,
-	IsString,
-	IsUUID,
-	Min,
-	ValidateNested,
+  ArrayMinSize,
+  IsArray,
+  IsBoolean,
+  IsIn,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  IsUUID,
+  Min,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class CreateSaleItemDto {
-	@IsUUID()
-	productId: string;
+  @IsUUID()
+  productId: string;
 
-	@IsNumber()
-	@IsPositive()
-	quantity: number;
+  @IsNumber()
+  @IsPositive()
+  quantity: number;
 
-	@IsNumber()
-	@IsPositive()
-	sellingPrice: number;
+  @IsNumber()
+  @IsPositive()
+  sellingPrice: number;
 }
 
 export class CreateSaleDto {
-	@IsString()
-	@IsNotEmpty()
-	date: string;
+  @IsString()
+  @IsNotEmpty()
+  date: string;
 
-	@IsArray()
-	@ArrayMinSize(1)
-	@ValidateNested({ each: true })
-	@Type(() => CreateSaleItemDto)
-	items: CreateSaleItemDto[];
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => CreateSaleItemDto)
+  items: CreateSaleItemDto[];
 
-	@IsNumber()
-	@IsPositive()
-	totalAmount: number;
+  @IsNumber()
+  @IsPositive()
+  totalAmount: number;
 
-	@IsString()
-	@IsNotEmpty()
-	soldBy: string;
+  @IsString()
+  @IsNotEmpty()
+  soldBy: string;
 
-	@IsString()
-	@IsIn(['cash', 'UPI', 'mixed'])
-	@IsOptional()
-	paymentType?: string;
+  @IsString()
+  @IsIn(['cash', 'UPI', 'mixed'])
+  @IsOptional()
+  paymentType?: string;
 
-	@IsNumber()
-	@IsOptional()
-	cashAmount?: number;
+  @IsNumber()
+  @IsOptional()
+  cashAmount?: number;
 
-	@IsNumber()
-	@IsOptional()
-	upiAmount?: number;
+  @IsNumber()
+  @IsOptional()
+  upiAmount?: number;
 
-	@IsBoolean()
-	@IsOptional()
-	isPaid?: boolean;
+  @IsBoolean()
+  @IsOptional()
+  isPaid?: boolean;
 
-	@IsUUID()
-	@IsOptional()
-	tableId?: string;
+  @IsUUID()
+  @IsOptional()
+  tableId?: string;
 
-	@IsUUID()
-	@IsOptional()
-	customerId?: string;
+  @IsUUID()
+  @IsOptional()
+  customerId?: string;
 
-	@IsString()
-	@IsOptional()
-	customerPhone?: string;
+  @IsString()
+  @IsOptional()
+  customerPhone?: string;
 
-	@IsString()
-	@IsOptional()
-	customerName?: string;
+  @IsString()
+  @IsOptional()
+  customerName?: string;
 
-	@IsString()
-	@IsOptional()
-	@IsIn(['DINE_IN', 'TAKEAWAY', 'DELIVERY'])
-	visitType?: 'DINE_IN' | 'TAKEAWAY' | 'DELIVERY';
+  @IsString()
+  @IsOptional()
+  @IsIn(['DINE_IN', 'TAKEAWAY', 'DELIVERY'])
+  visitType?: 'DINE_IN' | 'TAKEAWAY' | 'DELIVERY';
 
-	@IsNumber()
-	@IsOptional()
-	@Min(0)
-	loyaltyPointsRedeemed?: number;
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  loyaltyPointsRedeemed?: number;
 
-	@IsNumber()
-	@IsOptional()
-	@Min(0)
-	loyaltyDiscountAmount?: number;
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  loyaltyDiscountAmount?: number;
 
-	/** Per-checkout UUID from POS; retries and offline sync reuse the same value for deduplication */
-	@IsUUID('4')
-	@IsOptional()
-	idempotencyKey?: string;
+  /** Per-checkout UUID from POS; retries and offline sync reuse the same value for deduplication */
+  @IsUUID('4')
+  @IsOptional()
+  idempotencyKey?: string;
 }
-
-

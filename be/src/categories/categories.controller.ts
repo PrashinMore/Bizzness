@@ -30,7 +30,9 @@ export class CategoriesController {
 
   @Roles('admin')
   @Get(':id')
-  findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string): Promise<Category> {
+  findOne(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ): Promise<Category> {
     return this.categoriesService.findOne(id);
   }
 
@@ -51,8 +53,9 @@ export class CategoriesController {
 
   @Roles('admin')
   @Delete(':id')
-  remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string): Promise<void> {
+  remove(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ): Promise<void> {
     return this.categoriesService.remove(id);
   }
 }
-

@@ -24,4 +24,3 @@ export class UpdateUserDto {
   @IsIn(USER_ROLES)
   role?: (typeof USER_ROLES)[number];
 }
-

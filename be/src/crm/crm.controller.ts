@@ -38,14 +38,18 @@ export class CrmController {
 
   private getOrganizationIds(user: SanitizedUser): string[] {
     if (!user.organizations || user.organizations.length === 0) {
-      throw new ForbiddenException('You must be assigned to at least one organization');
+      throw new ForbiddenException(
+        'You must be assigned to at least one organization',
+      );
     }
     return user.organizations.map((org) => org.id);
   }
 
   private getFirstOrganizationId(user: SanitizedUser): string {
     if (!user.organizations || user.organizations.length === 0) {
-      throw new ForbiddenException('You must be assigned to at least one organization');
+      throw new ForbiddenException(
+        'You must be assigned to at least one organization',
+      );
     }
     return user.organizations[0].id;
   }
@@ -147,7 +151,8 @@ export class CrmController {
   @Get('loyalty/redeem-preview')
   async getRedemptionPreview(
     @Req() req: RequestWithUser,
-    @Query('customerId', new ParseUUIDPipe({ version: '4' })) customerId: string,
+    @Query('customerId', new ParseUUIDPipe({ version: '4' }))
+    customerId: string,
     @Query('billAmount') billAmount: string,
   ) {
     const organizationId = this.getFirstOrganizationId(req.user);
@@ -159,7 +164,10 @@ export class CrmController {
   }
 
   @Post('loyalty/redeem')
-  async redeemPoints(@Req() req: RequestWithUser, @Body() dto: RedeemPointsDto) {
+  async redeemPoints(
+    @Req() req: RequestWithUser,
+    @Body() dto: RedeemPointsDto,
+  ) {
     const organizationId = this.getFirstOrganizationId(req.user);
     return this.crmService.redeemPoints(
       dto.customerId,
@@ -172,7 +180,8 @@ export class CrmController {
   @Get('loyalty/transactions/:customerId')
   async getTransactionHistory(
     @Req() req: RequestWithUser,
-    @Param('customerId', new ParseUUIDPipe({ version: '4' })) customerId: string,
+    @Param('customerId', new ParseUUIDPipe({ version: '4' }))
+    customerId: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
   ) {
@@ -186,7 +195,10 @@ export class CrmController {
   }
 
   @Post('loyalty/adjust-points')
-  async adjustPoints(@Req() req: RequestWithUser, @Body() dto: AdjustPointsDto) {
+  async adjustPoints(
+    @Req() req: RequestWithUser,
+    @Body() dto: AdjustPointsDto,
+  ) {
     const organizationId = this.getFirstOrganizationId(req.user);
     return this.crmService.adjustPoints(
       dto.customerId,
@@ -202,19 +214,25 @@ export class CrmController {
     @Query('activeOnly') activeOnly?: string,
   ) {
     const organizationIds = this.getOrganizationIds(req.user);
-    return this.crmService.findAllRewards(organizationIds, activeOnly === 'true');
+    return this.crmService.findAllRewards(
+      organizationIds,
+      activeOnly === 'true',
+    );
   }
 
   @Get('rewards/eligible')
   async getEligibleRewards(
     @Req() req: RequestWithUser,
-    @Query('customerId', new ParseUUIDPipe({ version: '4' })) customerId: string,
+    @Query('customerId', new ParseUUIDPipe({ version: '4' }))
+    customerId: string,
     @Query('billAmount') billAmount: string,
   ) {
     const organizationId = this.getFirstOrganizationId(req.user);
     const billAmountNum = parseFloat(billAmount);
     if (isNaN(billAmountNum) || billAmountNum < 0) {
-      throw new BadRequestException('billAmount must be a valid positive number');
+      throw new BadRequestException(
+        'billAmount must be a valid positive number',
+      );
     }
     return this.crmService.getEligibleRewards(
       customerId,
@@ -233,7 +251,10 @@ export class CrmController {
   }
 
   @Post('rewards')
-  async createReward(@Req() req: RequestWithUser, @Body() dto: CreateRewardDto) {
+  async createReward(
+    @Req() req: RequestWithUser,
+    @Body() dto: CreateRewardDto,
+  ) {
     const organizationId = this.getFirstOrganizationId(req.user);
     return this.crmService.createReward(dto, organizationId);
   }
@@ -272,4 +293,3 @@ export class CrmController {
     );
   }
 }
-

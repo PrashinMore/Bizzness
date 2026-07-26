@@ -31,7 +31,12 @@ export class Invoice {
   @JoinColumn({ name: 'billing_session_id' })
   billingSession?: Sale | null;
 
-  @Column({ type: 'uuid', nullable: true, unique: true, name: 'billing_session_id' })
+  @Column({
+    type: 'uuid',
+    nullable: true,
+    unique: true,
+    name: 'billing_session_id',
+  })
   billingSessionId?: string | null;
 
   @Column({ type: 'text', name: 'invoice_number' })
@@ -68,10 +73,22 @@ export class Invoice {
   @Column({ type: 'decimal', precision: 12, scale: 2, name: 'subtotal' })
   subtotal!: number;
 
-  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0, name: 'tax_amount' })
+  @Column({
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+    name: 'tax_amount',
+  })
   taxAmount!: number;
 
-  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0, name: 'discount_amount' })
+  @Column({
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+    name: 'discount_amount',
+  })
   discountAmount!: number;
 
   @Column({ type: 'decimal', precision: 12, scale: 2, name: 'total' })
@@ -92,4 +109,3 @@ export class Invoice {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 }
-

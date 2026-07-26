@@ -39,7 +39,11 @@ export class User {
   @Column({ type: 'text', default: 'ACTIVE', name: 'status' })
   status!: 'ACTIVE' | 'DELETED';
 
-  @Column({ type: 'timestamp', nullable: true, name: 'hard_delete_scheduled_at' })
+  @Column({
+    type: 'timestamp',
+    nullable: true,
+    name: 'hard_delete_scheduled_at',
+  })
   hardDeleteScheduledAt?: Date | null;
 
   @ManyToMany(() => Organization, (organization) => organization.users)
@@ -56,4 +60,3 @@ export class User {
   @UpdateDateColumn()
   updatedAt!: Date;
 }
-

@@ -28,14 +28,18 @@ export class OutletsController {
 
   private getOrganizationIds(user: SanitizedUser): string[] {
     if (!user.organizations || user.organizations.length === 0) {
-      throw new ForbiddenException('You must be assigned to at least one organization');
+      throw new ForbiddenException(
+        'You must be assigned to at least one organization',
+      );
     }
     return user.organizations.map((org) => org.id);
   }
 
   private getFirstOrganizationId(user: SanitizedUser): string {
     if (!user.organizations || user.organizations.length === 0) {
-      throw new ForbiddenException('You must be assigned to at least one organization');
+      throw new ForbiddenException(
+        'You must be assigned to at least one organization',
+      );
     }
     return user.organizations[0].id;
   }
@@ -83,4 +87,3 @@ export class OutletsController {
     return this.outletsService.remove(id, organizationIds);
   }
 }
-

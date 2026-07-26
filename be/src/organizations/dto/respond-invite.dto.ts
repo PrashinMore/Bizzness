@@ -15,4 +15,3 @@ export class RespondInviteByTokenDto {
   @IsNotEmpty()
   action!: 'accept' | 'decline';
 }
-

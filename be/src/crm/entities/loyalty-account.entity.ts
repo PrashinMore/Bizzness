@@ -18,7 +18,10 @@ export class LoyaltyAccount {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @OneToOne(() => Customer, (customer) => customer.loyaltyAccount, { nullable: false, onDelete: 'CASCADE' })
+  @OneToOne(() => Customer, (customer) => customer.loyaltyAccount, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'customerId' })
   customer!: Customer;
 
@@ -37,4 +40,3 @@ export class LoyaltyAccount {
   @UpdateDateColumn()
   updatedAt!: Date;
 }
-
