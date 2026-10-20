@@ -170,26 +170,33 @@ export function SideNav() {
             )}
           </button>
         </div>
-        {!outletsLoading && outlets.length > 1 && (
+        {!outletsLoading && outlets.length > 0 && (
           <div className="border-b border-ink-light px-4 py-3">
             <label className="mb-1 block text-xs font-medium text-paper/60">Outlet</label>
-            <select
-              value={selectedOutlet?.id || ''}
-              onChange={(e) => {
-                const outlet = outlets.find((o) => o.id === e.target.value);
-                if (outlet) setSelectedOutlet(outlet);
-              }}
-              className={cn(
-                'w-full rounded-lg border border-ink-light bg-ink-light px-2.5 py-2 text-xs text-paper',
-                ui.focusRing,
-              )}
-            >
-              {outlets.map((outlet) => (
-                <option key={outlet.id} value={outlet.id}>
-                  {outlet.name} {outlet.isPrimary && '(Primary)'}
-                </option>
-              ))}
-            </select>
+            {outlets.length === 1 ? (
+              <div className="rounded-lg border border-ink-light bg-ink-light px-2.5 py-2 text-xs text-paper">
+                {selectedOutlet?.name || outlets[0].name}
+                {(selectedOutlet?.isPrimary ?? outlets[0].isPrimary) ? ' (Primary)' : ''}
+              </div>
+            ) : (
+              <select
+                value={selectedOutlet?.id || ''}
+                onChange={(e) => {
+                  const outlet = outlets.find((o) => o.id === e.target.value);
+                  if (outlet) setSelectedOutlet(outlet);
+                }}
+                className={cn(
+                  'w-full rounded-lg border border-ink-light bg-ink-light px-2.5 py-2 text-xs text-paper',
+                  ui.focusRing,
+                )}
+              >
+                {outlets.map((outlet) => (
+                  <option key={outlet.id} value={outlet.id}>
+                    {outlet.name} {outlet.isPrimary && '(Primary)'}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         )}
         <nav className="flex min-h-0 flex-1 flex-col overflow-hidden">

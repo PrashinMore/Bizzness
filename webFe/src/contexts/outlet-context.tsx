@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from 'react';
@@ -16,13 +17,38 @@ type OutletContextValue = {
   selectedOutlet: Outlet | null;
   outlets: Outlet[];
   loading: boolean;
+  /** True once outlet list is loaded and a selection is applied (or confirmed empty). */
+  isOutletReady: boolean;
   setSelectedOutlet: (outlet: Outlet | null) => void;
   refreshOutlets: () => Promise<void>;
 };
 
-const STORAGE_KEY = 'selected-outlet-id';
+export const OUTLET_STORAGE_KEY = 'selected-outlet-id';
 
 const OutletContext = createContext<OutletContextValue | undefined>(undefined);
+
+function readStoredOutletId(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(OUTLET_STORAGE_KEY);
+}
+
+/**
+ * Pick which outlet should be active:
+ * 1. Last-session outlet from localStorage (if still in the list)
+ * 2. Primary outlet
+ * 3. First outlet (covers single-outlet orgs)
+ */
+function resolveOutletSelection(data: Outlet[]): Outlet | null {
+  if (data.length === 0) return null;
+
+  const storedId = readStoredOutletId();
+  if (storedId) {
+    const stored = data.find((o) => o.id === storedId);
+    if (stored) return stored;
+  }
+
+  return data.find((o) => o.isPrimary) || data[0];
+}
 
 export function OutletProvider({
   children,
@@ -39,12 +65,12 @@ export function OutletProvider({
 
   const setSelectedOutlet = useCallback((outlet: Outlet | null) => {
     setSelectedOutletState(outlet);
-    if (typeof window !== 'undefined') {
-      if (outlet) {
-        localStorage.setItem(STORAGE_KEY, outlet.id);
-      } else {
-        localStorage.removeItem(STORAGE_KEY);
-      }
+    if (typeof window === 'undefined') return;
+    // Persist across sessions so the last choice is restored on next login.
+    // Do not clear storage on logout — only when selection is explicitly cleared
+    // with no replacement, or when the stored id is no longer valid.
+    if (outlet) {
+      localStorage.setItem(OUTLET_STORAGE_KEY, outlet.id);
     }
   }, []);
 
@@ -52,43 +78,21 @@ export function OutletProvider({
     if (!token || !userHasOrganization(user)) {
       setOutlets([]);
       setSelectedOutletState(null);
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem(STORAGE_KEY);
-      }
       setLoading(false);
       return;
     }
 
+    setLoading(true);
     try {
       const data = await outletsApi.list(token);
       setOutlets(data);
 
-      // Auto-select if only one outlet
-      if (data.length === 1 && !selectedOutlet) {
-        setSelectedOutlet(data[0]);
-      } else if (data.length > 0 && selectedOutlet) {
-        // Verify selected outlet still exists
-        const stillExists = data.find((o) => o.id === selectedOutlet.id);
-        if (!stillExists) {
-          // Select primary outlet or first one
-          const primary = data.find((o) => o.isPrimary) || data[0];
-          setSelectedOutlet(primary);
+      const next = resolveOutletSelection(data);
+      setSelectedOutletState(next);
+      if (typeof window !== 'undefined') {
+        if (next) {
+          localStorage.setItem(OUTLET_STORAGE_KEY, next.id);
         }
-      } else if (data.length > 0 && !selectedOutlet) {
-        // Restore from localStorage or select primary
-        if (typeof window !== 'undefined') {
-          const storedId = localStorage.getItem(STORAGE_KEY);
-          if (storedId) {
-            const stored = data.find((o) => o.id === storedId);
-            if (stored) {
-              setSelectedOutlet(stored);
-              return;
-            }
-          }
-        }
-        // Select primary outlet or first one
-        const primary = data.find((o) => o.isPrimary) || data[0];
-        setSelectedOutlet(primary);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : '';
@@ -96,19 +100,28 @@ export function OutletProvider({
         console.error('Failed to load outlets:', err);
       }
       setOutlets([]);
+      setSelectedOutletState(null);
     } finally {
       setLoading(false);
     }
-  }, [token, user, selectedOutlet, setSelectedOutlet]);
+  }, [token, user]);
 
   useEffect(() => {
-    refreshOutlets();
+    void refreshOutlets();
   }, [refreshOutlets]);
+
+  const isOutletReady = useMemo(() => {
+    if (loading) return false;
+    if (!token || !userHasOrganization(user)) return true;
+    // Ready when we have a selected outlet, or confirmed there are none.
+    return outlets.length === 0 || selectedOutlet !== null;
+  }, [loading, token, user, outlets.length, selectedOutlet]);
 
   const value: OutletContextValue = {
     selectedOutlet,
     outlets,
     loading,
+    isOutletReady,
     setSelectedOutlet,
     refreshOutlets,
   };
@@ -123,4 +136,3 @@ export function useOutlet() {
   }
   return context;
 }
-

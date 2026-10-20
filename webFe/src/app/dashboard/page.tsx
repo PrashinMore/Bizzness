@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
+import { useOutlet } from '@/contexts/outlet-context';
 import { useRequireAuth } from '@/hooks/use-require-auth';
 import { dashboardApi } from '@/lib/api-client';
 import Link from 'next/link';
@@ -62,6 +63,7 @@ function formatRupee(amount: number) {
 export default function DashboardPage() {
   const { user, loading } = useRequireAuth();
   const { token } = useAuth();
+  const { selectedOutlet, isOutletReady } = useOutlet();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [salesTrend, setSalesTrend] = useState<SalesTrendData[]>([]);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
@@ -73,7 +75,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function loadDashboard() {
-      if (!token || loading || !user) return;
+      // Wait until an outlet is selected so X-Outlet-Id is present on API calls.
+      if (!token || loading || !user || !isOutletReady || !selectedOutlet) return;
       setFetching(true);
       setError(null);
       try {
@@ -100,9 +103,9 @@ export default function DashboardPage() {
       }
     }
     loadDashboard();
-  }, [token, loading, user, trendRange]);
+  }, [token, loading, user, trendRange, isOutletReady, selectedOutlet?.id]);
 
-  if (loading || !user || !token) {
+  if (loading || !user || !token || !isOutletReady) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-paper">
         <LoadingState message="Loading your workspace…" />
