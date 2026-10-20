@@ -51,7 +51,7 @@ async function request<T>(
     headers.Authorization = `Bearer ${token}`;
   }
 
-  // Add X-Outlet-Id header if outlet is selected
+  // Add X-Outlet-Id header if outlet is selected (persisted across sessions)
   if (typeof window !== 'undefined') {
     const selectedOutletId = localStorage.getItem('selected-outlet-id');
     if (selectedOutletId) {

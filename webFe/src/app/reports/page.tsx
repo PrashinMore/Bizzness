@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
+import { useOutlet } from '@/contexts/outlet-context';
 import { useRequireAuth } from '@/hooks/use-require-auth';
 import { reportsApi } from '@/lib/api-client';
 import { PageHeader, PageShell } from '@/components/ui/shell';
@@ -19,6 +20,7 @@ type ExpenseReportData = Awaited<ReturnType<typeof reportsApi.getExpenseReport>>
 export default function ReportsPage() {
   const { user, loading } = useRequireAuth();
   const { token } = useAuth();
+  const { selectedOutlet, isOutletReady } = useOutlet();
   const [activeTab, setActiveTab] = useState<Tab>('sales');
   const [loadingReport, setLoadingReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -121,7 +123,7 @@ export default function ReportsPage() {
   };
 
   useEffect(() => {
-    if (!token || loading || !user) return;
+    if (!token || loading || !user || !isOutletReady || !selectedOutlet) return;
     if (activeTab === 'sales') {
       loadSalesReport();
     } else if (activeTab === 'profit-loss') {
@@ -131,7 +133,7 @@ export default function ReportsPage() {
     } else if (activeTab === 'expenses') {
       loadExpenseReport();
     }
-  }, [activeTab, token, loading, user, fromDate, toDate]);
+  }, [activeTab, token, loading, user, fromDate, toDate, isOutletReady, selectedOutlet?.id]);
 
   const handleExportCSV = async () => {
     if (!token) return;
