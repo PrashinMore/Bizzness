@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { useOutlet } from '@/contexts/outlet-context';
 import { settingsApi, type Settings } from '@/lib/api-client';
+import { BrandLogo } from '@/components/brand-logo';
 import { cn, ui } from '@/lib/ui';
 import {
   ChartColumn,
@@ -138,8 +139,8 @@ export function SideNav() {
         )}
       >
         <div className="flex h-16 items-center justify-between gap-3 border-b border-ink-light px-4">
-          <div className="flex items-center gap-3">
-            {businessLogo && (
+          <div className="flex min-w-0 items-center gap-3">
+            {businessLogo ? (
               <img
                 src={`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'}${businessLogo}`}
                 alt={businessName}
@@ -148,6 +149,8 @@ export function SideNav() {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
               />
+            ) : (
+              <BrandLogo variant="onDark" className="shrink-0 [&_svg]:h-9 [&_svg]:w-9" />
             )}
             <span className="truncate font-display text-sm font-semibold text-paper">{businessName}</span>
           </div>

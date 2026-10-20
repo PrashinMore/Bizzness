@@ -8,9 +8,18 @@ import { OrganizationOnboardingGate } from '@/components/organization-onboarding
 import { fraunces, ibmPlexSans } from '@/lib/app-fonts';
 
 export const metadata: Metadata = {
-  title: 'Bizzness Portal',
+  title: {
+    default: 'Bizzness',
+    template: '%s · Bizzness',
+  },
   description:
-    'Manage users, roles, and authentication for the Bizzness platform.',
+    'Inventory, billing, and staff management for restaurants and retail shops.',
+  applicationName: 'Bizzness',
+  icons: {
+    icon: [{ url: '/brand-logo.svg', type: 'image/svg+xml' }],
+    shortcut: '/brand-logo.svg',
+    apple: '/brand-logo.svg',
+  },
 };
 
 export default function RootLayout({
