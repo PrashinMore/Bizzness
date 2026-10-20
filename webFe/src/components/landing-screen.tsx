@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { BrandLogo } from '@/components/brand-logo';
 import { useAuth } from '@/contexts/auth-context';
 import { ui } from '@/lib/ui';
 import { VerifiedStamp } from '@/components/marketing/verified-stamp';
@@ -80,12 +81,8 @@ export function LandingScreen() {
 
           <VerifiedStamp className="landing-stamp pointer-events-none absolute -right-2 -top-2 sm:right-4 sm:top-4" />
 
-          <div className="mb-8 flex items-center gap-3" aria-hidden="true">
-            <span className="h-px flex-1 bg-border" />
-            <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-accent">
-              Bizzness
-            </span>
-            <span className="h-px flex-1 bg-border" />
+          <div className="mb-8 flex items-center justify-center">
+            <BrandLogo withWordmark />
           </div>
 
           <header className="space-y-4 text-center sm:text-left">

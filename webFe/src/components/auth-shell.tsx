@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { cn } from '@/lib/ui';
+import { BrandLogo } from '@/components/brand-logo';
+import { cn, ui } from '@/lib/ui';
 import { Button } from '@/components/ui/button';
 import { InlineAlert } from '@/components/ui/states';
 import { PageEyebrow, PageTitle, PageSubtitle } from '@/components/ui/shell';
@@ -36,6 +37,11 @@ export function AuthShell({
         }}
       />
       <div className="relative z-10 w-full max-w-md">
+        <div className="mb-6 flex justify-center sm:justify-start">
+          <Link href="/" className={cn(ui.focusRing)}>
+            <BrandLogo withWordmark />
+          </Link>
+        </div>
         <div className="rounded-panel border border-border bg-surface px-6 py-8 shadow-soft sm:px-8 sm:py-10">
           <PageEyebrow className="text-center sm:text-left">{eyebrow}</PageEyebrow>
           <PageTitle className="mt-3 text-center sm:text-left">{title}</PageTitle>

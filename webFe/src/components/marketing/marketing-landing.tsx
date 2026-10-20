@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useAuth } from '@/contexts/auth-context';
+import { BrandLogo } from '@/components/brand-logo';
 import { cn, ui } from '@/lib/ui';
 import { DashboardPreview } from './dashboard-preview';
 import { FaqAccordion } from './faq-accordion';
@@ -317,11 +318,8 @@ export function MarketingLanding() {
       {/* Nav */}
       <header className="sticky top-0 z-50 border-b border-border bg-paper/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <Link href="/" className={cn('flex items-center gap-2', ui.focusRing)}>
-            <span className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-surface font-display text-sm font-bold text-ink">
-              B
-            </span>
-            <span className="font-display text-lg font-semibold text-ink">Bizzness</span>
+          <Link href="/" className={cn(ui.focusRing)}>
+            <BrandLogo withWordmark />
           </Link>
 
           <nav className="hidden items-center gap-6 md:flex" aria-label="Main">
@@ -615,12 +613,7 @@ export function MarketingLanding() {
       <footer className="border-t border-border bg-surface py-12">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
           <div className="lg:col-span-2">
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-paper font-display text-sm font-bold">
-                B
-              </span>
-              <span className="font-display text-lg font-semibold">Bizzness</span>
-            </div>
+            <BrandLogo withWordmark />
             <p className="mt-3 max-w-sm text-sm text-muted">
               Simple business management for Indian shops.
             </p>
